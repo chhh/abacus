@@ -1,5 +1,6 @@
 package abacus;
 
+import java.awt.datatransfer.StringSelection;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
@@ -19,7 +20,7 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.xml.stream.XMLStreamReader;
-import javax.swing.GroupLayout.*;
+
 import abacus_textArea.abacus_textArea;
 import java.text.DecimalFormat;
 
@@ -74,14 +75,14 @@ public class globals {
 
 	// maps pepXML files to their protXML files
 	// key = pepXML, value = parent protXML file
-	public static HashMap<String, String> pepTagHash = new HashMap<String, String>();
+	public static HashMap<String, String> pepTagHash = new HashMap<>();
 	
 	// maps protXML files to their tag
 	// key = protXML, value = short tag
-	public static HashMap<String, String> protTagHash = new HashMap<String, String>();
+	public static HashMap<String, String> protTagHash = new HashMap<>();
 
-	public static List<String> pepXmlFiles = new ArrayList<String>();
-	public static List<String> protXmlFiles = new ArrayList<String>();
+	public static List<String> pepXmlFiles = new ArrayList<>();
+	public static List<String> protXmlFiles = new ArrayList<>();
 	
 	public static String fileSepChar = System.getProperty("file.separator"); // get either '\' or '/'
 	
@@ -97,8 +98,8 @@ public class globals {
 	public static boolean proceedWithQuery = false; //used to deterin if a prepared statement should proceed or not 
 	
 	// variables used for custom output.
-	public static Set<String> printC = new HashSet<String>();
-	public static Set<String> printE = new HashSet<String>();
+	public static Set<String> printC = new HashSet<>();
+	public static Set<String> printE = new HashSet<>();
  
 	//ERROR CODES
 	public static int noDBname = 1;
@@ -135,7 +136,7 @@ public class globals {
 		DataInputStream dis = null;
 		BufferedReader br = null;
 		
-		protLen = new HashMap<String, Integer>();
+		protLen = new HashMap<>();
 		String k = null;
 		String seq = null;
 		String line = null;
@@ -175,7 +176,7 @@ public class globals {
 				
 				if(line.startsWith(">")) {
 					
-					if(k.isEmpty() || k == null) {
+					if(k == null || k.isEmpty()) {
 						k = globals.formatProtId(line.substring(1));
 					}
 					else { // record current protein before continuing
@@ -214,7 +215,7 @@ public class globals {
 	
 	
 	// Function assigns command line arguments to global variables
-	public static void parseCommandLineArgs(String[] argv) throws IOException {
+	public static void parseCommandLineArgs(String[] argv) {
 		boolean a = false;
 		boolean b = false;
 		
@@ -254,8 +255,8 @@ public class globals {
 		// determine the operating system being used
 		String OS = System.getProperty("os.name").toLowerCase();
 		
-		if( OS.indexOf("win") >= 0) OStype = "windows";
-		if( OS.indexOf("mac") >= 0) OStype = "mac";
+		if(OS.contains("win")) OStype = "windows";
+		if(OS.contains("mac")) OStype = "mac";
 		else OStype = "nix";
 	}
 	
@@ -364,19 +365,28 @@ public class globals {
 				//determine output type
 				if(globals.outputFormat == -1) { // -1 means 'unset yet'
 					if(ary[0].equals("output")) {
-						if(ary[1].equals("Custom")) outputFormat = customOutput;
-						else if(ary[1].equals("GeneQspec")) outputFormat = geneQspecFormat;
-						else if(ary[1].equals("ProtQspec")) outputFormat = protQspecFormat;
-						else if(ary[1].equals("Default")) outputFormat = defaultOutput;
-						else if(ary[1].equals("Peptide")) {
-							byPeptide = true;
-							outputFormat = peptideOutput;
-						}
-						else if(ary[1].equals("Gene")) {
-							byGene = true;
-							outputFormat = geneOutput;
-						}
-						
+                        switch (ary[1]) {
+                            case "Custom":
+                                outputFormat = customOutput;
+                                break;
+                            case "GeneQspec":
+                                outputFormat = geneQspecFormat;
+                                break;
+                            case "ProtQspec":
+                                outputFormat = protQspecFormat;
+                                break;
+                            case "Default":
+                                outputFormat = defaultOutput;
+                                break;
+                            case "Peptide":
+                                byPeptide = true;
+                                outputFormat = peptideOutput;
+                                break;
+                            case "Gene":
+                                byGene = true;
+                                outputFormat = geneOutput;
+                                break;
+                        }
 					}
 					
 					if( 
@@ -519,7 +529,7 @@ public class globals {
 		};
 		
 		Calendar rightNow = Calendar.getInstance();
-		String month = monthName[ rightNow.get(Calendar.MONDAY)];
+		String month = monthName[ rightNow.get(Calendar.MONTH)];
 		
 		int min = rightNow.get(Calendar.MINUTE);
 		String minString = null;
@@ -579,57 +589,57 @@ public class globals {
 	 */
 	private static void parseCustomOutputOptions(String[] ary) {
 		
-		if(ary[0].equals("printC")) printC = new HashSet<String>();
-		if(ary[0].equals("printE")) printE = new HashSet<String>();
+		if(ary[0].equals("printC")) printC = new HashSet<>();
+		if(ary[0].equals("printE")) printE = new HashSet<>();
 		
 		
 		String opts[] = ary[1].split(",");
-		for(int i = 0; i < opts.length; i++) {
-			
-			// options available to printE
-			if( ary[0].equals("printE") ) {
-				if(opts[i].equals("id")) printE.add("_id"); 
-				if(opts[i].equals("Pw")) printE.add("_Pw");
-				if(opts[i].equals("numPepsTot")) printE.add("_numPepsTot");
-				if(opts[i].equals("numPepsUniq")) printE.add("_numPepsUniq");
-				if(opts[i].equals("numSpecsTot")) printE.add("_numSpecsTot");
-				if(opts[i].equals("numSpecsUniq")) printE.add("_numSpecsUniq");
-				if(opts[i].equals("numSpecsAdj")) printE.add("_numSpecsAdj");
+        for (String opt : opts) {
 
-				if(globals.doNSAF) {
-					if(opts[i].equals("numSpecsTot")) printE.add("_totNSAF");
-					if(opts[i].equals("numSpecsUniq")) printE.add("_uniqNSAF");
-					if(opts[i].equals("numSpecsAdj")) printE.add("_adjNSAF");
-				}
-			}
-			
-			// options available to printC
-			if(ary[0].equals("printC")) {
-				if(opts[i].equals("id")) printC.add("ALL_ID");
-				if(opts[i].equals("allPw")) printC.add("ALL_PW");
-				if(opts[i].equals("localPw")) printC.add("ALL_LOCALPW");
-				if(opts[i].equals("numPepsTot")) printC.add("ALL_NUMPEPSTOT");
-				if(opts[i].equals("numPepsUniq")) printC.add("ALL_NUMPEPSUNIQ");
-				if(opts[i].equals("numSpecsTot")) printC.add("ALL_NUMSPECSTOT");
-				if(opts[i].equals("numSpecsUniq")) printC.add("ALL_NUMSPECSUNIQ");
-				
-				if(opts[i].equals("maxPw")) printC.add("MAXPW");
-				if(opts[i].equals("maxIniProb")) printC.add("MAXINIPROB");
-				if(opts[i].equals("wt_maxIniProb")) printC.add("WT_MAXINIPROB");
-				if(opts[i].equals("maxIniProbUniq")) printC.add("MAXINIPROBUNIQ");
-				
-				if(opts[i].equals("protid")) printC.add("PROTID");
-				if(opts[i].equals("isFwd")) printC.add("ISFWD");
-				if(opts[i].equals("defline")) printC.add("DEFLINE");
-				if(opts[i].equals("numXML")) printC.add("NUMXML");
-				if(opts[i].equals("protLen")) printC.add("PROTLEN");
-				
-				if(opts[i].equals("geneid")) {
-					// make sure the data will contain a gene id field
-					if(gene2protFile != null) printC.add("GENEID");
-				}
-			}
-		}
+            // options available to printE
+            if (ary[0].equals("printE")) {
+                if (opt.equals("id")) printE.add("_id");
+                if (opt.equals("Pw")) printE.add("_Pw");
+                if (opt.equals("numPepsTot")) printE.add("_numPepsTot");
+                if (opt.equals("numPepsUniq")) printE.add("_numPepsUniq");
+                if (opt.equals("numSpecsTot")) printE.add("_numSpecsTot");
+                if (opt.equals("numSpecsUniq")) printE.add("_numSpecsUniq");
+                if (opt.equals("numSpecsAdj")) printE.add("_numSpecsAdj");
+
+                if (globals.doNSAF) {
+                    if (opt.equals("numSpecsTot")) printE.add("_totNSAF");
+                    if (opt.equals("numSpecsUniq")) printE.add("_uniqNSAF");
+                    if (opt.equals("numSpecsAdj")) printE.add("_adjNSAF");
+                }
+            }
+
+            // options available to printC
+            if (ary[0].equals("printC")) {
+                if (opt.equals("id")) printC.add("ALL_ID");
+                if (opt.equals("allPw")) printC.add("ALL_PW");
+                if (opt.equals("localPw")) printC.add("ALL_LOCALPW");
+                if (opt.equals("numPepsTot")) printC.add("ALL_NUMPEPSTOT");
+                if (opt.equals("numPepsUniq")) printC.add("ALL_NUMPEPSUNIQ");
+                if (opt.equals("numSpecsTot")) printC.add("ALL_NUMSPECSTOT");
+                if (opt.equals("numSpecsUniq")) printC.add("ALL_NUMSPECSUNIQ");
+
+                if (opt.equals("maxPw")) printC.add("MAXPW");
+                if (opt.equals("maxIniProb")) printC.add("MAXINIPROB");
+                if (opt.equals("wt_maxIniProb")) printC.add("WT_MAXINIPROB");
+                if (opt.equals("maxIniProbUniq")) printC.add("MAXINIPROBUNIQ");
+
+                if (opt.equals("protid")) printC.add("PROTID");
+                if (opt.equals("isFwd")) printC.add("ISFWD");
+                if (opt.equals("defline")) printC.add("DEFLINE");
+                if (opt.equals("numXML")) printC.add("NUMXML");
+                if (opt.equals("protLen")) printC.add("PROTLEN");
+
+                if (opt.equals("geneid")) {
+                    // make sure the data will contain a gene id field
+                    if (gene2protFile != null) printC.add("GENEID");
+                }
+            }
+        }
 	}
 	
 	
@@ -639,7 +649,7 @@ public class globals {
 	 * computer is doing something.
 	 * 
 	 */
-	public static void cursorStatus(int i, String msg) throws Exception {
+	public static void cursorStatus(int i, String msg) {
 		String anim = "|/-\\";
 		int r = i % anim.length();
 
@@ -727,7 +737,7 @@ public class globals {
 				// this code identifies all the pepXML files that went into making
 				// the current protXML file and associates them with the current protXML's tag
 				//Pattern regexPattern = Pattern.compile(".*[\\/](.+.pep.xml)$");
-				Pattern regexPattern = Pattern.compile(".*[\\/](.+." + pepXMLsuffix +")$");
+				Pattern regexPattern = Pattern.compile(".*[/](.+." + pepXMLsuffix +")$");
 				
 				Matcher matcher = null;
 				String err;
@@ -739,13 +749,13 @@ public class globals {
 					if(n.equals("source_files")) {
 						ary = v.split("\\s+"); // each element should be 1 pepXML file
 
-						for(int j = 0; j < ary.length; j++) {
-							matcher = regexPattern.matcher(ary[j]);
-							if(matcher.find()) { //pepXML file extracted
-								pXML = matcher.group(1);
-								pepTagHash.put(pXML, tag);
-							}
-						}
+                        for (String anAry : ary) {
+                            matcher = regexPattern.matcher(anAry);
+                            if (matcher.find()) { //pepXML file extracted
+                                pXML = matcher.group(1);
+                                pepTagHash.put(pXML, tag);
+                            }
+                        }
 					}
 				}
 			}
@@ -765,7 +775,8 @@ public class globals {
 	 * same name as the protXML file.
 	 * If that fails, the function returns false.
 	 * 
-	 * @param pXML protXML
+	 * @param origProtXML_tag protXML
+     * @param protXML_tag
 	 * @return
 	 */
 	private static boolean search_srcDir_for_pepXML(String origProtXML_tag, String protXML_tag) {
@@ -940,23 +951,22 @@ public class globals {
 		
 		pepMods_minus = null;
 		pepMods_plus = null;
-		
-		for(int i = 0; i < x.length; i++) {
-			curTxt = x[i].trim();
-			
-			if( curTxt.startsWith("-") ) { // we want to avoid this modification
-				if(pepMods_minus == null) pepMods_minus = new String[ nM ];
 
-				pepMods_minus[ m ] = curTxt.substring(1).toUpperCase();
-				m++;
-			}
-			else if( curTxt.startsWith("+") ) { // we want to keep this modification
-				if(pepMods_plus == null) pepMods_plus = new String[ nP ];
+        for (String aX : x) {
+            curTxt = aX.trim();
 
-				pepMods_plus[ p ] = curTxt.substring(1).toUpperCase();
-				p++;
-			}
-		}
+            if (curTxt.startsWith("-")) { // we want to avoid this modification
+                if (pepMods_minus == null) pepMods_minus = new String[nM];
+
+                pepMods_minus[m] = curTxt.substring(1).toUpperCase();
+                m++;
+            } else if (curTxt.startsWith("+")) { // we want to keep this modification
+                if (pepMods_plus == null) pepMods_plus = new String[nP];
+
+                pepMods_plus[p] = curTxt.substring(1).toUpperCase();
+                p++;
+            }
+        }
 	}
 
 
@@ -973,13 +983,11 @@ public class globals {
 		else {
 			score = 0;
 			if( (pepMods_plus != null) && (pepMods_plus.length > 0) ) {
-				for(int i = 0; i < pepMods_plus.length; i++)
-					if( modPep.contains( pepMods_plus[i] ) ) score++;
+                for (String pepMods_plu : pepMods_plus) if (modPep.contains(pepMods_plu)) score++;
 			}
 
 			if( (pepMods_minus != null) && (pepMods_minus.length > 0) ) {
-				for(int i = 0; i < pepMods_minus.length; i++)
-					if( modPep.contains( pepMods_minus[i] ) ) score--;
+                for (String pepMods_minu : pepMods_minus) if (modPep.contains(pepMods_minu)) score--;
 			}
 
 			// the current modPep value contains more 'plus' modifications
@@ -1011,15 +1019,15 @@ public class globals {
 		String curTag = null;
 		Pattern pat = Pattern.compile("(.+)\\." + pepXMLsuffix + "$");
 		Matcher matcher = null;
-		
-		for(int i = 0; i < pepXmlFiles.size(); i++) {
-			curFile = pepXmlFiles.get(i);
-			matcher = pat.matcher(curFile);
-			if(matcher.find()) {
-				curTag = matcher.group(1).replaceAll("interact-", "");
-				pepTagHash.put(curFile, curTag);
-			}
-		}
+
+        for (String pepXmlFile : pepXmlFiles) {
+            curFile = pepXmlFile;
+            matcher = pat.matcher(curFile);
+            if (matcher.find()) {
+                curTag = matcher.group(1).replaceAll("interact-", "");
+                pepTagHash.put(curFile, curTag);
+            }
+        }
 	}
 	
 }

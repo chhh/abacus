@@ -28,10 +28,10 @@ public class protXML {
 	public protXML(String txt, boolean iProphet_status) {
 
 		this.srcFile = txt;
-		this.protIds = new HashMap<String, String>();
-		this.peptides = new HashMap<String, pepXML>();
-		this.protIdClass = new HashMap<String, Integer>();
-		this.protLen = new HashMap<String, Integer>();
+		this.protIds = new HashMap<>();
+		this.peptides = new HashMap<>();
+		this.protIdClass = new HashMap<>();
+		this.protLen = new HashMap<>();
 		this.isFwdGroup = 0;
 		this.isProphet = iProphet_status; // true means the file is an i-Prophet output file
 	}
@@ -205,7 +205,7 @@ public class protXML {
 
 
 		while(protIter.hasNext()) {
-			k = (String) protIter.next();
+			k = protIter.next();
 
 			if( k.startsWith( globals.decoyTag ) ) this.protIdClass.put(k, 0);
 			else {
@@ -218,8 +218,8 @@ public class protXML {
 		if(isFwd_ctr > 0) {  // the group (overall) is a forward group
 			this.isFwdGroup = 1;
 
-			HashMap<String, String> newProtids = new HashMap<String, String>();
-			HashMap<String, Integer> newProtidsClass = new HashMap<String, Integer>();
+			HashMap<String, String> newProtids = new HashMap<>();
+			HashMap<String, Integer> newProtidsClass = new HashMap<>();
 
 
 			protIter = null;
@@ -227,7 +227,7 @@ public class protXML {
 
 
 			while(protIter.hasNext()) { // remove decoys from group
-				k = (String) protIter.next();
+				k = protIter.next();
 
 				if( !k.startsWith(globals.decoyTag) ) {
 					newProtids.put(k, protIds.get(k));
@@ -261,7 +261,7 @@ public class protXML {
 		int protClass = 0;
 
 		while(protIter.hasNext()) { // iterate over protein Ids
-			k = (String) protIter.next();
+			k = protIter.next();
 			defline = this.protIds.get(k);
 
 			if(this.protIdClass.containsKey(k)) protClass = this.protIdClass.get(k);
@@ -278,7 +278,7 @@ public class protXML {
 			pepXML curPep = null;
 
 			while(pepIter.hasNext()) { // iterate over peptides
-				pepId = (String) pepIter.next();
+				pepId = pepIter.next();
 				curPep = null;
 				curPep = this.peptides.get(pepId);
 

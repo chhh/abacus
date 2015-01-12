@@ -6,8 +6,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DecimalFormat;
 import abacus_textArea.abacus_textArea;
-import java.util.Iterator;
-
 
 
 /******************

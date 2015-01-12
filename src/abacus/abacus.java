@@ -67,15 +67,15 @@ public class abacus {
 		 */
 		String[] toRemove = {".data", ".properties", ".script", ".tmp", ".log"};
 		File f = null;
-		for(int i = 0; i < toRemove.length; i++) {
-			String tmpFile = "" + globals.DBname + toRemove[i];
-			f = new File( tmpFile );
-			if( f.exists() ) {
-				f.delete();
-				System.err.println("Abacus disk clean up: removing " + tmpFile);
-			}
-			f = null;
-		}
+        for (String aToRemove : toRemove) {
+            String tmpFile = "" + globals.DBname + aToRemove;
+            f = new File(tmpFile);
+            if (f.exists()) {
+                f.delete();
+                System.err.println("Abacus disk clean up: removing " + tmpFile);
+            }
+            f = null;
+        }
 		System.err.print("\n");
 
 		record_XML_files(dir); // record only the protXML and pepXML files
@@ -289,12 +289,7 @@ public class abacus {
 	/*****************
 	 * Function opens up files in the given directory and determines if they
 	 * are protXML files based upon their content
-	 * @param <ExtensionFilter>
 	 * @param dir
-	 * @throws Exception
-	 * @throws IOException
-	 * @throws FileNotFoundException
-	 *
 	 */
 	public void record_XML_files(File dir) {
 
@@ -308,10 +303,10 @@ public class abacus {
 			}
 		};
 		String[] pep = dir.list(filter);
-		for(int i = 0; i < pep.length; i++) {
-			if( !globals.pepXmlFiles.contains(pep[i]) )
-				globals.pepXmlFiles.add(pep[i]);
-		}
+        for (String aPep : pep) {
+            if (!globals.pepXmlFiles.contains(aPep))
+                globals.pepXmlFiles.add(aPep);
+        }
 
 		if(!globals.byPeptide) {
 			// filter to only select protXML files
@@ -322,10 +317,10 @@ public class abacus {
 			};
 			String[] prot = dir.list(filter);
 
-			for(int i = 0; i < prot.length; i++) {
-				if( !globals.protXmlFiles.contains(prot[i]) )
-					globals.protXmlFiles.add(prot[i]);
-			}
+            for (String aProt : prot) {
+                if (!globals.protXmlFiles.contains(aProt))
+                    globals.protXmlFiles.add(aProt);
+            }
 		}
 
 	}
@@ -362,7 +357,9 @@ public class abacus {
 		boolean status = true;
 		if(dataType.equals("pepXML")) {
 			status = parsePepXML( xmlStreamReader, xmlFile, prep, fileNumber, console );
-			if(status) return status; // if this returns true, there is a problem in the pepXML file
+			if(status) {
+                return status; // if this returns true, there is a problem in the pepXML file
+            }
 		}
 		if(dataType.equals("protXML")) {
 			status = parseProtXML( xmlStreamReader, xmlFile, prep, fileNumber, console );
@@ -407,132 +404,130 @@ public class abacus {
 					 * This code determines if the current protXML file represents an i-prophet
 					 * output file.
 					 */
-					if(elementName.equals("proteinprophet_details")) {
-						for(int i = 0; i < xmlStreamReader.getAttributeCount(); i++) {
-							String n = xmlStreamReader.getAttributeLocalName(i);
-							String v = xmlStreamReader.getAttributeValue(i);
-							if(n.equals("run_options")) {
-								if(v.contains("IPROPHET")) is_iprophet_data = true;
-								break;
-							}
-						}
-					}
+                    switch (elementName) {
+                        case "proteinprophet_details":
+                            for (int i = 0; i < xmlStreamReader.getAttributeCount(); i++) {
+                                String n = xmlStreamReader.getAttributeLocalName(i);
+                                String v = xmlStreamReader.getAttributeValue(i);
+                                if (n.equals("run_options")) {
+                                    if (v.contains("IPROPHET")) is_iprophet_data = true;
+                                    break;
+                                }
+                            }
+                            break;
 
-					/*
-					 * This code identifies the pepXML files used for this protXML file
-					 * This information is used to map between these files.
-					 */
-					else if(elementName.equals("protein_summary_header")) {
-						if( globals.parseProtXML_header(xmlStreamReader, xmlFile, console) ) {
-							err = "\nERROR:\n"
-								+ "The pepXML files used to create '" + xmlFile + "' could not be found.\n"
-								+ "The pepXML file names must match whatever is in the protXML file header.\n"
-							    + "I have to quit now.\n\n";
+                        case "protein_summary_header":
+                             // This code identifies the pepXML files used for this protXML file
+                             // This information is used to map between these files.
+                            if (globals.parseProtXML_header(xmlStreamReader, xmlFile, console)) {
+                                err = "\nERROR:\n"
+                                        + "The pepXML files used to create '" + xmlFile + "' could not be found.\n"
+                                        + "The pepXML file names must match whatever is in the protXML file header.\n"
+                                        + "I have to quit now.\n\n";
 
-							 if(console != null) {
-								console.append(err);
-								return true;
-							}
-							else {
-								System.err.print(err);
-								System.exit(-1);
-							}
-						}
-					}
+                                if (console != null) {
+                                    console.append(err);
+                                    return true;
+                                } else {
+                                    System.err.print(err);
+                                    System.exit(-1);
+                                }
+                            }
+                            break;
 
-					else if(elementName.equals("protein_group")) { // beginning of new protein group
-						curGroup = new protXML(xmlFile, is_iprophet_data);
-						curGroup.parse_protGroup_line(xmlStreamReader);
-					}
+                        case "protein_group":  // beginning of new protein group
+                            curGroup = new protXML(xmlFile, is_iprophet_data);
+                            curGroup.parse_protGroup_line(xmlStreamReader);
+                            break;
 
-					else if( elementName.equals("protein") )
-						curProtid_ = curGroup.parse_protein_line(xmlStreamReader);
+                        case "protein":
+                            curProtid_ = curGroup.parse_protein_line(xmlStreamReader);
+                            break;
 
+                        case "annotation":
+                            for (int i = 0; i < xmlStreamReader.getAttributeCount(); i++) {
+                                String n = xmlStreamReader.getAttributeLocalName(i);
+                                String v = xmlStreamReader.getAttributeValue(i);
+                                if (n.equals("protein_description")) {
+                                    curGroup.setProtId(v, curProtid_);
+                                    curProtid_ = null;
+                                    break;
+                                }
+                                v = null;
+                                n = null;
+                            }
+                            break;
 
-					else if( elementName.equals("annotation") ) {
+                        case "indistinguishable_protein":
+                            curProtid_ = curGroup.parse_protein_line(xmlStreamReader);
+                            break;
 
-						for(int i = 0; i < xmlStreamReader.getAttributeCount(); i++) {
-							String n = xmlStreamReader.getAttributeLocalName(i);
-							String v = xmlStreamReader.getAttributeValue(i);
-							if(n.equals("protein_description")) {
-								curGroup.setProtId(v, curProtid_);
-								curProtid_ = null;
-								break;
-							}
-							v = null;
-							n = null;
-						}
-					}
+                        case "peptide":
+                            // beginning of peptide record
+                            curPep_ = curGroup.parse_peptide_line(xmlStreamReader);
+                            break;
 
-					else if( elementName.equals("indistinguishable_protein") )
-						curProtid_ = curGroup.parse_protein_line(xmlStreamReader);
-
-					else if( elementName.equals("peptide") )  // beginning of peptide record
-						curPep_ = curGroup.parse_peptide_line(xmlStreamReader);
-
-					else if( elementName.equals("modification_info"))  // N-terminal modifcation
-						curGroup.record_AA_mod_protXML(xmlStreamReader, curPep_);
-
-					else if( elementName.equals("mod_aminoacid_mass"))
-						curGroup.record_AA_mod_protXML(xmlStreamReader, curPep_);
+                        case "modification_info":
+// N-terminal modifcation
+                            curGroup.record_AA_mod_protXML(xmlStreamReader, curPep_);
+                            break;
+                        case "mod_aminoacid_mass":
+                            curGroup.record_AA_mod_protXML(xmlStreamReader, curPep_);
+                            break;
+                    }
 
 				}
 
 				else if(event == XMLStreamReader.END_ELEMENT) { // end of a record
 					String elementName = xmlStreamReader.getLocalName();
-					
-					if( elementName.equals("peptide") ) {
-						curGroup.annotate_modPeptide_protXML(curPep_);
-						curPep_ = null;
-					}
-					
-					else if( elementName.equals("protein") ) { // end of current protein
-						curGroup.classify_group();
-						try {
-							curGroup.write_to_db(prep);
-						} catch (Exception e) {
-							if(console != null) {
-								console.append(e.toString());
-								return true;
-							}
-							else {
-								e.printStackTrace();
-								System.exit(-1);
-							}
 
-						}
+                    switch (elementName) {
+                        case "peptide":
+                            curGroup.annotate_modPeptide_protXML(curPep_);
+                            curPep_ = null;
+                            break;
 
-						curGroup.clear_variables();
-						curProtid_ = null;
-					}
+                        case "protein":  // end of current protein
+                            curGroup.classify_group();
+                            try {
+                                curGroup.write_to_db(prep);
+                            } catch (Exception e) {
+                                if (console != null) {
+                                    console.append(e.toString());
+                                    return true;
+                                } else {
+                                    e.printStackTrace();
+                                    System.exit(-1);
+                                }
 
-					else if( elementName.equals("protein_group") ) { // end of protein group
-						
-						curGroup.classify_group();
-						try {
+                            }
+                            curGroup.clear_variables();
+                            curProtid_ = null;
+                            break;
 
-							if( xmlFile.contains(globals.combinedFile) ) {
-								if( curGroup.getPw() >= globals.minCombinedFilePw ) curGroup.write_to_db(prep);
-							}
-							else {
-								if( curGroup.getPw() >= globals.minPw ) curGroup.write_to_db(prep);
-							}
+                        case "protein_group":  // end of protein group
+                            curGroup.classify_group();
+                            try {
+                                if (xmlFile.contains(globals.combinedFile)) {
+                                    if (curGroup.getPw() >= globals.minCombinedFilePw) curGroup.write_to_db(prep);
+                                } else {
+                                    if (curGroup.getPw() >= globals.minPw) curGroup.write_to_db(prep);
+                                }
+                            } catch (Exception e) {
+                                if (console != null) {
+                                    console.append(e.toString());
+                                    return true;
+                                } else {
+                                    e.printStackTrace();
+                                    System.exit(-1);
+                                }
+                            }
 
-						} catch (Exception e) {
-							if(console != null) {
-								console.append(e.toString());
-								return true;
-							}
-							else {
-								e.printStackTrace();
-								System.exit(-1);
-							}
-						}
-
-						curGroup.clear_variables();
-						curGroup = null;
-						curProtid_ = null;
-					}
+                            curGroup.clear_variables();
+                            curGroup = null;
+                            curProtid_ = null;
+                            break;
+                    }
 				}
 			}
 			

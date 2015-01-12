@@ -50,7 +50,7 @@ public class pepXML {
 	private double sequest_sprank;
 
 	public pepXML() {
-	}; // default constructor
+	} // default constructor
 
 	public pepXML(String txt, boolean b) {
 		this.srcFile = txt;
@@ -203,8 +203,8 @@ public class pepXML {
 	 * found in it.
 	 */
 	public void parse_pepXML_line(XMLStreamReader xmlStreamReader) {
-		String attrName = null;
-		String attrValue = null;
+		String attrName;
+		String attrValue;
 
 		if(this.hitRank == 1) return; // this means we have already recorded the best hit for this PSM
 		
@@ -243,7 +243,7 @@ public class pepXML {
 		int v = 0;
 
 		if (this.aaMods == null)
-			this.aaMods = new HashMap<Integer, Integer>();
+			this.aaMods = new HashMap<>();
 
 		for (int i = 0; i < xmlStreamReader.getAttributeCount(); i++) {
 			attrName = xmlStreamReader.getAttributeLocalName(i);
@@ -384,7 +384,9 @@ public class pepXML {
 
 	public void write_to_db(PreparedStatement prep) {
 
-		if( !globals.check_modPeptide(this.modPeptide) ) ; // do nothing (don't add it into database
+		if( !globals.check_modPeptide(this.modPeptide) ) {
+            // do nothing (don't add it into database
+        }
 		else if(this.iniProb > 0) {
 			try {
 				prep.setString(1, this.srcFile.toUpperCase());
@@ -401,7 +403,7 @@ public class pepXML {
 				System.exit(-1);
 
 			}
-			
+
 		}
 	}
 }

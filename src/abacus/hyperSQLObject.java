@@ -92,7 +92,7 @@ public class hyperSQLObject {
 			iter = globals.protTagHash.entrySet().iterator();
 			ctr = 1;
 			while(iter.hasNext()) {
-				Map.Entry<String, String> pairs = (Map.Entry<String, String>) iter.next();
+				Map.Entry<String, String> pairs = iter.next();
 				String srcFile = pairs.getKey();
 				String t = pairs.getValue();
 
@@ -122,7 +122,7 @@ public class hyperSQLObject {
 		// now load pepXML files
 		iter = globals.pepTagHash.entrySet().iterator();
 		while(iter.hasNext()) {
-			Map.Entry<String, String> pairs = (Map.Entry<String, String>) iter.next();
+			Map.Entry<String, String> pairs = iter.next();
 			String srcFile = pairs.getKey();
 			String tag = globals.replaceAll(globals.replaceAll(pairs.getValue(), '.', '_'), '-', '_');
 			String type = "pep";
@@ -265,7 +265,7 @@ public class hyperSQLObject {
 			int len = 0;
 			if(globals.fastaFile == null || globals.fastaFile.isEmpty() ) len = 0;
 			else {
-				if( globals.protLen.containsKey(protid) ) len = (Integer)globals.protLen.get(protid);
+				if( globals.protLen.containsKey(protid) ) len = globals.protLen.get(protid);
 			}
 			
 			prep.setInt(6, len);
@@ -479,7 +479,7 @@ public class hyperSQLObject {
 	 * @throws SQLException
 	 *
 	 */
-	public void makeProtXMLTable(Connection conn, abacus_textArea console) throws SQLException, Exception {
+	public void makeProtXMLTable(Connection conn, abacus_textArea console) throws SQLException {
 		if(console != null) console.append("Creating protXML table\n");
 		else System.err.print("Creating protXML table\n");
 
@@ -792,8 +792,7 @@ public class hyperSQLObject {
 	 *  weights. When in fact they should have the same weight in all cases.
 	 *
 	 * @param conn
-	 * @param string
-	 * @throws SQLException
+	 * @param tag
 	 *
 	 */
 	public void recalculatePeptideWts(Connection conn, String tag, abacus_textArea console) {
@@ -2408,9 +2407,9 @@ public class hyperSQLObject {
 			// print header line
 			for(int i = 1; i < numColumns; i++) {
 				String colName = rsmd.getColumnName(i);
-				out.append( colName + "\t" );
+				out.append(colName).append("\t");
 			}
-			out.append(rsmd.getColumnName(numColumns) + "\n");
+			out.append(rsmd.getColumnName(numColumns)).append("\n");
 
 			// print values
 			while(rs.next()) {
@@ -2474,7 +2473,7 @@ public class hyperSQLObject {
 
 			// get column names and write them to file.
 			// we only want the nspecsAdj columns
-			Map<Integer, String> colHdrs = new LinkedHashMap<Integer, String>();
+			Map<Integer, String> colHdrs = new LinkedHashMap<>();
 			String c = null;
 			for(int i = 1; i <= numColumns; i++) {
 				c = rsmd.getColumnName(i);
@@ -2509,7 +2508,7 @@ public class hyperSQLObject {
 
 			int maxColNum = 0; // holds the maximum column index for the relevant columns
 			for(Iterator<Integer> it=colHdrs.keySet().iterator(); it.hasNext(); ) {
-				int k = (Integer) it.next();
+				int k = it.next();
 				String v = colHdrs.get(k);
 				out.append(v);
 				if(it.hasNext()) out.append("\t");
@@ -2557,7 +2556,7 @@ public class hyperSQLObject {
 		 * Need to construct a new HashMap that contains all the fields in the
 		 * results table that will be used for the custom output.
 		 */
-		Map<Integer,String> selectCols = new HashMap<Integer, String>();
+		Map<Integer,String> selectCols = new HashMap<>();
 		Statement stmt1 = conn.createStatement();
 		ResultSet rs1 = null;
 		ResultSetMetaData rsmd = null;
@@ -2568,17 +2567,15 @@ public class hyperSQLObject {
 		// first construct the field names for the individual experiments
 		// using the data in printE Set
 		if(globals.printE.size() > 0) {
-			exptSet = new HashSet<String>();
+			exptSet = new HashSet<>();
 			rs1 = stmt1.executeQuery("SELECT DISTINCT tag FROM srcFileTags WHERE fileType = 'prot';");
 			while(rs1.next()) {
 				String tag = rs1.getString(1);
 
-				Iterator<String> iter = globals.printE.iterator();
-				while(iter.hasNext()) {
-					String suffix = (String) iter.next(); // this is the particular field the user wants
-					String colName = tag.toUpperCase()  + suffix.toUpperCase();
-					exptSet.add(colName);
-				}
+                for (String suffix : globals.printE) {
+                    String colName = tag.toUpperCase() + suffix.toUpperCase();
+                    exptSet.add(colName);
+                }
 			}
 			rs1.close(); rs1 = null;
 		}
@@ -2623,7 +2620,7 @@ public class hyperSQLObject {
 		// Now construct final query
 		// need to order the data in 'selectCols' from high to low column numbers
 		String queryBody = "";
-		SortedSet<Integer> mapKeys = new TreeSet<Integer>();
+		SortedSet<Integer> mapKeys = new TreeSet<>();
 		for(Integer k : selectCols.keySet()) {
 			mapKeys.add(k);
 		}
@@ -2633,7 +2630,7 @@ public class hyperSQLObject {
 		else System.err.print("\nCustom output columns:\n");
 
 		for(Integer k : mapKeys) {
-			String v = (String) selectCols.get(k);
+			String v = selectCols.get(k);
 
 			if(console != null) console.append(v + "\n");
 			else System.err.print(v + "\n");
@@ -2667,9 +2664,9 @@ public class hyperSQLObject {
 			// print header line
 			for(int i = 1; i < numCols; i++) {
 				String colName = rsmd.getColumnName(i);
-				out.append( colName + "\t" );
+				out.append(colName).append("\t");
 			}
-			out.append(rsmd.getColumnName(numCols) + "\n");
+			out.append(rsmd.getColumnName(numCols)).append("\n");
 
 			while(rs1.next()) {
 				for(int i = 1; i <= numCols; i++) {
@@ -3256,7 +3253,7 @@ public String getGeneId(Connection conn, abacus_textArea console, String protid)
 /*****************
  * Function returns the length of the given protein ID
  */
-public int getProtLen(String protid) throws SQLException {
+public int getProtLen(String protid) {
 	int ret = 0;
 
 	if( globals.fastaFile == null || globals.fastaFile.isEmpty() ) ret = 0; 
@@ -3494,9 +3491,9 @@ public void peptideLevelResults(Connection conn, abacus_textArea console) throws
 		
 		for(i = 1; i < Ncols; i++) {
 			String c = rsmd.getColumnName(i);
-			out.append(c + "\t");
+			out.append(c).append("\t");
 		}
-		out.append( rsmd.getColumnName(Ncols) + "\n");
+		out.append(rsmd.getColumnName(Ncols)).append("\n");
 		
 		// write the data
 		while(rs.next()) {

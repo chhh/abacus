@@ -1383,55 +1383,55 @@ public class abacusUI extends javax.swing.JFrame {
 				try {
 					BufferedWriter out = new BufferedWriter(new FileWriter(outFile));
 
-					out.append(
-						"\n#\n# ABACUS parameter file\n" +
-						"# Generated on: " + globals.formatCurrentTime() + "\n#\n\n"
-					);
+					out.append("\n#\n# ABACUS parameter file\n" + "# Generated on: ")
+                            .append(globals.formatCurrentTime())
+                            .append("\n#\n\n");
 
-					out.append(
-
-						"# Name to give the database\n" +
-						"dbName=" + dbNameTextField.getText() + "\n\n" +
-
-						"# Name of protXML file corresponding to merged/combined results\n" +
-						"combinedFile=" + combinedFileTextField.getText() + "\n\n" +
-
-						"# The directory that contains the pepXML and protXML files\n" +
-						"srcDir=" + srcDirTextField.getText() + "\n\n" +
-
-						"# The name of the file where results will be saved to\n" +
-						"outputFile=" + outputFileTextField.getText().trim() + "\n\n" +
-
-						"# The minimum PeptideProphet score the best peptide match of a protein must have\n" +
-						"maxIniProbTH=" + maxIniProbTextField.getText() + "\n\n" +
-
-						"# The minimum PeptideProphet score a peptide must have in order to be even considered by Abacus\n" +
-						"iniProbTH=" + iniProbTextField.getText() + "\n\n" +
-
-						"# E.P.I: Experimental Peptide-probability Inclusion threshold\n" +
-						"# If a protein does not contain at least one peptide exceeding this PeptideProphet score, none of the\n" +
-						"# peptide evidence for this protein will be considered. This is applied on an experiment by experiment case.\n" +
-						"epiTH=" + epiTextField.getText() + "\n\n" +
-
-						"# The minimum ProteinProphet score a protein group must have in the COMBINED file\n" +
-						"minCombinedFilePw=" + minCombinedFilePwTextField.getText() + "\n\n" +
-
-						"# The path the the FASTA formatted file used for the original protein search\n" +
-						"# Relative paths are allowed\n" +
-						"fasta=" + fastaTextField.getText() + "\n\n"
-
-					);
+					out.append("# Name to give the database\n" + "dbName=")
+                            .append(dbNameTextField.getText())
+                            .append("\n\n")
+                            .append("# Name of protXML file corresponding to merged/combined results\n")
+                            .append("combinedFile=")
+                            .append(combinedFileTextField.getText())
+                            .append("\n\n")
+                            .append("# The directory that contains the pepXML and protXML files\n")
+                            .append("srcDir=").append(srcDirTextField.getText())
+                            .append("\n\n")
+                            .append("# The name of the file where results will be saved to\n")
+                            .append("outputFile=")
+                            .append(outputFileTextField.getText().trim())
+                            .append("\n\n")
+                            .append("# The minimum PeptideProphet score the best peptide match of a protein must have\n")
+                            .append("maxIniProbTH=")
+                            .append(maxIniProbTextField.getText())
+                            .append("\n\n")
+                            .append("# The minimum PeptideProphet score a peptide must have in order to be even considered by Abacus\n")
+                            .append("iniProbTH=")
+                            .append(iniProbTextField.getText())
+                            .append("\n\n")
+                            .append("# E.P.I: Experimental Peptide-probability Inclusion threshold\n")
+                            .append("# If a protein does not contain at least one peptide exceeding this PeptideProphet score, none of the\n")
+                            .append("# peptide evidence for this protein will be considered. This is applied on an experiment by experiment case.\n")
+                            .append("epiTH=")
+                            .append(epiTextField.getText())
+                            .append("\n\n")
+                            .append("# The minimum ProteinProphet score a protein group must have in the COMBINED file\n")
+                            .append("minCombinedFilePw=")
+                            .append(minCombinedFilePwTextField.getText())
+                            .append("\n\n")
+                            .append("# The path the the FASTA formatted file used for the original protein search\n")
+                            .append("# Relative paths are allowed\n")
+                            .append("fasta=")
+                            .append(fastaTextField.getText())
+                            .append("\n\n");
 					
 					
 					if( !pepRegexTextField.getText().isEmpty() ) {
 
 						String modTxt = null;
 						modTxt = pepRegexTextField.getText().trim().replaceAll("\\s", "").toUpperCase();			
-						out.append(
-							"# Amino Acid modifications that all peptides are required to have in order to be counted\n" +
-							"# by Abacus.\n" +
-							"reqAAmods=" + modTxt + "\n\n"
-						);
+						out.append("# Amino Acid modifications that all peptides are required to have in order to be counted\n" + "# by Abacus.\n" + "reqAAmods=")
+                                .append(modTxt).append("\n\n");
 					}
 
 
@@ -1489,21 +1489,12 @@ public class abacusUI extends javax.swing.JFrame {
 					
 					
 					if(globals.gene2protFile != null) {
-						out.append(
-							"# The path the file that maps between protein IDs and gene IDs\n" +
-							"# File format: geneId protId description. All lines must be tab separated.\n" +
-							"# Comment lines (like the column header) start with '#'.\n" +
-							"gene2prot=" + gene2protTextField.getText() + "\n\n"
-						);
+						out.append("# The path the file that maps between protein IDs and gene IDs\n" + "# File format: geneId protId description. All lines must be tab separated.\n" + "# Comment lines (like the column header) start with '#'.\n" + "gene2prot=").append(gene2protTextField.getText()).append("\n\n");
 					}
 
 					String decoyTag = decoyTagTextField.getText();
 					if( (decoyTag != null) && ((decoyTag.length() < 10) && (decoyTag.length() > 0)) ) {
-						out.append(
-							"# If you are using decoy proteins in your searches, specify the first few\n" +
-							"# characters of the label indicating decoy proteins here\n" +
-							"decoyTag=" + decoyTag + "\n\n"
-						);
+						out.append("# If you are using decoy proteins in your searches, specify the first few\n" + "# characters of the label indicating decoy proteins here\n" + "decoyTag=").append(decoyTag).append("\n\n");
 					}
 
 					// this section sets the output format to be generated by this parameter file
@@ -1768,8 +1759,8 @@ public class abacusUI extends javax.swing.JFrame {
 
 		globals.protTagHash = null;
 		globals.pepTagHash = null;
-		globals.protTagHash = new HashMap<String, String>();
-		globals.pepTagHash = new HashMap<String, String>();
+		globals.protTagHash = new HashMap<>();
+		globals.pepTagHash = new HashMap<>();
 	}
 
 
@@ -2596,14 +2587,14 @@ class workThread extends Thread {
          */
         String[] toRemove = {".properties", ".script", ".tmp", ".log", ".lck"};
         File f = null;
-        for(int i = 0; i < toRemove.length; i++) {
-                String tmpFile = "" + globals.DBname + toRemove[i];
-                f = new File( tmpFile );
-                if( f.exists() ) {
-                        f.delete();
-                        console.append("Abacus disk clean up: removing " + tmpFile + "\n");
-                }
-                f = null;
+        for (String aToRemove : toRemove) {
+            String tmpFile = "" + globals.DBname + aToRemove;
+            f = new File(tmpFile);
+            if (f.exists()) {
+                f.delete();
+                console.append("Abacus disk clean up: removing " + tmpFile + "\n");
+            }
+            f = null;
         }
         console.append("\n");
 
