@@ -1,5 +1,6 @@
 package abacus;
 
+import abacus.console.AbacusTextArea;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
@@ -9,6 +10,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -19,9 +21,6 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.xml.stream.XMLStreamReader;
-
-import abacus_textArea.abacus_textArea;
-import java.text.DecimalFormat;
 
 
 /*
@@ -129,7 +128,7 @@ public class Globals {
 	/*
 	 *  Function reads in FASTA file and records each protein's length
 	 */
-	public static boolean parseFasta(abacus_textArea console) {
+	public static boolean parseFasta(AbacusTextArea console) {
 		File fastaF = null;
 		InputStream in = null;
 		DataInputStream dis = null;
@@ -687,7 +686,7 @@ public class Globals {
 	 * @param protXMLfile 
 	 * 
 	 */
-	public static boolean parseProtXML_header(XMLStreamReader xmlStreamReader, String protXMLfile, abacus_textArea console) {
+	public static boolean parseProtXML_header(XMLStreamReader xmlStreamReader, String protXMLfile, AbacusTextArea console) {
 		
 		String[] ary = null;
 		String tag = null;

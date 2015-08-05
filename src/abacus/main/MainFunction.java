@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package main;
+package abacus.main;
 
 import abacus.Abacus;
 import abacus.ui.abacusUI;
@@ -22,10 +22,10 @@ import org.hsqldb.util.DatabaseManagerSwing;
 public class MainFunction {
 
 	public static void main(String[] args) throws IOException {
-		abacusUI gui = null;
-		Abacus cmdLine = null;
-		String inputFile = null;
-		DatabaseManagerSwing dbGUI = null;
+		abacusUI gui;
+		Abacus cmdLine;
+		String inputFile;
+		DatabaseManagerSwing dbGUI;
 
 		/*
 		 * Insufficient command line arguments, start the gui

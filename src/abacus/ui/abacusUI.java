@@ -11,23 +11,24 @@
 
 package abacus.ui;
 
+import abacus.Abacus;
+import abacus.Globals;
+import abacus.HyperSQLObject;
+import abacus.HyperSQLObjectGene;
+import abacus.console.AbacusTextArea;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import abacus.Globals;
-import abacus.HyperSQLObject;
-import abacus.HyperSQLObjectGene;
-import abacus.Abacus;
-import abacus_textArea.abacus_textArea;
-import java.util.HashMap;
 
 /**
  *
@@ -2551,7 +2552,7 @@ public class abacusUI extends javax.swing.JFrame {
  */
 class workThread extends Thread {
 
-	abacus_textArea console;
+	AbacusTextArea console;
 	Abacus pmasc;
 
 	File dir = null;
@@ -2571,7 +2572,7 @@ class workThread extends Thread {
 		long elapsed_time = 0;
 
         pmasc = new Abacus();
-        console = new abacus_textArea();
+        console = new AbacusTextArea();
         console.setVisible(true);
         console.append(pmasc.printHeader());
 		console.append(Globals.printParameters());
@@ -2649,7 +2650,7 @@ class workThread extends Thread {
                 Class.forName("org.hsqldb.jdbc.JDBCDriver");
                 conn = DriverManager.getConnection(db, "SA", "");
 		}
-		catch (Exception e) {
+		catch (ClassNotFoundException | SQLException e) {
                makeAlert();
 			   console.append("There was an error connecting to the HyperSQL database\n");
 			   console.append(e.toString());

@@ -1,5 +1,6 @@
 package abacus;
 
+import abacus.console.AbacusTextArea;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -15,12 +16,10 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
-import abacus_textArea.abacus_textArea;
 
 
 public class Abacus {
@@ -328,7 +327,7 @@ public class Abacus {
 
 
 
-	public static boolean parseXMLDocument(String xmlFile, String dataType, PreparedStatement prep, int fileNumber, abacus_textArea console) {
+	public static boolean parseXMLDocument(String xmlFile, String dataType, PreparedStatement prep, int fileNumber, AbacusTextArea console) {
 		XMLInputFactory inputFactory = XMLInputFactory.newInstance();
 
 		InputStream input = null;
@@ -382,7 +381,7 @@ public class Abacus {
 	/*
 	 *  Function parses protXML files
 	 */
-	public static boolean parseProtXML(XMLStreamReader xmlStreamReader, String xmlFile, PreparedStatement prep, int fileNumber, abacus_textArea console) {
+	public static boolean parseProtXML(XMLStreamReader xmlStreamReader, String xmlFile, PreparedStatement prep, int fileNumber, AbacusTextArea console) {
 		ProtXML curGroup  = null;   // current protein group
 		String curProtid_ = null;   // need this to get protein description
 		String curPep_    = null;   // need this to annotate any AA modifications
@@ -563,7 +562,7 @@ public class Abacus {
 	/*
 	 *  Function written to parse pepXML files
 	 */
-	public static boolean parsePepXML(XMLStreamReader xmlStreamReader, String xmlFile, PreparedStatement prep, int fileNumber, abacus_textArea console) {
+	public static boolean parsePepXML(XMLStreamReader xmlStreamReader, String xmlFile, PreparedStatement prep, int fileNumber, AbacusTextArea console) {
 
 		PepXML curPSM = null;  // current peptide-to-spectrum match
 		String err = null; // holds string for stderr or console
@@ -652,7 +651,7 @@ public class Abacus {
 	 * Loading is always handled by the prot version of the SQLite objects since
 	 * the basic starting material is always protein-centric
 	 */
-	public boolean load_protXML(Connection conn, abacus_textArea console) throws Exception {
+	public boolean load_protXML(Connection conn, AbacusTextArea console) throws Exception {
 		String err = "Loading protXML files\n";
 		
 		if(console != null) console.append(err);
@@ -741,7 +740,7 @@ public class Abacus {
 	 * Loading is always handled by the prot version of the SQLite objects since
 	 * the basic starting material is always protein-centric
 	 */
-	public boolean load_pepXML(Connection conn, abacus_textArea console) throws SQLException {
+	public boolean load_pepXML(Connection conn, AbacusTextArea console) throws SQLException {
 		String err = "Loading pepXML files\n";
 		if(console != null) console.append(err);
 		else System.err.print(err);

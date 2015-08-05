@@ -1,5 +1,6 @@
 package abacus;
 
+import abacus.console.AbacusTextArea;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -20,13 +21,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import abacus_textArea.abacus_textArea;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
@@ -60,7 +60,7 @@ public class HyperSQLObject {
 	}
 	
 
-	public void makeSrcFileTable(Connection conn, abacus_textArea console) throws Exception {
+	public void makeSrcFileTable(Connection conn, AbacusTextArea console) throws Exception {
 
 		if(console != null) console.append("Creating srcFileTags table\n");
 		else System.err.print("Creating srcFileTags table\n");
@@ -172,7 +172,7 @@ public class HyperSQLObject {
 	 * @throws SQLException
 	 *
 	 */
-	public void makeCombinedTable(Connection conn, abacus_textArea console) throws SQLException {
+	public void makeCombinedTable(Connection conn, AbacusTextArea console) throws SQLException {
 
 		if(console != null) console.append("Creating combined table from '" + Globals.combinedFile + "'\n");
 		else System.err.print("Creating combined table from '" + Globals.combinedFile + "'\n");
@@ -313,7 +313,7 @@ public class HyperSQLObject {
 	 * From the combined table, only keep siblingGroups that meet the combined
 	 * file localPw threshold set by the user
 	 */
-	private void curate_on_maxLocalPw(String xmlId, Connection conn, abacus_textArea console) throws SQLException {
+	private void curate_on_maxLocalPw(String xmlId, Connection conn, AbacusTextArea console) throws SQLException {
 		
 		if(console != null) console.append("  Curating " + xmlId );
 		else System.err.print("  Curating " + xmlId);
@@ -479,7 +479,7 @@ public class HyperSQLObject {
 	 * @throws SQLException
 	 *
 	 */
-	public void makeProtXMLTable(Connection conn, abacus_textArea console) throws SQLException {
+	public void makeProtXMLTable(Connection conn, AbacusTextArea console) throws SQLException {
 		if(console != null) console.append("Creating protXML table\n");
 		else System.err.print("Creating protXML table\n");
 
@@ -717,7 +717,7 @@ public class HyperSQLObject {
 	 * the sibling groups are interrelated isoforms all sharing the same common
 	 * set of peptides.
 	 */
-	public void recalculateLocalPw(Connection conn, String tag, abacus_textArea console) throws SQLException {
+	public void recalculateLocalPw(Connection conn, String tag, AbacusTextArea console) throws SQLException {
 		
 		String query = null;
 		Statement stmt = conn.createStatement();
@@ -795,7 +795,7 @@ public class HyperSQLObject {
 	 * @param tag
 	 *
 	 */
-	public void recalculatePeptideWts(Connection conn, String tag, abacus_textArea console) {
+	public void recalculatePeptideWts(Connection conn, String tag, AbacusTextArea console) {
 		if(console != null) console.append("\n  Recalculating peptide weights for " + tag);
 		else System.err.print("\n  Recalculating peptide weights for " + tag);
 
@@ -944,7 +944,7 @@ public class HyperSQLObject {
 	 * for all the proteins in the combined and the protXML tables
 	 *
 	 */
-	public void makeTempProt2PepTable(Connection conn, abacus_textArea console) throws Exception {
+	public void makeTempProt2PepTable(Connection conn, AbacusTextArea console) throws Exception {
 		Statement stmt = conn.createStatement();
 		ResultSet rs = null;
 		ResultSet rs2 = null;
@@ -1089,7 +1089,7 @@ public class HyperSQLObject {
 	 * @throws Exception
 	 *
 	 */
-	public void makeProtidSummary(Connection conn, abacus_textArea console) throws Exception {
+	public void makeProtidSummary(Connection conn, AbacusTextArea console) throws Exception {
 		if(console != null) console.append("\nCreating protidSummary table\n");
 		else System.err.print("\nCreating protidSummary table\n");
 
@@ -1697,7 +1697,7 @@ public class HyperSQLObject {
 	 * Function loads the user's protid-to-geneSymbol table into SQLite
 	 *
 	 */
-	public boolean makeGeneTable(Connection conn, abacus_textArea console) throws SQLException {
+	public boolean makeGeneTable(Connection conn, AbacusTextArea console) throws SQLException {
 
 		if(console != null) {
 			if(!Globals.byGene) console.append("  ");
@@ -1813,7 +1813,7 @@ public class HyperSQLObject {
 	 * Function adds gene IDs to the protidSummary table. This function is only called
 	 * if the gene2prot table exists in the SQLite database.
 	 */
-	public void appendGeneIDs(Connection conn, abacus_textArea console) throws Exception {
+	public void appendGeneIDs(Connection conn, AbacusTextArea console) throws Exception {
 		if(console != null) console.append("  Appending gene IDs to protidSummary table\n");
 		else System.err.print("  Appending gene IDs to protidSummary table\n");
 
@@ -1836,7 +1836,7 @@ public class HyperSQLObject {
 	/*
 	 *  Function creates the final results table.
 	 */
-	public boolean makeResultsTable(Connection conn, abacus_textArea console) {
+	public boolean makeResultsTable(Connection conn, AbacusTextArea console) {
 		if(console != null) console.append("Creating results table\n");
 		else System.err.print("Creating results\n");
 
@@ -1936,7 +1936,7 @@ public class HyperSQLObject {
 	 *  Function parses the contents of the GLOBALS.protLen hash map and uses
 	 *  it to populate the protLen field of the results table.
 	 */
-	public void addProteinLengths(Connection conn, abacus_textArea console, int dataType) throws Exception {
+	public void addProteinLengths(Connection conn, AbacusTextArea console, int dataType) throws Exception {
 		if( console != null ) console.append("  Appending protLen column\n");
 		//else System.err.print("  Appending protLen column");
 
@@ -2063,7 +2063,7 @@ public class HyperSQLObject {
 	 *  Creates the pepUsage_ table.
 	 *
 	 */
-	public void makePepUsageTable(Connection conn, abacus_textArea console) throws Exception {
+	public void makePepUsageTable(Connection conn, AbacusTextArea console) throws Exception {
 		if(console != null) console.append("\nCreating peptide usage table\n");
 		else System.err.print("\nCreating peptide usage table\n");
 
@@ -2205,7 +2205,7 @@ public class HyperSQLObject {
 	 *
 	 */
 
-	public void appendIndividualExpts(Connection conn, abacus_textArea console) throws Exception {
+	public void appendIndividualExpts(Connection conn, AbacusTextArea console) throws Exception {
 		if(console != null) console.append("\nRetrieving data from individual experiments\n");
 		else System.err.print("\nRetrieving data from individual experiments\n");
 
@@ -2373,7 +2373,7 @@ public class HyperSQLObject {
 	 * Function writes the final results to a file.
 	 *
 	 */
-	public void defaultResults(Connection conn, abacus_textArea console) throws Exception {
+	public void defaultResults(Connection conn, AbacusTextArea console) throws Exception {
 
 		String outputFileName = Globals.outputFilePath;
 
@@ -2446,7 +2446,7 @@ public class HyperSQLObject {
 	 * Function generates output file formatted for submission to QSpec
 	 *
 	 */
-	public void formatQspecOutput(Connection conn, abacus_textArea console) throws Exception {
+	public void formatQspecOutput(Connection conn, AbacusTextArea console) throws Exception {
 		Statement stmt = conn.createStatement();
 		ResultSet rs = null;
 		ResultSetMetaData rsmd = null;
@@ -2550,7 +2550,7 @@ public class HyperSQLObject {
 	 * make absolutely no sense.
 	 *
 	 */
-	public void customOutput(Connection conn, abacus_textArea console) throws Exception {
+	public void customOutput(Connection conn, AbacusTextArea console) throws Exception {
 
 		/*
 		 * Need to construct a new HashMap that contains all the fields in the
@@ -2848,7 +2848,7 @@ public class HyperSQLObject {
 	 * Function generates spectral count data in ln(NSAF) format
 	 *
 	 */
-	public void getNSAF_values_prot(Connection conn, abacus_textArea console) throws SQLException {
+	public void getNSAF_values_prot(Connection conn, AbacusTextArea console) throws SQLException {
 		Statement stmt  = conn.createStatement();
 		Statement stmt2 = conn.createStatement();
 		Statement stmt3 = conn.createStatement();
@@ -3036,7 +3036,7 @@ public class HyperSQLObject {
 	 * @param conn
 	 *
 	 */
-	public void reformat_results(Connection conn, abacus_textArea console) throws SQLException {
+	public void reformat_results(Connection conn, AbacusTextArea console) throws SQLException {
 
 		String msg = "\nAdding NSAF values to results table.\n";
 		if(console != null) console.append(msg);
@@ -3231,7 +3231,7 @@ public class HyperSQLObject {
  * Function returns the gene id for the given protein id from the gene2prot
  * table.
  */
-public String getGeneId(Connection conn, abacus_textArea console, String protid) throws SQLException {
+public String getGeneId(Connection conn, AbacusTextArea console, String protid) throws SQLException {
 	Statement stmt = conn.createStatement();
 	ResultSet rs = null;
 	String query = null;
@@ -3272,7 +3272,7 @@ public int getProtLen(String protid) {
 * them is the repProtId field
 */
 
-public void addExtraProteins(Connection conn, abacus_textArea console) throws SQLException {
+public void addExtraProteins(Connection conn, AbacusTextArea console) throws SQLException {
 	Statement stmt = conn.createStatement();
 	Statement stmt2 = conn.createStatement();
 	Statement stmt3 = conn.createStatement();
@@ -3383,7 +3383,7 @@ public void addExtraProteins(Connection conn, abacus_textArea console) throws SQ
 /**************
  * Function generates a peptide-level output file for users who need it
  */
-public void peptideLevelResults(Connection conn, abacus_textArea console) throws SQLException {
+public void peptideLevelResults(Connection conn, AbacusTextArea console) throws SQLException {
 	Statement stmt = conn.createStatement();
 	Statement stmt2 = conn.createStatement();
 	Statement stmt3 = conn.createStatement();

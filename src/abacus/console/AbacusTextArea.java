@@ -4,27 +4,26 @@
  */
 
 /*
- * abacus_textArea.java
+ * AbacusTextArea.java
  *
  * Created on Jul 22, 2010, 4:16:28 PM
  */
 
-package abacus_textArea;
+package abacus.console;
 
 import abacus.Globals;
-
 import javax.swing.ProgressMonitor;
 
 /**
  *
  * @author dfermin
  */
-public class abacus_textArea extends javax.swing.JFrame {
+public class AbacusTextArea extends javax.swing.JFrame {
     int curStatusValue = 0; // holds the progressBar value when switching to indeterminant mode
 	ProgressMonitor pMonitor;
 
     /** Creates new form abacus_textArea */
-    public abacus_textArea() {
+    public AbacusTextArea() {
         initComponents();
         //this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -134,7 +133,7 @@ public class abacus_textArea extends javax.swing.JFrame {
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new abacus_textArea().setVisible(true);
+                new AbacusTextArea().setVisible(true);
             }
         });
     }
@@ -165,7 +164,7 @@ public class abacus_textArea extends javax.swing.JFrame {
 
 	// function to initialize a progress monitor object
 	public void monitorBoxInit(int maxValue, String message) {
-		pMonitor = new ProgressMonitor(abacus_textArea.this,
+		pMonitor = new ProgressMonitor(AbacusTextArea.this,
 					message,
 					"", 0, maxValue
 				);

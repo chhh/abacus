@@ -1,11 +1,11 @@
 package abacus;
+import abacus.console.AbacusTextArea;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DecimalFormat;
-import abacus_textArea.abacus_textArea;
 
 
 /******************
@@ -26,7 +26,7 @@ public class HyperSQLObjectGene extends HyperSQLObject {
 	 * @throws Exception
 	 *
 	 */
-	public void makeGeneCombined(Connection conn, abacus_textArea console) throws Exception {
+	public void makeGeneCombined(Connection conn, AbacusTextArea console) throws Exception {
 
 		if(console != null) console.append("Creating gene-centric combined table (this can take a while)...\n");
 		else System.err.print("Creating gene-centric combined table (this can take a while)...\n");
@@ -246,7 +246,7 @@ public class HyperSQLObjectGene extends HyperSQLObject {
 	 * Function creates geneXML table from individual protXML files
 	 *
 	 */
-	public void makeGeneXML(Connection conn, abacus_textArea console) throws Exception {
+	public void makeGeneXML(Connection conn, AbacusTextArea console) throws Exception {
 		if(console != null) console.append("\nCreating geneXML table\n");
 		else System.err.print("\nCreating geneXML table\n");
 
@@ -356,7 +356,7 @@ public class HyperSQLObjectGene extends HyperSQLObject {
 	 * Function adjusts weights of peptides on a gene-basis
 	 *
 	 */
-	public void adjustGenePeptideWT(Connection conn, abacus_textArea console) throws Exception {
+	public void adjustGenePeptideWT(Connection conn, AbacusTextArea console) throws Exception {
 		Statement stmt  = conn.createStatement();
 		Statement stmt2 = conn.createStatement();
 		Statement stmt3 = conn.createStatement();
@@ -471,7 +471,7 @@ public class HyperSQLObjectGene extends HyperSQLObject {
 	 * Creates the geneidSummary table
 	 *
 	 */
-	public void makeGeneidSummary(Connection conn, abacus_textArea console) throws Exception {
+	public void makeGeneidSummary(Connection conn, AbacusTextArea console) throws Exception {
 
 		String msg = "Creating geneidSummary table (this can take a while)...";
 		if(console != null) console.append(msg + "\n");
@@ -633,7 +633,7 @@ public class HyperSQLObjectGene extends HyperSQLObject {
 	 * Creates a results table that is gene-centric
 	 *
 	 */
-	public void makeGeneResults(Connection conn, abacus_textArea console) throws SQLException {
+	public void makeGeneResults(Connection conn, AbacusTextArea console) throws SQLException {
 
 		if(console != null) console.append("Creating gene-centric results table\n");
 		else System.err.print("Creating gene-centric results table\n");
@@ -807,7 +807,7 @@ public class HyperSQLObjectGene extends HyperSQLObject {
 	 * Function creates a peptide usage table that is gene-centric
 	 *
 	 */
-	public void makeGenePepUsageTable(Connection conn, abacus_textArea console) throws Exception {
+	public void makeGenePepUsageTable(Connection conn, AbacusTextArea console) throws Exception {
 
 		String msg = "Creating gene-centric peptide usage table (this could take a while)...";
 		if(console != null) console.append(msg + "\n");
@@ -958,7 +958,7 @@ public class HyperSQLObjectGene extends HyperSQLObject {
 	 * Appends independent experiment data to gene-centric results table
 	 *
 	 */
-	public void appendIndividualExpts_GC(Connection conn, abacus_textArea console) throws Exception {
+	public void appendIndividualExpts_GC(Connection conn, AbacusTextArea console) throws Exception {
 
 		if(console != null) console.append("Appending individual experiment results\n");
 		else System.err.print("Appending individual experiment results\n");
@@ -1187,7 +1187,7 @@ public class HyperSQLObjectGene extends HyperSQLObject {
 		stmt = null;
 	}
 
-	public void getNSAF_values_gene(Connection conn, abacus_textArea console) throws SQLException {
+	public void getNSAF_values_gene(Connection conn, AbacusTextArea console) throws SQLException {
 		String query = null;
 		String msg = null;
 		Statement stmt = conn.createStatement();
