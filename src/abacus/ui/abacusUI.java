@@ -34,15 +34,15 @@ import javax.swing.JOptionPane;
  *
  * @author dfermin
  */
-public class abacusUI extends javax.swing.JFrame {
+public class AbacusUI extends javax.swing.JFrame {
 
     // file and folder chooser for this program
     final JFileChooser fc = new JFileChooser();
 
-    workThread t;
+    WorkerThread t;
 
     /** Creates new form ui */
-    public abacusUI() {
+    public AbacusUI() {
         initComponents();
     }
 
@@ -341,7 +341,7 @@ public class abacusUI extends javax.swing.JFrame {
         jPanel10Layout.setVerticalGroup(
             jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel10Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap(33, Short.MAX_VALUE)
                 .addComponent(srcDirPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(FastaPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -484,7 +484,7 @@ public class abacusUI extends javax.swing.JFrame {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 109, Short.MAX_VALUE)
                         .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jPanel10, javax.swing.GroupLayout.DEFAULT_SIZE, 600, Short.MAX_VALUE))
                 .addContainerGap())
@@ -498,7 +498,7 @@ public class abacusUI extends javax.swing.JFrame {
                     .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addGap(18, 18, 18)
                 .addComponent(jPanel10, javax.swing.GroupLayout.PREFERRED_SIZE, 291, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(12, Short.MAX_VALUE))
         );
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Output Options"));
@@ -826,7 +826,7 @@ public class abacusUI extends javax.swing.JFrame {
                 .addComponent(jPanel11, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(jPanel12, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(60, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel4_customOutputLayout.setVerticalGroup(
             jPanel4_customOutputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1060,7 +1060,7 @@ public class abacusUI extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, 509, Short.MAX_VALUE)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 509, Short.MAX_VALUE))
+                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -1137,7 +1137,7 @@ public class abacusUI extends javax.swing.JFrame {
 		
 		
         // in response to a button click:
-        int retVal = fc.showOpenDialog(abacusUI.this);
+        int retVal = fc.showOpenDialog(AbacusUI.this);
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
             File f = fc.getSelectedFile();
@@ -1153,7 +1153,7 @@ public class abacusUI extends javax.swing.JFrame {
         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
         // in response to a button click:
-        int retVal = fc.showOpenDialog(abacusUI.this);
+        int retVal = fc.showOpenDialog(AbacusUI.this);
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
             File f = fc.getSelectedFile();
@@ -1170,7 +1170,7 @@ public class abacusUI extends javax.swing.JFrame {
         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
         // in response to a button click:
-        int retVal = fc.showOpenDialog(abacusUI.this);
+        int retVal = fc.showOpenDialog(AbacusUI.this);
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
             File f = fc.getSelectedFile();
@@ -1186,7 +1186,7 @@ public class abacusUI extends javax.swing.JFrame {
         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
         // in response to a button click:
-        int retVal = fc.showOpenDialog(abacusUI.this);
+        int retVal = fc.showOpenDialog(AbacusUI.this);
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
             File f = fc.getSelectedFile();
@@ -1201,7 +1201,7 @@ public class abacusUI extends javax.swing.JFrame {
 		fc.setCurrentDirectory(new File(".")); // sets the file chooser to the current working directory
 
         // in response to a button click:
-        int retVal = fc.showOpenDialog(abacusUI.this);
+        int retVal = fc.showOpenDialog(AbacusUI.this);
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
             File f = fc.getSelectedFile();
@@ -1355,7 +1355,7 @@ public class abacusUI extends javax.swing.JFrame {
 		if( errorChecking() ) { // do error checking first
 
 			// in response to a button click:
-			int retVal = fc.showSaveDialog(abacusUI.this);
+			int retVal = fc.showSaveDialog(AbacusUI.this);
 			boolean success = false;
 			String localFileName = null;
 
@@ -1541,12 +1541,12 @@ public class abacusUI extends javax.swing.JFrame {
 					out.close();
 					success = true;
 				} catch (IOException ex) {
-					Logger.getLogger(abacusUI.class.getName()).log(Level.SEVERE, null, ex);
+					Logger.getLogger(AbacusUI.class.getName()).log(Level.SEVERE, null, ex);
 				}
 
 				if(success) {
 					String msg = "Your parameters have been saved to " + localFileName;
-					JOptionPane.showMessageDialog(abacusUI.this, msg);
+					JOptionPane.showMessageDialog(AbacusUI.this, msg);
 				}
 			}
 		} // end errorChecking()
@@ -1614,7 +1614,7 @@ public class abacusUI extends javax.swing.JFrame {
 
 			RunButton.setEnabled(false); // can't run again until it's over
 
-			t = new workThread();
+			t = new WorkerThread();
 			t.start();
 		}
 
@@ -1773,7 +1773,7 @@ public class abacusUI extends javax.swing.JFrame {
 		fc.setSelectedFile(new File("Abacus_output.tsv"));
 
         // in response to a button click:
-        int retVal = fc.showSaveDialog(abacusUI.this);
+        int retVal = fc.showSaveDialog(AbacusUI.this);
         String localFileName = null;
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
@@ -1802,7 +1802,7 @@ public class abacusUI extends javax.swing.JFrame {
 				try {
 					this.outputFileTextField.setText(f.getCanonicalFile().toString());
 				} catch (IOException ex) {
-					Logger.getLogger(abacusUI.class.getName()).log(Level.SEVERE, null, ex);
+					Logger.getLogger(AbacusUI.class.getName()).log(Level.SEVERE, null, ex);
 				}
 			}
 		}
@@ -2408,7 +2408,7 @@ public class abacusUI extends javax.swing.JFrame {
     public void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new abacusUI().setVisible(true);
+                new AbacusUI().setVisible(true);
             }
         });
     }
@@ -2550,7 +2550,7 @@ public class abacusUI extends javax.swing.JFrame {
  * This class extends the Thread class so all the magic can happen here
  *
  */
-class workThread extends Thread {
+class WorkerThread extends Thread {
 
 	AbacusTextArea console;
 	Abacus pmasc;
@@ -2899,7 +2899,7 @@ class workThread extends Thread {
 			console.append("\nYou may now close this window\n\n");
 		}
 		catch (Exception ex) {
-			Logger.getLogger(workThread.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(WorkerThread.class.getName()).log(Level.SEVERE, null, ex);
 		}
 
 		try {
