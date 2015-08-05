@@ -34,7 +34,7 @@ import javax.swing.JOptionPane;
  *
  * @author dfermin
  */
-public class AZZZbacusUI extends javax.swing.JFrame {
+public class AbacusUI extends javax.swing.JFrame {
 
     // file and folder chooser for this program
     final JFileChooser fc = new JFileChooser();
@@ -42,7 +42,7 @@ public class AZZZbacusUI extends javax.swing.JFrame {
     WorkerThread t;
 
     /** Creates new form ui */
-    public AZZZbacusUI() {
+    public AbacusUI() {
         initComponents();
     }
 
@@ -1137,7 +1137,7 @@ public class AZZZbacusUI extends javax.swing.JFrame {
 		
 		
         // in response to a button click:
-        int retVal = fc.showOpenDialog(AZZZbacusUI.this);
+        int retVal = fc.showOpenDialog(AbacusUI.this);
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
             File f = fc.getSelectedFile();
@@ -1153,7 +1153,7 @@ public class AZZZbacusUI extends javax.swing.JFrame {
         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
         // in response to a button click:
-        int retVal = fc.showOpenDialog(AZZZbacusUI.this);
+        int retVal = fc.showOpenDialog(AbacusUI.this);
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
             File f = fc.getSelectedFile();
@@ -1170,7 +1170,7 @@ public class AZZZbacusUI extends javax.swing.JFrame {
         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
         // in response to a button click:
-        int retVal = fc.showOpenDialog(AZZZbacusUI.this);
+        int retVal = fc.showOpenDialog(AbacusUI.this);
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
             File f = fc.getSelectedFile();
@@ -1186,7 +1186,7 @@ public class AZZZbacusUI extends javax.swing.JFrame {
         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
         // in response to a button click:
-        int retVal = fc.showOpenDialog(AZZZbacusUI.this);
+        int retVal = fc.showOpenDialog(AbacusUI.this);
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
             File f = fc.getSelectedFile();
@@ -1201,7 +1201,7 @@ public class AZZZbacusUI extends javax.swing.JFrame {
 		fc.setCurrentDirectory(new File(".")); // sets the file chooser to the current working directory
 
         // in response to a button click:
-        int retVal = fc.showOpenDialog(AZZZbacusUI.this);
+        int retVal = fc.showOpenDialog(AbacusUI.this);
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
             File f = fc.getSelectedFile();
@@ -1355,7 +1355,7 @@ public class AZZZbacusUI extends javax.swing.JFrame {
 		if( errorChecking() ) { // do error checking first
 
 			// in response to a button click:
-			int retVal = fc.showSaveDialog(AZZZbacusUI.this);
+			int retVal = fc.showSaveDialog(AbacusUI.this);
 			boolean success = false;
 			String localFileName = null;
 
@@ -1541,12 +1541,12 @@ public class AZZZbacusUI extends javax.swing.JFrame {
 					out.close();
 					success = true;
 				} catch (IOException ex) {
-					Logger.getLogger(AZZZbacusUI.class.getName()).log(Level.SEVERE, null, ex);
+					Logger.getLogger(AbacusUI.class.getName()).log(Level.SEVERE, null, ex);
 				}
 
 				if(success) {
 					String msg = "Your parameters have been saved to " + localFileName;
-					JOptionPane.showMessageDialog(AZZZbacusUI.this, msg);
+					JOptionPane.showMessageDialog(AbacusUI.this, msg);
 				}
 			}
 		} // end errorChecking()
@@ -1773,7 +1773,7 @@ public class AZZZbacusUI extends javax.swing.JFrame {
 		fc.setSelectedFile(new File("Abacus_output.tsv"));
 
         // in response to a button click:
-        int retVal = fc.showSaveDialog(AZZZbacusUI.this);
+        int retVal = fc.showSaveDialog(AbacusUI.this);
         String localFileName = null;
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
@@ -1802,7 +1802,7 @@ public class AZZZbacusUI extends javax.swing.JFrame {
 				try {
 					this.outputFileTextField.setText(f.getCanonicalFile().toString());
 				} catch (IOException ex) {
-					Logger.getLogger(AZZZbacusUI.class.getName()).log(Level.SEVERE, null, ex);
+					Logger.getLogger(AbacusUI.class.getName()).log(Level.SEVERE, null, ex);
 				}
 			}
 		}
@@ -2408,7 +2408,7 @@ public class AZZZbacusUI extends javax.swing.JFrame {
     public void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new AZZZbacusUI().setVisible(true);
+                new AbacusUI().setVisible(true);
             }
         });
     }
@@ -2619,7 +2619,7 @@ class WorkerThread extends Thread {
             Class.forName("org.hsqldb.jdbc.JDBCDriver");
             conn = DriverManager.getConnection(db, "SA", "");
         } catch (ClassNotFoundException | SQLException e) {
-            alerter.alert(AZZZbacusUI.this);
+            alerter.alert(AbacusUI.this);
             console.append("There was an error connecting to the HyperSQL database\n");
             console.append(e.toString());
             return;
@@ -2630,14 +2630,14 @@ class WorkerThread extends Thread {
         try {
             if (!Globals.byPeptide) {
                 if (pmasc.load_protXML(conn, console)) {
-                    alerter.alert(AZZZbacusUI.this);
+                    alerter.alert(AbacusUI.this);
                     console.changeCloseStatus("allowClose");
                     return;
                 }
                 console.append("\n");
             }
         } catch (Exception e) {
-            alerter.alert(AZZZbacusUI.this);
+            alerter.alert(AbacusUI.this);
             console.append("Error parsing protXML files\n");
             console.append(e.toString());
             console.changeCloseStatus("allowClose");
@@ -2646,14 +2646,14 @@ class WorkerThread extends Thread {
 
         try {
             if (pmasc.load_pepXML(conn, console)) {
-                alerter.alert(AZZZbacusUI.this);
+                alerter.alert(AbacusUI.this);
                 console.changeCloseStatus("allowClose");
                 return;
             }
             console.append("\n");
 
         } catch (Exception e) {
-            alerter.alert(AZZZbacusUI.this);
+            alerter.alert(AbacusUI.this);
             console.append("Error parsing pepXML files\n");
             console.append(e.toString());
             console.changeCloseStatus("allowClose");
@@ -2686,7 +2686,7 @@ class WorkerThread extends Thread {
                 forGenes.correctPepXMLTags(conn);
 
                 if (forGenes.makeGeneTable(conn, console)) {
-                    alerter.alert(AZZZbacusUI.this);
+                    alerter.alert(AbacusUI.this);
                     console.changeCloseStatus("allowClose");
                     return;
                 }
@@ -2789,7 +2789,7 @@ class WorkerThread extends Thread {
                 }
 
                 if (forProteins.makeResultsTable(conn, console)) {
-                    alerter.alert(AZZZbacusUI.this);
+                    alerter.alert(AbacusUI.this);
                     console.append("\nError creating results table.\n");
                     console.changeCloseStatus("allowClose");
                     return;
