@@ -34,7 +34,7 @@ import javax.swing.JOptionPane;
  *
  * @author dfermin
  */
-public class AbacusUI extends javax.swing.JFrame {
+public class AZZZbacusUI extends javax.swing.JFrame {
 
     // file and folder chooser for this program
     final JFileChooser fc = new JFileChooser();
@@ -42,7 +42,7 @@ public class AbacusUI extends javax.swing.JFrame {
     WorkerThread t;
 
     /** Creates new form ui */
-    public AbacusUI() {
+    public AZZZbacusUI() {
         initComponents();
     }
 
@@ -1137,7 +1137,7 @@ public class AbacusUI extends javax.swing.JFrame {
 		
 		
         // in response to a button click:
-        int retVal = fc.showOpenDialog(AbacusUI.this);
+        int retVal = fc.showOpenDialog(AZZZbacusUI.this);
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
             File f = fc.getSelectedFile();
@@ -1153,7 +1153,7 @@ public class AbacusUI extends javax.swing.JFrame {
         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
         // in response to a button click:
-        int retVal = fc.showOpenDialog(AbacusUI.this);
+        int retVal = fc.showOpenDialog(AZZZbacusUI.this);
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
             File f = fc.getSelectedFile();
@@ -1170,7 +1170,7 @@ public class AbacusUI extends javax.swing.JFrame {
         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
         // in response to a button click:
-        int retVal = fc.showOpenDialog(AbacusUI.this);
+        int retVal = fc.showOpenDialog(AZZZbacusUI.this);
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
             File f = fc.getSelectedFile();
@@ -1186,7 +1186,7 @@ public class AbacusUI extends javax.swing.JFrame {
         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
         // in response to a button click:
-        int retVal = fc.showOpenDialog(AbacusUI.this);
+        int retVal = fc.showOpenDialog(AZZZbacusUI.this);
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
             File f = fc.getSelectedFile();
@@ -1201,7 +1201,7 @@ public class AbacusUI extends javax.swing.JFrame {
 		fc.setCurrentDirectory(new File(".")); // sets the file chooser to the current working directory
 
         // in response to a button click:
-        int retVal = fc.showOpenDialog(AbacusUI.this);
+        int retVal = fc.showOpenDialog(AZZZbacusUI.this);
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
             File f = fc.getSelectedFile();
@@ -1355,7 +1355,7 @@ public class AbacusUI extends javax.swing.JFrame {
 		if( errorChecking() ) { // do error checking first
 
 			// in response to a button click:
-			int retVal = fc.showSaveDialog(AbacusUI.this);
+			int retVal = fc.showSaveDialog(AZZZbacusUI.this);
 			boolean success = false;
 			String localFileName = null;
 
@@ -1541,12 +1541,12 @@ public class AbacusUI extends javax.swing.JFrame {
 					out.close();
 					success = true;
 				} catch (IOException ex) {
-					Logger.getLogger(AbacusUI.class.getName()).log(Level.SEVERE, null, ex);
+					Logger.getLogger(AZZZbacusUI.class.getName()).log(Level.SEVERE, null, ex);
 				}
 
 				if(success) {
 					String msg = "Your parameters have been saved to " + localFileName;
-					JOptionPane.showMessageDialog(AbacusUI.this, msg);
+					JOptionPane.showMessageDialog(AZZZbacusUI.this, msg);
 				}
 			}
 		} // end errorChecking()
@@ -1773,7 +1773,7 @@ public class AbacusUI extends javax.swing.JFrame {
 		fc.setSelectedFile(new File("Abacus_output.tsv"));
 
         // in response to a button click:
-        int retVal = fc.showSaveDialog(AbacusUI.this);
+        int retVal = fc.showSaveDialog(AZZZbacusUI.this);
         String localFileName = null;
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
@@ -1802,7 +1802,7 @@ public class AbacusUI extends javax.swing.JFrame {
 				try {
 					this.outputFileTextField.setText(f.getCanonicalFile().toString());
 				} catch (IOException ex) {
-					Logger.getLogger(AbacusUI.class.getName()).log(Level.SEVERE, null, ex);
+					Logger.getLogger(AZZZbacusUI.class.getName()).log(Level.SEVERE, null, ex);
 				}
 			}
 		}
@@ -2408,7 +2408,7 @@ public class AbacusUI extends javax.swing.JFrame {
     public void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new AbacusUI().setVisible(true);
+                new AZZZbacusUI().setVisible(true);
             }
         });
     }
@@ -2541,389 +2541,348 @@ public class AbacusUI extends javax.swing.JFrame {
         Expt_numSpecsAdjCB.setSelected(false);
 	}
 
-}
 
 
-
-/****************
- *
- * This class extends the Thread class so all the magic can happen here
- *
+        /**
+ * This class extends the Thread class so all the magic can happen here.
  */
 class WorkerThread extends Thread {
 
-	AbacusTextArea console;
-	Abacus pmasc;
+    AbacusTextArea console;
+    Abacus pmasc;
+    AbacusUIAlerter alerter = new AbacusUIAlerter();
 
-	File dir = null;
-	Connection conn = null;
-	HyperSQLObject forProteins = null;
-	HyperSQLObjectGene forGenes = null;
-	String db = "jdbc:hsqldb";
+    File dir = null;
+    Connection conn = null;
+    HyperSQLObject forProteins = null;
+    HyperSQLObjectGene forGenes = null;
+    String db = "jdbc:hsqldb";
 
-	String err; // used for error messages
-
+    String err; // used for error messages
 
     // This method is called when the thread runs
-	@Override
+    @Override
     public void run() {
-		String timeStr = null;
-		long start_time = System.currentTimeMillis();
-		long elapsed_time = 0;
+        String timeStr = null;
+        long start_time = System.currentTimeMillis();
+        long elapsed_time = 0;
 
         pmasc = new Abacus();
         console = new AbacusTextArea();
         console.setVisible(true);
         console.append(pmasc.printHeader());
-		console.append(Globals.printParameters());
+        console.append(Globals.printParameters());
 
         dir = new File(Globals.srcDir);
 
 
-        /*
-         *  This code checks to see if the database we are going to create
-         *  already exists if it does, delete it first.
-         *  HyperSQL makes several files when it makes a database so we
-         *  have to iterate through them.
-         */
-        String[] toRemove = {".properties", ".script", ".tmp", ".log", ".lck"};
-        File f = null;
-        for (String aToRemove : toRemove) {
-            String tmpFile = "" + Globals.DBname + aToRemove;
-            f = new File(tmpFile);
-            if (f.exists()) {
-                f.delete();
-                console.append("Abacus disk clean up: removing " + tmpFile + "\n");
+        try {
+            pmasc.cleanup(console);
+            pmasc.record_XML_files(dir); // record only the protXML and pepXML files
+            pmasc.checkPepXmlFiles(console, alerter, console);
+            pmasc.checkProtXmlFiles(console, alerter, console);
+            pmasc.checkFastaFile(console, alerter, console);
+            if (!checkFastaFile(System.err, null, null)) return;
+            if (!Globals.byPeptide) {
+                if (Globals.fastaFile == null || Globals.fastaFile.isEmpty()) {
+                    console.append("No fasta file was given so protein lengths will not be reported\n\n");
+                } else {
+                    console.append("Retrieving protein lengths from '" + Globals.fastaFile + "'\n\n");
+                    if (Globals.parseFasta(console, alerter, console)) {
+                        return; // exit this thread
+                    }
+                }
             }
-            f = null;
+
+        } catch (IOException ex) {
+            Logger.getLogger(WorkerThread.class.getName()).log(Level.SEVERE, null, ex);
         }
-        console.append("\n");
 
-        pmasc.record_XML_files(dir); // record only the protXML and pepXML files
-
-		if(Globals.pepXmlFiles.isEmpty()) {
-			makeAlert();
-			console.append("No pepXML files were found in '" + Globals.srcDir + "'\n");
-			return;
-		}
-
-		if(!Globals.byPeptide && Globals.protXmlFiles.isEmpty()) {
-			makeAlert();
-			console.append("No protXML files were found in '" + Globals.srcDir + "'\n");
-			return;
-		}
-
-
-		if(!Globals.byPeptide) {
-			if(Globals.fastaFile.isEmpty()) {
-				console.append("No fasta file was given so protein lengths will not be reported\n\n");
-			}
-			else {
-				console.append("Retrieving protein lengths from '" + Globals.fastaFile + "'\n\n");
-				if( Globals.parseFasta(console) ) {
-					makeAlert();
-					return; // exit this thread
-				}
-			}
-		}
-
-		
         /*
          * By default, the program stores the database in memory.
          * If the user wants to keep the database, this code allows them to.
          * NOTE: writing to disk is much slower!!!
          */
-        if(Globals.keepDB) {
-                db += ":file:" + Globals.DBname;
-                console.append("\nDatabase will be written to disk within the following files and folders:\n");
-                console.append("\t" + Globals.DBname + ".script\n");
-                console.append("\t" + Globals.DBname + ".properties\n");
-                console.append("\t" + Globals.DBname + ".tmp\n\n");
-                console.append("NOTE: Writing to disk slows things down so please be patient...\n\n");
-        }
-        else {
-                db += ":mem:memoryDB"; //default method, do everything in memory
+        if (Globals.keepDB) {
+            db += ":file:" + Globals.DBname;
+            console.append("\nDatabase will be written to disk within the following files and folders:\n");
+            console.append("\t" + Globals.DBname + ".script\n");
+            console.append("\t" + Globals.DBname + ".properties\n");
+            console.append("\t" + Globals.DBname + ".tmp\n\n");
+            console.append("NOTE: Writing to disk slows things down so please be patient...\n\n");
+        } else {
+            db += ":mem:memoryDB"; //default method, do everything in memory
         }
 
         //Connect to hyperSQL database object
         try {
-                Class.forName("org.hsqldb.jdbc.JDBCDriver");
-                conn = DriverManager.getConnection(db, "SA", "");
-		}
-		catch (ClassNotFoundException | SQLException e) {
-               makeAlert();
-			   console.append("There was an error connecting to the HyperSQL database\n");
-			   console.append(e.toString());
-			   return;
+            Class.forName("org.hsqldb.jdbc.JDBCDriver");
+            conn = DriverManager.getConnection(db, "SA", "");
+        } catch (ClassNotFoundException | SQLException e) {
+            alerter.alert(AZZZbacusUI.this);
+            console.append("There was an error connecting to the HyperSQL database\n");
+            console.append(e.toString());
+            return;
         }
 
+        System.gc(); // System clean up
 
-		System.gc(); // System clean up
-
-		try {
-			if(!Globals.byPeptide) {
-				if (pmasc.load_protXML(conn, console)) {
-					makeAlert();
-					console.changeCloseStatus("allowClose");
-					return;
-				}
-				console.append("\n");
-			}
-		} catch (Exception e) {
-		   makeAlert();
-		   console.append("Error parsing protXML files\n");
-		   console.append(e.toString());
-		   console.changeCloseStatus("allowClose");
-		   return;
-		}
-
-		try {
-                if( pmasc.load_pepXML(conn, console) ) {
-					makeAlert();
-					console.changeCloseStatus("allowClose");
-					return;
-				}
+        try {
+            if (!Globals.byPeptide) {
+                if (pmasc.load_protXML(conn, console)) {
+                    alerter.alert(AZZZbacusUI.this);
+                    console.changeCloseStatus("allowClose");
+                    return;
+                }
                 console.append("\n");
+            }
+        } catch (Exception e) {
+            alerter.alert(AZZZbacusUI.this);
+            console.append("Error parsing protXML files\n");
+            console.append(e.toString());
+            console.changeCloseStatus("allowClose");
+            return;
+        }
+
+        try {
+            if (pmasc.load_pepXML(conn, console)) {
+                alerter.alert(AZZZbacusUI.this);
+                console.changeCloseStatus("allowClose");
+                return;
+            }
+            console.append("\n");
 
         } catch (Exception e) {
-               makeAlert();
-			   console.append("Error parsing pepXML files\n");
-			   console.append(e.toString());
-			   console.changeCloseStatus("allowClose");
-			   return;
+            alerter.alert(AZZZbacusUI.this);
+            console.append("Error parsing pepXML files\n");
+            console.append(e.toString());
+            console.changeCloseStatus("allowClose");
+            return;
         }
-		console.updateProgress(1);
+        console.updateProgress(1);
 
-		// now the work begins
-		try {
-			
-			if(Globals.byPeptide) { // user wants peptide-level results
-				forProteins = new HyperSQLObject();
-				forProteins.initialize();
-				forProteins.makeSrcFileTable(conn, console);
-				
-				forProteins.correctPepXMLTags(conn);
-				console.updateProgress(1);
-				
-				forProteins.peptideLevelResults(conn, console);
-				console.updateProgress(20);
-			}
-			else if(Globals.byGene) { // user wants gene-centric output
+        // now the work begins
+        try {
 
-				forGenes = new HyperSQLObjectGene();
-				forGenes.initialize();
+            if (Globals.byPeptide) { // user wants peptide-level results
+                forProteins = new HyperSQLObject();
+                forProteins.initialize();
+                forProteins.makeSrcFileTable(conn, console);
 
-				//forGenes.makeProtLenTable(conn, console); //deprecated function
-				forGenes.makeSrcFileTable(conn, console);
-				console.updateProgress(1);
+                forProteins.correctPepXMLTags(conn);
+                console.updateProgress(1);
 
-				forGenes.correctPepXMLTags(conn);
+                forProteins.peptideLevelResults(conn, console);
+                console.updateProgress(20);
+            } else if (Globals.byGene) { // user wants gene-centric output
 
-				if(forGenes.makeGeneTable(conn, console)) {
-					makeAlert();
-					console.changeCloseStatus("allowClose");
-					return;
-				}
-				console.updateProgress(1);
-				
-				
-				forGenes.makeCombinedTable(conn, console);
-				console.updateProgress(1);
+                forGenes = new HyperSQLObjectGene();
+                forGenes.initialize();
 
-				forGenes.makeProtXMLTable(conn, console);
-				console.updateProgress(1);
+                //forGenes.makeProtLenTable(conn, console); //deprecated function
+                forGenes.makeSrcFileTable(conn, console);
+                console.updateProgress(1);
 
-				System.gc(); // need more RAM
-				
-				forGenes.makeGeneCombined(conn, console);
-				console.updateProgress(1);
+                forGenes.correctPepXMLTags(conn);
 
-				forGenes.makeGeneXML(conn, console);
-				console.updateProgress(1);
+                if (forGenes.makeGeneTable(conn, console)) {
+                    alerter.alert(AZZZbacusUI.this);
+                    console.changeCloseStatus("allowClose");
+                    return;
+                }
+                console.updateProgress(1);
 
-				forGenes.adjustGenePeptideWT(conn, console);
-				console.updateProgress(1);
+                forGenes.makeCombinedTable(conn, console);
+                console.updateProgress(1);
 
-				forGenes.makeTempGene2pepTable(conn);
+                forGenes.makeProtXMLTable(conn, console);
+                console.updateProgress(1);
 
-				System.gc(); // System clean up
+                System.gc(); // need more RAM
 
-				console.changeBarType("shaker");
-				forGenes.makeGeneidSummary(conn, console);
-				console.changeBarType("progress");
-				console.updateProgress(1);
+                forGenes.makeGeneCombined(conn, console);
+                console.updateProgress(1);
 
+                forGenes.makeGeneXML(conn, console);
+                console.updateProgress(1);
 
-				forGenes.makeGeneResults(conn, console);
-				console.updateProgress(1);
+                forGenes.adjustGenePeptideWT(conn, console);
+                console.updateProgress(1);
 
-				console.changeBarType("shaker");
-				forGenes.makeGenePepUsageTable(conn, console);
-				console.changeBarType("progress");
-				console.updateProgress(1);
+                forGenes.makeTempGene2pepTable(conn);
 
-				System.gc(); // System clean up
+                System.gc(); // System clean up
 
-				console.changeBarType("shaker");
-				forGenes.appendIndividualExpts_GC(conn, console);
-				console.changeBarType("progress");
-				console.append("\n");
+                console.changeBarType("shaker");
+                forGenes.makeGeneidSummary(conn, console);
+                console.changeBarType("progress");
+                console.updateProgress(1);
 
-				if(Globals.doNSAF) {
-					forGenes.getNSAF_values_gene(conn, console);
-					console.append("\n");
-				}
+                forGenes.makeGeneResults(conn, console);
+                console.updateProgress(1);
 
-				console.updateProgress(1);
+                console.changeBarType("shaker");
+                forGenes.makeGenePepUsageTable(conn, console);
+                console.changeBarType("progress");
+                console.updateProgress(1);
 
+                System.gc(); // System clean up
 
-				if(Globals.genesHaveDescriptions) { // append gene descriptions
-					forGenes.appendGeneDescriptions(conn);
-					console.updateProgress(1);
-				}
-				else console.updateProgress(2);
+                console.changeBarType("shaker");
+                forGenes.appendIndividualExpts_GC(conn, console);
+                console.changeBarType("progress");
+                console.append("\n");
 
-				// choose output format
-				if(Globals.outputFormat == Globals.geneQspecFormat)
-					forGenes.formatQspecOutput(conn, console);
-				else
-					forGenes.defaultResults(conn, console);
+                if (Globals.doNSAF) {
+                    forGenes.getNSAF_values_gene(conn, console);
+                    console.append("\n");
+                }
 
-				console.updateProgress(1);
-			}
-			else { // default protein-centric output
-				forProteins = new HyperSQLObject();
-				forProteins.initialize();
+                console.updateProgress(1);
 
-				//forProteins.makeProtLenTable(conn, console); // deprecated function
-				forProteins.makeSrcFileTable(conn, console);
-				console.updateProgress(1);
+                if (Globals.genesHaveDescriptions) { // append gene descriptions
+                    forGenes.appendGeneDescriptions(conn);
+                    console.updateProgress(1);
+                } else {
+                    console.updateProgress(2);
+                }
 
-				forProteins.correctPepXMLTags(conn);
-				forProteins.makeCombinedTable(conn, console);
-				console.updateProgress(1);
+                // choose output format
+                if (Globals.outputFormat == Globals.geneQspecFormat) {
+                    forGenes.formatQspecOutput(conn, console);
+                } else {
+                    forGenes.defaultResults(conn, console);
+                }
 
-				forProteins.makeProtXMLTable(conn, console);
-				console.updateProgress(1);
+                console.updateProgress(1);
+            } else { // default protein-centric output
+                forProteins = new HyperSQLObject();
+                forProteins.initialize();
 
-				System.gc(); // need more RAM
+                //forProteins.makeProtLenTable(conn, console); // deprecated function
+                forProteins.makeSrcFileTable(conn, console);
+                console.updateProgress(1);
 
-				forProteins.makeTempProt2PepTable(conn, console);
+                forProteins.correctPepXMLTags(conn);
+                forProteins.makeCombinedTable(conn, console);
+                console.updateProgress(1);
 
-				System.gc(); // System clean up
+                forProteins.makeProtXMLTable(conn, console);
+                console.updateProgress(1);
 
-				//console.changeBarType("shaker");
-				forProteins.makeProtidSummary(conn, console);
-				//console.changeBarType("progress");
-				console.updateProgress(1);
+                System.gc(); // need more RAM
 
+                forProteins.makeTempProt2PepTable(conn, console);
 
-				if(Globals.gene2protFile != null) {
-					forProteins.makeGeneTable(conn, console);
-					forProteins.appendGeneIDs(conn, console);
-					console.append("\n");
+                System.gc(); // System clean up
 
-				}
+                //console.changeBarType("shaker");
+                forProteins.makeProtidSummary(conn, console);
+                //console.changeBarType("progress");
+                console.updateProgress(1);
 
+                if (Globals.gene2protFile != null) {
+                    forProteins.makeGeneTable(conn, console);
+                    forProteins.appendGeneIDs(conn, console);
+                    console.append("\n");
 
-				if( forProteins.makeResultsTable(conn, console) ) {
-					makeAlert();
-					console.append("\nError creating results table.\n");
-					console.changeCloseStatus("allowClose");
-					return;
-				}
-				console.updateProgress(1);
+                }
 
-				forProteins.addProteinLengths(conn, console, 0);
-				console.updateProgress(1);
+                if (forProteins.makeResultsTable(conn, console)) {
+                    alerter.alert(AZZZbacusUI.this);
+                    console.append("\nError creating results table.\n");
+                    console.changeCloseStatus("allowClose");
+                    return;
+                }
+                console.updateProgress(1);
 
-				// these functions deal with adjusting spectral counts
-				forProteins.makeWT9XgroupsTable(conn);
-				forProteins.makePepUsageTable(conn, console);
-				console.updateProgress(1);
+                forProteins.addProteinLengths(conn, console, 0);
+                console.updateProgress(1);
 
-				// add individual experiment data to results table
-				forProteins.appendIndividualExpts(conn, console);
-				console.updateProgress(1);
+                // these functions deal with adjusting spectral counts
+                forProteins.makeWT9XgroupsTable(conn);
+                forProteins.makePepUsageTable(conn, console);
+                console.updateProgress(1);
 
+                // add individual experiment data to results table
+                forProteins.appendIndividualExpts(conn, console);
+                console.updateProgress(1);
 
 				// reduce the number of columns in the results table
-				// by merging the groupid and siblingGroup fields
-				forProteins.mergeIDfields(conn);
+                // by merging the groupid and siblingGroup fields
+                forProteins.mergeIDfields(conn);
 
-				if(Globals.doNSAF) {
-					forProteins.getNSAF_values_prot(conn, console);
-					console.changeCloseStatus("allowClose");
-					console.append("\n");
-				}
+                if (Globals.doNSAF) {
+                    forProteins.getNSAF_values_prot(conn, console);
+                    console.changeCloseStatus("allowClose");
+                    console.append("\n");
+                }
 
+                if (Globals.makeVerboseOutput) {
+                    forProteins.addExtraProteins(conn, console);
+                    forProteins.addProteinLengths(conn, console, 1);
+                }
 
-				if(Globals.makeVerboseOutput) {
-					forProteins.addExtraProteins(conn, console);
-					forProteins.addProteinLengths(conn, console, 1);
-				}
+                // choose output format
+                switch (Globals.outputFormat) {
+                    case Globals.protQspecFormat:
+                        forProteins.formatQspecOutput(conn, console);
+                        break;
+                    case Globals.customOutput:
+                        forProteins.customOutput(conn, console);
+                        break;
+                    default:
+                        forProteins.defaultResults(conn, console);
+                }
+                console.updateProgress(1);
+            }
 
-				// choose output format
-				switch(Globals.outputFormat) {
-					case Globals.protQspecFormat:
-						forProteins.formatQspecOutput(conn, console);
-						break;
-					case Globals.customOutput:
-						forProteins.customOutput(conn, console);
-						break;
-					default:
-						forProteins.defaultResults(conn, console);
-				}
-				console.updateProgress(1);
-			}
+            // user has elected to keep database, remove unnecessary tables.
+            if (Globals.keepDB) {
+                if (Globals.byGene) {
+                    forGenes.cleanUp(conn);
+                } else {
+                    forProteins.cleanUp(conn);
+                }
+            } else { // left over files that should be removed
+                String tmpFile = "" + Globals.DBname + ".properties";
+                File f = new File(tmpFile);
+                if (f.exists()) {
+                    f.delete();
+                }
+            }
 
-			// user has elected to keep database, remove unnecessary tables.
-			if(Globals.keepDB) {
-				if(Globals.byGene) forGenes.cleanUp(conn);
-				else forProteins.cleanUp(conn);
-			}
-			else { // left over files that should be removed
-				f = null;
-				String tmpFile = "" + Globals.DBname + ".properties";
-				f = new File( tmpFile );
-				if( f.exists() ) f.delete();
-				f = null;
-			}
+            console.changeCloseStatus("allowClose");
 
-			console.changeCloseStatus("allowClose");
+            elapsed_time = System.currentTimeMillis() - start_time;
+            timeStr = Globals.formatTime(elapsed_time);
+            console.append("\n\nTotal runtime (hh:mm:ss): " + timeStr + "\n");
 
-			elapsed_time = System.currentTimeMillis() - start_time;
-			timeStr = Globals.formatTime(elapsed_time);
-			console.append("\n\nTotal runtime (hh:mm:ss): " + timeStr + "\n");
+            console.append("\nYou may now close this window\n\n");
+        } catch (Exception ex) {
+            Logger.getLogger(WorkerThread.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                // Whatever happens, shutdown the HSQLDB connection nicely
+                conn.createStatement().execute("SHUTDOWN");
+                conn.close();
+                conn = null;
 
-			console.append("\nYou may now close this window\n\n");
-		}
-		catch (Exception ex) {
-			Logger.getLogger(WorkerThread.class.getName()).log(Level.SEVERE, null, ex);
-		}
+            } catch (Exception e) {
+                console.append(e.toString());
+                console.changeCloseStatus("allowClose");
+            }
+        }
 
-		try {
-			// Whatever happens, shutdown the HSQLDB connection nicely
-			conn.createStatement().execute("SHUTDOWN");
-			conn.close();
-			conn = null;
-
-		} catch( Exception e) {
-			console.append(e.toString());
-			console.changeCloseStatus("allowClose");
-		}
-
-		// clean up
-		pmasc = null;
-		System.gc();
+        // clean up
+        pmasc = null;
+        System.gc();
     }
 
-    // Function to make alert window
-    public void makeAlert() {
-        JOptionPane.showMessageDialog(console,
-				"ERROR!\nCheck Console for\nmore useful information",
-				"Douh!",
-				JOptionPane.ERROR_MESSAGE
-		);
-    }
+
 }
+
+}
+
+
+

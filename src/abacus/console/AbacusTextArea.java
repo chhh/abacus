@@ -12,13 +12,14 @@
 package abacus.console;
 
 import abacus.Globals;
+import java.io.IOException;
 import javax.swing.ProgressMonitor;
 
 /**
  *
  * @author dfermin
  */
-public class AbacusTextArea extends javax.swing.JFrame {
+public class AbacusTextArea extends javax.swing.JFrame implements Appendable {
     int curStatusValue = 0; // holds the progressBar value when switching to indeterminant mode
 	ProgressMonitor pMonitor;
 
@@ -213,4 +214,22 @@ public class AbacusTextArea extends javax.swing.JFrame {
 	public void changeCloseStatus(String act) {
 		if(act.equals("allowClose")) this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 	}
+
+    @Override
+    public Appendable append(CharSequence csq) throws IOException {
+        append(csq.toString());
+        return this;
+    }
+
+    @Override
+    public Appendable append(CharSequence csq, int start, int end) throws IOException {
+        append(csq.subSequence(start, end).toString());
+        return this;
+    }
+
+    @Override
+    public Appendable append(char c) throws IOException {
+        append(Character.toString(c));
+        return this;
+    }
 }
