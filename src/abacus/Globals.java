@@ -100,21 +100,21 @@ public class Globals {
     public static Set<String> printE = new HashSet<>();
 
     //ERROR CODES
-    public static int noDBname = 1;
-    public static int noCombinedTag = 2;
-    public static int noSrcDir = 3;
-    public static int noDecoyTag = 4;
-    public static int noMaxIniProbTH = 5;
-    public static int noIniProbTH = 6;
-    public static int noMinCombinedFilePw = 7;
-    public static int noMinPw = 8;
-    public static int DirError = 9;
-    public static int noFastaFile = 10;
-    public static int fastaNotFound = 11;
-    public static int paramFileNotFound = 12;
-    public static int mapFileNotFound = 13;
-    public static int paramFileNull = 14;
-    public static int outputPathNotFound = 15;
+    public static final int ERR_NO_DB_NAME = 1;
+    public static final int ERR_NO_CMBINED_TAG = 2;
+    public static final int ERR_NO_SRC_DIR = 3;
+    public static final int ERR_NO_DECOY_TAG = 4;
+    public static final int ERR_NO_MAX_INI_PROB_TH = 5;
+    public static final int ERR_NO_INI_PROB_TH = 6;
+    public static final int ERR_NO_MIN_COMBINED_FILE_PW = 7;
+    public static final int ERR_NO_MIN_PW = 8;
+    public static final int ERR_DIR = 9;
+    public static final int ERR_NO_FASTA_FILE = 10;
+    public static final int ERR_FASTA_NOT_FOUND = 11;
+    public static final int ERR_PARAM_FILE_NOT_FOUND = 12;
+    public static final int ERR_MAP_FILE_NOT_FOUND = 13;
+    public static final int ERR_PARAM_FILE_NULL = 14;
+    public static final int ERR_OUTPUT_PATH_NOT_FOUND = 15;
 
 	//=============================================================
     //
@@ -215,8 +215,7 @@ public class Globals {
         }
 
         if (paramFile == null || paramFile.isEmpty()) {
-            printError(paramFileNull);
-            System.exit(0);
+            printError(ERR_PARAM_FILE_NULL, System.err);
         }
 
         fastaFile = ""; // initalize the variable to be empty
@@ -226,31 +225,31 @@ public class Globals {
          * Check to make sure all of these options were set
          */
         if (DBname == null) {
-            printError(noDBname);
+            printError(ERR_NO_DB_NAME, System.err);
         }
         if (combinedFile == null) {
-            printError(noCombinedTag);
+            printError(ERR_NO_CMBINED_TAG, System.err);
         }
         if (srcDir == null) {
-            printError(noSrcDir);
+            printError(ERR_NO_SRC_DIR, System.err);
         }
         if (decoyTag == null) {
-            printError(noDecoyTag);
+            printError(ERR_NO_DECOY_TAG, System.err);
         }
-        //if(fastaFile == null) printError(noFastaFile);
+        //if(fastaFile == null) printError(ERR_NO_FASTA_FILE);
         if (maxIniProbTH == -100) {
-            printError(noMaxIniProbTH);
+            printError(ERR_NO_MAX_INI_PROB_TH, System.err);
         }
         if (iniProbTH == -100) {
-            printError(noIniProbTH);
+            printError(ERR_NO_INI_PROB_TH, System.err);
         }
         if (minCombinedFilePw == -100) {
-            printError(noMinCombinedFilePw);
+            printError(ERR_NO_MIN_COMBINED_FILE_PW, System.err);
         }
-		//if(minPw == -100) printError(noMinPw);
+        //if(minPw == -100) printError(ERR_NO_MIN_PW);
 
         if (gene2protFile == null && byGene) {
-            printError(mapFileNotFound);
+            printError(ERR_MAP_FILE_NOT_FOUND, System.err);
         }
     }
 
@@ -272,14 +271,17 @@ public class Globals {
         }
     }
 
-    /*
-     * Function to parse the parameters file and record its values
+
+    /**
+     * Function to parse the parameters file and record its values.
+     * @return 0 if ok, anything else otherwise
      */
-    public static void parseParametersFile() {
+    public static int parseParametersFile() {
 
         File inputFile = new File(paramFile);
         if (!inputFile.exists()) {
-            printError(paramFileNotFound);
+            printError(ERR_PARAM_FILE_NOT_FOUND, System.err);
+            return ERR_PARAM_FILE_NOT_FOUND;
         }
         Pattern regex = Pattern.compile("\\s+"); // for matching white space in ary[1] element
 
@@ -313,10 +315,10 @@ public class Globals {
                     }
                 } else if (ary[0].trim().contains("Prob") || ary[0].trim().contains("Pw")) {
                     // different handling for fields that are suppose to be numeric
-                    ary[1].trim(); // just keep the value as is (could be negative number)
+                    ary[1] = ary[1].trim(); // just keep the value as is (could be negative number)
                 } else {
                     // just take the first 'word' in ary[1]
-                    ary[1].trim();
+                    ary[1] = ary[1].trim();
                     String tmp[] = regex.split(ary[1]);
                     ary[1] = tmp[0];
                 }
@@ -352,7 +354,7 @@ public class Globals {
 
 				//if(ary[0].equals("minPw")) minPw = (ary[1].equals("ERROR")) ? 0 : Double.parseDouble(ary[1]);
                 if (ary[0].equals("verboseResults")) {
-                    makeVerboseOutput = (ary[1].equals("true")) ? true : false;
+                    makeVerboseOutput = ary[1].equals("true");
                 }
 
                 if (ary[0].equals("outputFile")) {
@@ -360,36 +362,28 @@ public class Globals {
                 }
 
                 if (ary[0].equals("recalcPepWts")) {
-                    recalcPepWts = (ary[1].equals("true")) ? true : false;
+                    recalcPepWts = ary[1].equals("true");
                 }
 
 				// these two options are legacy code that we keep here just in case we need it again in the future
                 // technically they should not be needed.
                 if (ary[0].equals("protXMLsuffix")) {
-                    protXMLsuffix = (ary[1].equals("ERROR")) ? "prot.xml" : ary[1];
+                    protXMLsuffix = ary[1].equals("ERROR") ? "prot.xml" : ary[1];
                 }
                 if (ary[0].equals("pepXMLsuffix")) {
-                    pepXMLsuffix = (ary[1].equals("ERROR")) ? "pep.xml" : ary[1];
+                    pepXMLsuffix = ary[1].equals("ERROR") ? "pep.xml" : ary[1];
                 }
 
                 if (ary[0].equals("keepDB")) {
-                    if (ary[1].equals("true")) {
-                        keepDB = true;
-                    } else {
-                        keepDB = false;
-                    }
+                    keepDB = ary[1].equals("true");
                 }
 
                 if (ary[0].equals("asNSAF")) {
-                    if (ary[1].equals("true")) {
-                        doNSAF = true;
-                    } else {
-                        doNSAF = false;
-                    }
+                    doNSAF = ary[1].equals("true");
                 }
 
                 if (ary[0].equals("reqAAmods")) {
-                    pepRegexText = (ary[1].equals("ERROR")) ? "" : ary[1];
+                    pepRegexText = ary[1].equals("ERROR") ? "" : ary[1];
                 }
 
                 /*
@@ -490,7 +484,6 @@ public class Globals {
             if (Globals.combinedFilePath != null) {
                 File cf = new File(Globals.combinedFilePath);
                 combinedFile = cf.getName();
-                cf = null;
             }
 
 
@@ -522,6 +515,8 @@ public class Globals {
         if (decoyTag == null) {
             decoyTag = UUID.randomUUID().toString().replace('-', 'x');
         }
+
+        return 0;
     }
 
     /*
@@ -539,7 +534,7 @@ public class Globals {
                 + "\tRecalc Pep Wts:    " + recalcPepWts + "\n";
 
         // code used print output type
-        String outputTxt = null;
+        String outputTxt;
         switch (outputFormat) {
             case 1:
                 outputTxt = "Protein Qspec";
@@ -636,60 +631,64 @@ public class Globals {
         return ret;
     }
 
-    public static void printError(int err) {
+    public static void printError(int err, Appendable out) {
 
-        switch (err) {
-            case 1:
-                System.err.println("\nError in " + paramFile + ": dbName=?\n");
-                break;
-            case 2:
-                System.err.println("\nError in " + paramFile + ": combinedTag=?\n");
-                break;
-            case 3:
-                System.err.println("\nError in " + paramFile + ": srcDir=?\n");
-                break;
-            case 4:
-                System.err.println("\nError in " + paramFile + ": decoyTag=?\n");
-                break;
-            case 5:
-                System.err.println("\nError in " + paramFile + ": maxIniProbTH=?\n");
-                break;
-            case 6:
-                System.err.println("\nError in " + paramFile + ": iniProbTH=?\n");
-                break;
-            case 7:
-                System.err.println("\nError in " + paramFile + ": minCombinedFilePw=?\n");
-                break;
-            case 8:
-                System.err.println("\nError in " + paramFile + ": minPw=?\n");
-                break;
-            case 9:
-                System.err.println("\nError: srcdir='" + srcDir + "' was not found.\n");
-                break;
-            case 10:
-                System.err.println("\nError in " + paramFile + ": fasta=?\n");
-                break;
-            case 11:
-                System.err.println("\nError: fastaFile='" + fastaFile + "' was not found.\n");
-                break;
-            case 12:
-                System.err.println("\nError: paramFile='" + paramFile + "' was not found.\n");
-                break;
-            case 13:
-                System.err.println("\nError: gene2protFile='" + gene2protFile + "'. You didn't specify a gene-to-protein ID mapping file\n");
-                break;
-            case 14:
-                System.err.println("\nError: No parameter file was read in. Did you forget the '-p' option?\n");
-                break;
-            case 15:
-                System.err.println("\nError: The path for the output file does not exist.\n");
-                break;
-            default:
-                System.err.println("Undefined error.");
-                break;
+        try {
+            switch (err) {
+                case 1:
+                    out.append("\nError in " + paramFile + ": dbName=?\n\n");
+                    break;
+                case 2:
+                    out.append("\nError in " + paramFile + ": combinedTag=?\n");
+                    break;
+                case 3:
+                    out.append("\nError in " + paramFile + ": srcDir=?\n");
+                    break;
+                case 4:
+                    out.append("\nError in " + paramFile + ": decoyTag=?\n");
+                    break;
+                case 5:
+                    out.append("\nError in " + paramFile + ": maxIniProbTH=?\n");
+                    break;
+                case 6:
+                    out.append("\nError in " + paramFile + ": iniProbTH=?\n");
+                    break;
+                case 7:
+                    out.append("\nError in " + paramFile + ": minCombinedFilePw=?\n");
+                    break;
+                case 8:
+                    out.append("\nError in " + paramFile + ": minPw=?\n");
+                    break;
+                case 9:
+                    out.append("\nError: srcdir='" + srcDir + "' was not found.\n");
+                    break;
+                case 10:
+                    out.append("\nError in " + paramFile + ": fasta=?\n");
+                    break;
+                case 11:
+                    out.append("\nError: fastaFile='" + fastaFile + "' was not found.\n");
+                    break;
+                case 12:
+                    out.append("\nError: paramFile='" + paramFile + "' was not found.\n");
+                    break;
+                case 13:
+                    out.append("\nError: gene2protFile='" + gene2protFile + "'. You didn't specify a gene-to-protein ID mapping file\n");
+                    break;
+                case 14:
+                    out.append("\nError: No parameter file was read in. Did you forget the '-p' option?\n");
+                    break;
+                case 15:
+                    out.append("\nError: The path for the output file does not exist.\n");
+                    break;
+                default:
+                    out.append("Undefined error.");
+                    break;
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } finally {
+            System.exit(err);
         }
-
-        System.exit(-1000);
     }
 
     /**

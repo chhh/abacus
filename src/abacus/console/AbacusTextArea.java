@@ -18,7 +18,7 @@ import javax.swing.ProgressMonitor;
  *
  * @author dfermin
  */
-public class AbacusTextArea extends javax.swing.JFrame implements Appendable {
+public class AbacusTextArea extends javax.swing.JFrame implements Appendable, ProgressBarHandler {
 
     int curStatusValue = 0; // holds the progressBar value when switching to indeterminant mode
     ProgressMonitor pMonitor;
@@ -161,12 +161,14 @@ public class AbacusTextArea extends javax.swing.JFrame implements Appendable {
         this.mainTextArea.setCaretPosition(pos);
     }
 
+    @Override
     public void updateProgress(int newValue) {
         curStatusValue = pBar.getValue() + newValue;
         pBar.setValue(curStatusValue);
     }
 
     // function to initialize a progress monitor object
+    @Override
     public void monitorBoxInit(int maxValue, String message) {
         pMonitor = new ProgressMonitor(AbacusTextArea.this,
                 message,
@@ -178,6 +180,7 @@ public class AbacusTextArea extends javax.swing.JFrame implements Appendable {
     }
 
     // function to update the progress monitor's counter
+    @Override
     public void monitorBoxUpdate(int newValue) {
         double x = ((double) newValue / (double) pMonitor.getMaximum()) * 100.00;
         String num = Double.toString(Globals.roundDbl(x, 0));
@@ -187,12 +190,14 @@ public class AbacusTextArea extends javax.swing.JFrame implements Appendable {
     }
 
     // function to close the progressMontior window
+    @Override
     public void closeMonitorBox() {
         pMonitor.close();
         pMonitor = null;
     }
 
     // switches from a progress bar to a "shaking bar"
+    @Override
     public void changeBarType(String displayType) {
         curStatusValue = pBar.getValue();
 
@@ -207,11 +212,13 @@ public class AbacusTextArea extends javax.swing.JFrame implements Appendable {
     }
 
     // Function sets the text of the progress bar
+    @Override
     public void setProgressBarString(int iter) {
         pBar.setString(Integer.toString(iter));
     }
 
     // Function to change the console window clickable close status
+    @Override
     public void changeCloseStatus(String act) {
         if (act.equals("allowClose")) {
             this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);

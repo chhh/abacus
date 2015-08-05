@@ -47,13 +47,13 @@ public class Abacus {
         String parentPath = dir.getParent();
         dir = new File(parentPath);
         if (!dir.exists()) {
-            Globals.printError(Globals.outputPathNotFound);
+            Globals.printError(Globals.ERR_OUTPUT_PATH_NOT_FOUND, System.err);
         }
 
         //verify that user input is a valid directory
         dir = new File(Globals.srcDir);
         if (!dir.isDirectory()) {
-            Globals.printError(Globals.DirError);
+            Globals.printError(Globals.ERR_DIR, System.err);
         }
 
 
@@ -85,6 +85,7 @@ public class Abacus {
 
                 forProteins.correctPepXMLTags(conn);
                 forProteins.peptideLevelResults(conn, null);
+
             } else if (Globals.byGene) { // user wants gene-centric output
 
                 forGenes = new HyperSQLObjectGene();
@@ -126,6 +127,7 @@ public class Abacus {
                 } else {
                     forGenes.defaultResults(conn, null);
                 }
+
             } else { // default protein-centric output
 
                 forProteins = new HyperSQLObject();
