@@ -23,14 +23,14 @@ import javax.xml.stream.XMLStreamReader;
 import abacus_textArea.abacus_textArea;
 
 
-public class abacus {
+public class Abacus {
 
 	public void main(String[] args) throws IOException {
 
 		File dir = null;
 		Connection conn = null;
-		hyperSQLObject forProteins = null;
-		hyperSQLObject_gene forGenes = null;
+		HyperSQLObject forProteins = null;
+		HyperSQLObjectGene forGenes = null;
 		String db = "jdbc:hsqldb";
         String err1 = "error";
 		long start_time = System.currentTimeMillis();
@@ -38,24 +38,24 @@ public class abacus {
 
 		System.err.print( printHeader() );
 
-		globals.parseCommandLineArgs(args);
+		Globals.parseCommandLineArgs(args);
 
-		System.err.print( globals.printParameters() );
+		System.err.print( Globals.printParameters() );
 
 		//verify that the output file's directory is valid
-		dir = new File(globals.outputFilePath);
+		dir = new File(Globals.outputFilePath);
 		String parentPath = dir.getParent();
 		dir = null;
 		dir = new File(parentPath);
 		if( !dir.exists() ) {
-			globals.printError(globals.outputPathNotFound);
+			Globals.printError(Globals.outputPathNotFound);
 		}
 		dir = null;
 
 		//verify that user input is a valid directory
-		dir = new File(globals.srcDir);
+		dir = new File(Globals.srcDir);
 		if( !dir.isDirectory() ) {
-			globals.printError(globals.DirError);
+			Globals.printError(Globals.DirError);
 		}
 
 
@@ -68,7 +68,7 @@ public class abacus {
 		String[] toRemove = {".data", ".properties", ".script", ".tmp", ".log"};
 		File f = null;
         for (String aToRemove : toRemove) {
-            String tmpFile = "" + globals.DBname + aToRemove;
+            String tmpFile = "" + Globals.DBname + aToRemove;
             f = new File(tmpFile);
             if (f.exists()) {
                 f.delete();
@@ -81,14 +81,14 @@ public class abacus {
 		record_XML_files(dir); // record only the protXML and pepXML files
 
 
-		if(!globals.byPeptide) {
+		if(!Globals.byPeptide) {
 			
-			if( globals.fastaFile == null || globals.fastaFile.isEmpty() ) {
+			if( Globals.fastaFile == null || Globals.fastaFile.isEmpty() ) {
 				System.err.print("No fasta file was given so protein lengths will not be reported\n\n");
 			}
 			else {
-				System.err.println("Retrieving protein lengths from\n'" + globals.fastaFile + "'");
-				globals.parseFasta(null);
+				System.err.println("Retrieving protein lengths from\n'" + Globals.fastaFile + "'");
+				Globals.parseFasta(null);
 				System.err.print("\n");
 			}
 		}
@@ -98,12 +98,12 @@ public class abacus {
 		 * If the user wants to keep the database, this code allows them to.
 		 * NOTE: writing to disk is much slower!!!
 		 */
-		if(globals.keepDB) {
-			db += ":file:" + globals.DBname;
+		if(Globals.keepDB) {
+			db += ":file:" + Globals.DBname;
 			System.err.println("\nDatabase will be written to disk within the following files and folders:");
-			System.err.print("\t" + globals.DBname + ".script\n");
-			System.err.print("\t" + globals.DBname + ".properties\n");
-			System.err.print("\t" + globals.DBname + ".tmp\n\n");
+			System.err.print("\t" + Globals.DBname + ".script\n");
+			System.err.print("\t" + Globals.DBname + ".properties\n");
+			System.err.print("\t" + Globals.DBname + ".tmp\n\n");
 			System.err.println("NOTE: Writing to disk slows things down so please be patient...\n\n");
 		}
 		else {
@@ -115,7 +115,7 @@ public class abacus {
 		try {
 			Class.forName("org.hsqldb.jdbc.JDBCDriver");
 			conn = DriverManager.getConnection(db, "SA", "");
-			if(!globals.byPeptide) {
+			if(!Globals.byPeptide) {
 				load_protXML(conn, null);
 				System.err.print("\n");
 			}
@@ -130,17 +130,17 @@ public class abacus {
 
 		try {
 
-			if(globals.byPeptide) { // user wants peptide-level results
-				forProteins = new hyperSQLObject();
+			if(Globals.byPeptide) { // user wants peptide-level results
+				forProteins = new HyperSQLObject();
 				forProteins.initialize();
 				forProteins.makeSrcFileTable(conn, null);
 				
 				forProteins.correctPepXMLTags(conn);
 				forProteins.peptideLevelResults(conn, null);				
 			}
-			else if(globals.byGene) { // user wants gene-centric output
+			else if(Globals.byGene) { // user wants gene-centric output
 
-				forGenes = new hyperSQLObject_gene();
+				forGenes = new HyperSQLObjectGene();
 				forGenes.initialize();
 
 				forGenes.makeSrcFileTable(conn, null);
@@ -165,23 +165,23 @@ public class abacus {
 				forGenes.makeGenePepUsageTable(conn, null);
 				forGenes.appendIndividualExpts_GC(conn, null);
 
-				if(globals.doNSAF) { //generate NSAF data
+				if(Globals.doNSAF) { //generate NSAF data
 					forGenes.getNSAF_values_gene(conn, null);
 				}
 
-				if(globals.genesHaveDescriptions) { // append gene descriptions
+				if(Globals.genesHaveDescriptions) { // append gene descriptions
 					forGenes.appendGeneDescriptions(conn);
 				}
 
 				// choose output format
-				if(globals.outputFormat == globals.geneQspecFormat)
+				if(Globals.outputFormat == Globals.geneQspecFormat)
 					forGenes.formatQspecOutput(conn, null);
 				else
 					forGenes.defaultResults(conn, null);
 			}
 			else { // default protein-centric output
 
-				forProteins = new hyperSQLObject();
+				forProteins = new HyperSQLObject();
 				forProteins.initialize();
 
 				forProteins.makeSrcFileTable(conn, null);
@@ -197,7 +197,7 @@ public class abacus {
 
 				forProteins.makeProtidSummary(conn, null);
 
-				if(globals.gene2protFile != null) {
+				if(Globals.gene2protFile != null) {
 					forProteins.makeGeneTable(conn, null);
 					forProteins.appendGeneIDs(conn, null);
 					System.err.print("\n");
@@ -217,21 +217,21 @@ public class abacus {
 				// by merging the groupid and siblingGroup fields
 				forProteins.mergeIDfields(conn);
 
-				if(globals.doNSAF) {
+				if(Globals.doNSAF) {
 					forProteins.getNSAF_values_prot(conn, null);
 				}
 
-				if(globals.makeVerboseOutput) {
+				if(Globals.makeVerboseOutput) {
 					forProteins.addExtraProteins(conn, null);
 					forProteins.addProteinLengths(conn, null, 1);
 				}
 
 				// choose output format
-				switch(globals.outputFormat) {
-					case globals.protQspecFormat:
+				switch(Globals.outputFormat) {
+					case Globals.protQspecFormat:
 						forProteins.formatQspecOutput(conn, null);
 						break;
-					case globals.customOutput:
+					case Globals.customOutput:
 						forProteins.customOutput(conn, null);
 						break;
 					default:
@@ -241,13 +241,13 @@ public class abacus {
 
 
 			// user has elected to keep database, remove unnecessary tables.
-			if(globals.keepDB) {
-				if(globals.byGene) forGenes.cleanUp(conn);
+			if(Globals.keepDB) {
+				if(Globals.byGene) forGenes.cleanUp(conn);
 				else forProteins.cleanUp(conn);
 			}
 			else { // left over files that should be removed
 				f = null;
-				String tmpFile = "" + globals.DBname + ".properties";
+				String tmpFile = "" + Globals.DBname + ".properties";
 				f = new File( tmpFile );
 				if( f.exists() ) f.delete();
 				f = null;
@@ -258,7 +258,7 @@ public class abacus {
 			conn.close();
 			conn = null;
 			elapsed_time = System.currentTimeMillis() - start_time;
-			String timeStr = globals.formatTime(elapsed_time);
+			String timeStr = Globals.formatTime(elapsed_time);
 			System.err.println("\nTotal runtime (hh:mm:ss): " + timeStr + "\n");
 			System.gc();
 
@@ -299,27 +299,27 @@ public class abacus {
 		// filter to only select pepXML files
 		filter = new FilenameFilter() {
 			public boolean accept(File dir, String name) {
-				return name.endsWith(globals.pepXMLsuffix);
+				return name.endsWith(Globals.pepXMLsuffix);
 			}
 		};
 		String[] pep = dir.list(filter);
         for (String aPep : pep) {
-            if (!globals.pepXmlFiles.contains(aPep))
-                globals.pepXmlFiles.add(aPep);
+            if (!Globals.pepXmlFiles.contains(aPep))
+                Globals.pepXmlFiles.add(aPep);
         }
 
-		if(!globals.byPeptide) {
+		if(!Globals.byPeptide) {
 			// filter to only select protXML files
 			filter = new FilenameFilter() {
 				public boolean accept(File dir, String name) {
-					return name.endsWith(globals.protXMLsuffix);
+					return name.endsWith(Globals.protXMLsuffix);
 				}
 			};
 			String[] prot = dir.list(filter);
 
             for (String aProt : prot) {
-                if (!globals.protXmlFiles.contains(aProt))
-                    globals.protXmlFiles.add(aProt);
+                if (!Globals.protXmlFiles.contains(aProt))
+                    Globals.protXmlFiles.add(aProt);
             }
 		}
 
@@ -335,7 +335,7 @@ public class abacus {
 
 		try {
 			String file_path = "";
-			file_path = globals.srcDir + globals.fileSepChar + xmlFile;
+			file_path = Globals.srcDir + Globals.fileSepChar + xmlFile;
 
 			input = new FileInputStream( new File(file_path) );
 
@@ -383,13 +383,13 @@ public class abacus {
 	 *  Function parses protXML files
 	 */
 	public static boolean parseProtXML(XMLStreamReader xmlStreamReader, String xmlFile, PreparedStatement prep, int fileNumber, abacus_textArea console) {
-		protXML curGroup  = null;   // current protein group
+		ProtXML curGroup  = null;   // current protein group
 		String curProtid_ = null;   // need this to get protein description
 		String curPep_    = null;   // need this to annotate any AA modifications
 		String err = null; // text printed to screen or console
 		boolean is_iprophet_data = false; // use this to identify i-prophet files
 
-		err = "Parsing protXML [ " + (fileNumber + 1) + " of " + globals.protXmlFiles.size() + " ]:  " + xmlFile + "\n";
+		err = "Parsing protXML [ " + (fileNumber + 1) + " of " + Globals.protXmlFiles.size() + " ]:  " + xmlFile + "\n";
 		if(console != null) console.append(err);
 		else { System.err.print(err); }
 		
@@ -419,7 +419,7 @@ public class abacus {
                         case "protein_summary_header":
                              // This code identifies the pepXML files used for this protXML file
                              // This information is used to map between these files.
-                            if (globals.parseProtXML_header(xmlStreamReader, xmlFile, console)) {
+                            if (Globals.parseProtXML_header(xmlStreamReader, xmlFile, console)) {
                                 err = "\nERROR:\n"
                                         + "The pepXML files used to create '" + xmlFile + "' could not be found.\n"
                                         + "The pepXML file names must match whatever is in the protXML file header.\n"
@@ -436,7 +436,7 @@ public class abacus {
                             break;
 
                         case "protein_group":  // beginning of new protein group
-                            curGroup = new protXML(xmlFile, is_iprophet_data);
+                            curGroup = new ProtXML(xmlFile, is_iprophet_data);
                             curGroup.parse_protGroup_line(xmlStreamReader);
                             break;
 
@@ -508,10 +508,10 @@ public class abacus {
                         case "protein_group":  // end of protein group
                             curGroup.classify_group();
                             try {
-                                if (xmlFile.contains(globals.combinedFile)) {
-                                    if (curGroup.getPw() >= globals.minCombinedFilePw) curGroup.write_to_db(prep);
+                                if (xmlFile.contains(Globals.combinedFile)) {
+                                    if (curGroup.getPw() >= Globals.minCombinedFilePw) curGroup.write_to_db(prep);
                                 } else {
-                                    if (curGroup.getPw() >= globals.minPw) curGroup.write_to_db(prep);
+                                    if (curGroup.getPw() >= Globals.minPw) curGroup.write_to_db(prep);
                                 }
                             } catch (Exception e) {
                                 if (console != null) {
@@ -533,11 +533,11 @@ public class abacus {
 			
 			if(curGroup != null) { // record last group entry
 				curGroup.classify_group();
-				if( xmlFile.contains(globals.combinedFile) ) {
-					if( curGroup.getPw() >= globals.minCombinedFilePw ) curGroup.write_to_db(prep);
+				if( xmlFile.contains(Globals.combinedFile) ) {
+					if( curGroup.getPw() >= Globals.minCombinedFilePw ) curGroup.write_to_db(prep);
 				}
 				else {
-					if( curGroup.getPw() >= globals.minPw ) curGroup.write_to_db(prep);
+					if( curGroup.getPw() >= Globals.minPw ) curGroup.write_to_db(prep);
 				}
 				curGroup.clear_variables();
 				curGroup = null;
@@ -565,11 +565,11 @@ public class abacus {
 	 */
 	public static boolean parsePepXML(XMLStreamReader xmlStreamReader, String xmlFile, PreparedStatement prep, int fileNumber, abacus_textArea console) {
 
-		pepXML curPSM = null;  // current peptide-to-spectrum match
+		PepXML curPSM = null;  // current peptide-to-spectrum match
 		String err = null; // holds string for stderr or console
 		boolean is_iprophet_data = false; // true means the file is an i-prophet file
 
-		err = "Parsing pepXML [ " + (fileNumber + 1) + " of " + globals.pepXmlFiles.size() + " ]: " + xmlFile + "\n";
+		err = "Parsing pepXML [ " + (fileNumber + 1) + " of " + Globals.pepXmlFiles.size() + " ]: " + xmlFile + "\n";
 
 		if(console != null) console.append(err);
 		else System.err.print(err);
@@ -596,7 +596,7 @@ public class abacus {
 					if(elementName.equals("peptideprophet_summary")) xmlStreamReader.next();
 
 					else if(elementName.equals("spectrum_query")) { // new peptide record starts
-						curPSM = new pepXML(xmlFile, is_iprophet_data);
+						curPSM = new PepXML(xmlFile, is_iprophet_data);
 						curPSM.parse_pepXML_line(xmlStreamReader);
 					}
 
@@ -621,7 +621,7 @@ public class abacus {
 						curPSM.annotate_modPeptide();
 
 						try {
-							if(curPSM.getIniProb() >= globals.iniProbTH ) curPSM.write_to_db(prep);
+							if(curPSM.getIniProb() >= Globals.iniProbTH ) curPSM.write_to_db(prep);
 						} catch (Exception e) {
 							e.printStackTrace();
 							System.exit(-1);
@@ -630,7 +630,7 @@ public class abacus {
 					}
 				}
 			}
-		} catch (XMLStreamException e) {
+		} catch (XMLStreamException | NullPointerException e) {
 			if(console != null) {
 				console.append("\nDied parsing " + xmlFile + "\n");
 				console.append("This error means there is a problem with the formatting of your pepXML file.\n");
@@ -700,12 +700,12 @@ public class abacus {
 
 		// At this juncture, the database should have been created.
 		// We will now iterate through the protXML files loading the relevant content
-		for(int i = 0; i < globals.protXmlFiles.size(); i++) {
-			globals.proceedWithQuery = false;
-			status = parseXMLDocument( globals.protXmlFiles.get(i), "protXML", prep, i, console );
+		for(int i = 0; i < Globals.protXmlFiles.size(); i++) {
+			Globals.proceedWithQuery = false;
+			status = parseXMLDocument( Globals.protXmlFiles.get(i), "protXML", prep, i, console );
 			if(status) return status; // a return of 'true' means something went wrong
 			
-			if(globals.proceedWithQuery) { // if queryCtr = true then you got at least 1 row to insert into the DB
+			if(Globals.proceedWithQuery) { // if queryCtr = true then you got at least 1 row to insert into the DB
 				conn.setAutoCommit(false);
 				prep.executeBatch();
 				conn.setAutoCommit(true);
@@ -775,12 +775,12 @@ public class abacus {
 
 		// At this juncture, the database should have been created.
 		// We will now iterate through the pepXML files loading the relevant content
-		for(int i = 0; i < globals.pepXmlFiles.size(); i++) {
-			globals.proceedWithQuery = false;
-			status = parseXMLDocument( globals.pepXmlFiles.get(i), "pepXML", prep, i, console );
+		for(int i = 0; i < Globals.pepXmlFiles.size(); i++) {
+			Globals.proceedWithQuery = false;
+			status = parseXMLDocument( Globals.pepXmlFiles.get(i), "pepXML", prep, i, console );
 			if(status) return status; // a return of 'true' means something went wrong
 			
-			if(globals.proceedWithQuery) { // if queryCtr > 0 then you got at least 1 row to insert into the DB
+			if(Globals.proceedWithQuery) { // if queryCtr > 0 then you got at least 1 row to insert into the DB
 				conn.setAutoCommit(false);
 				prep.executeBatch();
 				conn.setAutoCommit(true);

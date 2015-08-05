@@ -11,7 +11,7 @@
 
 package abacus_textArea;
 
-import abacus.globals;
+import abacus.Globals;
 
 import javax.swing.ProgressMonitor;
 
@@ -35,7 +35,7 @@ public class abacus_textArea extends javax.swing.JFrame {
 		pBar.setMinimum(0);
 		pBar.setValue(0);
 
-		if(globals.byGene) pBar.setMaximum(14);
+		if(Globals.byGene) pBar.setMaximum(14);
 		else pBar.setMaximum(10);
     }
 
@@ -177,7 +177,7 @@ public class abacus_textArea extends javax.swing.JFrame {
 	// function to update the progress monitor's counter
 	public void monitorBoxUpdate(int newValue) {
 		double x = ((double)newValue / (double)pMonitor.getMaximum()) * 100.00;
-		String num = Double.toString( globals.roundDbl(x, 0) );
+		String num = Double.toString( Globals.roundDbl(x, 0) );
 		String txt = "Completed " + num + "%\n";
 		pMonitor.setNote(txt);
 		pMonitor.setProgress(newValue);

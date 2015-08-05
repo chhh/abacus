@@ -27,7 +27,7 @@ import java.text.DecimalFormat;
 /*
  * Global functions and variables go here
  */
-public class globals {
+public class Globals {
 
 	public static String OStype = null;
 	public static String srcDir = null;
@@ -176,7 +176,7 @@ public class globals {
 				if(line.startsWith(">")) {
 					
 					if(k == null || k.isEmpty()) {
-						k = globals.formatProtId(line.substring(1));
+						k = Globals.formatProtId(line.substring(1));
 					}
 					else { // record current protein before continuing
 						
@@ -185,7 +185,7 @@ public class globals {
 						
 						k = null;
 						k = "";
-						k = globals.formatProtId(line.substring(1));
+						k = Globals.formatProtId(line.substring(1));
 						
 						seq = null;
 						len = -1;
@@ -362,7 +362,7 @@ public class globals {
 				
 				
 				//determine output type
-				if(globals.outputFormat == -1) { // -1 means 'unset yet'
+				if(Globals.outputFormat == -1) { // -1 means 'unset yet'
 					if(ary[0].equals("output")) {
                         switch (ary[1]) {
                             case "Custom":
@@ -430,11 +430,11 @@ public class globals {
 			input.close();
 
 
-			if(globals.epiThreshold == -1) globals.epiThreshold = 0;
+			if(Globals.epiThreshold == -1) Globals.epiThreshold = 0;
 
 			// extract the combined file name from combinedFilePath
-			if( globals.combinedFilePath != null ) {
-				File cf = new File(globals.combinedFilePath);
+			if( Globals.combinedFilePath != null ) {
+				File cf = new File(Globals.combinedFilePath);
 				combinedFile = cf.getName();
 				cf = null;
 			}
@@ -605,7 +605,7 @@ public class globals {
                 if (opt.equals("numSpecsUniq")) printE.add("_numSpecsUniq");
                 if (opt.equals("numSpecsAdj")) printE.add("_numSpecsAdj");
 
-                if (globals.doNSAF) {
+                if (Globals.doNSAF) {
                     if (opt.equals("numSpecsTot")) printE.add("_totNSAF");
                     if (opt.equals("numSpecsUniq")) printE.add("_uniqNSAF");
                     if (opt.equals("numSpecsAdj")) printE.add("_adjNSAF");
@@ -711,10 +711,10 @@ public class globals {
 				// problems.
 				if(origTag.matches("^\\d.*")) {
 					tmp = "x" + origTag;
-					tag = globals.replaceAll(tmp, '-', '_');
+					tag = Globals.replaceAll(tmp, '-', '_');
 				}
 				else { 
-					tag = globals.replaceAll(origTag, '-', '_'); 
+					tag = Globals.replaceAll(origTag, '-', '_');
 				}
 					
 			}
@@ -723,7 +723,7 @@ public class globals {
 				// so we make one up based upon the given file name.
 				// take the name of the file up to the first dot character
 				int dotIdx = protXMLfile.indexOf('.');
-				tag = globals.replaceAll(protXMLfile.substring(0, dotIdx), '-', '_');
+				tag = Globals.replaceAll(protXMLfile.substring(0, dotIdx), '-', '_');
 				origTag = tag;
 			}
 			protTagHash.put(protXMLfile, tag);
@@ -781,7 +781,7 @@ public class globals {
 	private static boolean search_srcDir_for_pepXML(String origProtXML_tag, String protXML_tag) {
 
 		boolean ret = false;
-		File dir = new File(globals.srcDir);
+		File dir = new File(Globals.srcDir);
 		String alt_pepXML = null;
 
 		if(origProtXML_tag.equals(protXML_tag)) {
@@ -793,7 +793,7 @@ public class globals {
 			alt_pepXML = "interact-" + origProtXML_tag + "." + pepXMLsuffix;
 		}
 
-		if( globals.pepXmlFiles.contains(alt_pepXML) ) {
+		if( Globals.pepXmlFiles.contains(alt_pepXML) ) {
 			pepTagHash.put(alt_pepXML, protXML_tag);
 			ret = true;
 		}
@@ -953,15 +953,16 @@ public class globals {
 		
 		for(int i = 0; i < x.length; i++) {
 			curTxt = x[i].trim();
-			
-			if( curTxt.startsWith("-") ) { // we want to avoid this modification
-				if(null == pepMods_minus) pepMods_minus = new String[ nM ];
 
-				pepMods_minus[ m ] = curTxt.substring(1).toUpperCase();
+			if (curTxt.startsWith("-")) { // we want to avoid this modification
+				if (null == pepMods_minus) pepMods_minus = new String[nM];
+
+				pepMods_minus[m] = curTxt.substring(1).toUpperCase();
 				m++;
+			} else if (curTxt.startsWith("+")) { // we want to keep this modification
+				if (null == pepMods_plus) pepMods_plus = new String[nP];
 			}
-			else if( curTxt.startsWith("+") ) { // we want to keep this modification
-				if(null == pepMods_plus) pepMods_plus = new String[ nP ];
+		}
 
 	}
 

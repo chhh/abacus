@@ -3,10 +3,10 @@
  * and open the template in the editor.
  */
 
-package mainFunction;
+package main;
 
-import abacus.abacus;
-import abacus.abacusUI.abacusUI;
+import abacus.Abacus;
+import abacus.ui.abacusUI;
 import java.io.File;
 import java.io.IOException;
 import org.hsqldb.util.DatabaseManagerSwing;
@@ -19,11 +19,11 @@ import org.hsqldb.util.DatabaseManagerSwing;
  *
  * @author dfermin
  */
-public class mainFunction {
+public class MainFunction {
 
 	public static void main(String[] args) throws IOException {
 		abacusUI gui = null;
-		abacus cmdLine = null;
+		Abacus cmdLine = null;
 		String inputFile = null;
 		DatabaseManagerSwing dbGUI = null;
 
@@ -40,7 +40,7 @@ public class mainFunction {
 			inputFile = args[1];
 			File tf = new File(inputFile);
 			if( tf.exists() ) {
-				cmdLine = new abacus();
+				cmdLine = new Abacus();
 				cmdLine.main(args);
 			}
 		}
@@ -50,7 +50,7 @@ public class mainFunction {
 			// Check to see if you can run the gui. Need to be running a 
 			// desktop environment for that
 			if( java.awt.GraphicsEnvironment.isHeadless() ) {
-				cmdLine = new abacus();
+				cmdLine = new Abacus();
 				System.err.print("\n\n" + cmdLine.printHeader() + "\n");
 				System.err.print("\nERROR!\n" +
 					"I was unable to start the GUI. Perhaps you are using a " +
@@ -78,7 +78,7 @@ public class mainFunction {
 //				);
 //				System.exit(-1);
 //			}
-//			gui = new abacusUI();
+//			gui = new ui();
 //			gui.main(args);
 //		}
 //		 else {
@@ -98,7 +98,7 @@ public class mainFunction {
 //			}
 //			else {
 //				// provided command line options were incorrect, start gui
-//				gui = new abacusUI();
+//				gui = new ui();
 //				gui.main(args);
 //			}
 //		 }

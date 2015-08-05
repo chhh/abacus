@@ -10,13 +10,12 @@ import abacus_textArea.abacus_textArea;
 
 /******************
  *
- * This class inherits from hyperSQLObject and is used to run gene-centric
- * queries.
+ * Used to run gene-centric queries.
  *
  * @author dfermin
  *
  */
-public class hyperSQLObject_gene extends hyperSQLObject {
+public class HyperSQLObjectGene extends HyperSQLObject {
 
 
 	/*****************
@@ -278,8 +277,8 @@ public class hyperSQLObject_gene extends hyperSQLObject {
 			  + "AND r.tag = px.tag "
 			  + "AND r.modPeptide = px.modPeptide "
 //			  + "AND r.charge = px.charge "
-              + "AND px.iniProb >= " + globals.iniProbTH + " "
-              + "AND r.iniProb >= " + globals.iniProbTH + " "
+              + "AND px.iniProb >= " + Globals.iniProbTH + " "
+              + "AND r.iniProb >= " + Globals.iniProbTH + " "
 			  + "GROUP BY r.tag, gn.geneid, r.isFwd, r.modPeptide "//, r.charge "
 			  + "HAVING max(r.localPw) > " + this.minPw + " "
 			  + ") ";
@@ -292,7 +291,7 @@ public class hyperSQLObject_gene extends hyperSQLObject {
 			  + "  MAX(r.localPw), r.modPeptide, MAX(r.iniProb) "
 			  + "FROM protXML r "
 			  + "WHERE r.isFwd = 0 "
-              + "AND r.iniProb >= " + globals.iniProbTH + " "
+              + "AND r.iniProb >= " + Globals.iniProbTH + " "
 			  + "GROUP BY r.tag, r.groupid, r.modPeptide" //, r.charge "
 			  + ") ";
 		stmt.executeUpdate(query);
@@ -309,7 +308,7 @@ public class hyperSQLObject_gene extends hyperSQLObject {
 		// if the epiThreshold > iniProbTH then we have to remove
 		// all entries where the gene does not have at least 1 peptide with a
 		// probability >= epiThreshold
-		if(globals.epiThreshold > globals.iniProbTH) {
+		if(Globals.epiThreshold > Globals.iniProbTH) {
 			query = "CREATE MEMORY TABLE x_ ("
 				  + " tag, geneid, maxIniProb "
 				  + ") AS ( "
@@ -322,7 +321,7 @@ public class hyperSQLObject_gene extends hyperSQLObject {
 			stmt.executeUpdate("CREATE INDEX x_1 ON x_(tag, geneid)");
 			stmt.executeUpdate("CREATE INDEX x_2 ON x_(maxIniProb)");
 
-			query = "SELECT * FROM x_ WHERE maxIniProb < " + globals.epiThreshold;
+			query = "SELECT * FROM x_ WHERE maxIniProb < " + Globals.epiThreshold;
 			rs = stmt.executeQuery(query);
 
 			Statement stmt2 = conn.createStatement();
@@ -544,7 +543,7 @@ public class hyperSQLObject_gene extends hyperSQLObject {
 			stmt2.executeUpdate(query);
 
 			if(console == null) {
-				globals.cursorStatus(iter, msg);
+				Globals.cursorStatus(iter, msg);
 				iter++;
 			}
 		}
@@ -572,7 +571,7 @@ public class hyperSQLObject_gene extends hyperSQLObject {
 
 		String tag = null;
 
-		if(sft.equals(globals.combinedFile))  tag = "COMBINED";
+		if(sft.equals(Globals.combinedFile))  tag = "COMBINED";
 		else tag = sft;
 
 		query = "SELECT COUNT(*) "
@@ -607,7 +606,7 @@ public class hyperSQLObject_gene extends hyperSQLObject {
 
 		String tag = null;
 
-		if(sft.equals(globals.combinedFile))  tag = "COMBINED";
+		if(sft.equals(Globals.combinedFile))  tag = "COMBINED";
 		else tag = sft;
 
 
@@ -677,7 +676,7 @@ public class hyperSQLObject_gene extends hyperSQLObject {
 			int numProts = get_numProts(conn, geneid);
 			int avgProtLen = 0;
 			
-			if( globals.fastaFile == null || globals.fastaFile.isEmpty() ) avgProtLen = 0;
+			if( Globals.fastaFile == null || Globals.fastaFile.isEmpty() ) avgProtLen = 0;
 			else {
 				avgProtLen = get_avgProtLen(conn, geneid);
 			}
@@ -768,9 +767,9 @@ public class hyperSQLObject_gene extends hyperSQLObject {
 			while(rs.next()) {
 				String protid = rs.getString(1);
 
-				if( globals.protLen.containsKey(protid) ) {
+				if( Globals.protLen.containsKey(protid) ) {
 					N++;
-					sumLen += globals.protLen.get(protid);
+					sumLen += Globals.protLen.get(protid);
 				}
 			}
 			avg = (float)sumLen / (float) N;
@@ -788,9 +787,9 @@ public class hyperSQLObject_gene extends hyperSQLObject {
 			while(rs.next()) {
 				String protid = rs.getString(1);
 
-				if( globals.protLen.containsKey(protid) ) {
+				if( Globals.protLen.containsKey(protid) ) {
 					N++;
-					sumLen += globals.protLen.get(protid);
+					sumLen += Globals.protLen.get(protid);
 				}
 			}
 			avg = (float)sumLen / (float) N;
@@ -915,7 +914,7 @@ public class hyperSQLObject_gene extends hyperSQLObject {
 			prep.setString(3, modPep);
 			prep.addBatch();
 
-			if(console == null) globals.cursorStatus(iter, msg);
+			if(console == null) Globals.cursorStatus(iter, msg);
 			iter++;
 		}
 		conn.setAutoCommit(false);
@@ -1038,7 +1037,7 @@ public class hyperSQLObject_gene extends hyperSQLObject {
 				stmt4.executeUpdate(query);
 
 				if(console == null) {
-					globals.cursorStatus(iter, msg);
+					Globals.cursorStatus(iter, msg);
 					iter++;
 				}
 			}
@@ -1102,7 +1101,7 @@ public class hyperSQLObject_gene extends hyperSQLObject {
 			  + "FROM geneCombined c, pepXML px "
 			  + "WHERE c.modPeptide = px.modPeptide "
 //			  + "AND c.charge = px.charge "
-			  + "AND px.iniProb >= " + globals.iniProbTH + " "
+			  + "AND px.iniProb >= " + Globals.iniProbTH + " "
 			  + "GROUP BY c.geneid, c.modPeptide, c.wt " //c.charge, c.wt "
 			  + "ORDER BY c.geneid, c.modPeptide "
 			  + ")";
@@ -1117,7 +1116,7 @@ public class hyperSQLObject_gene extends hyperSQLObject {
 			  + "WHERE gx.tag = px.tag "
 			  + "AND gx.modPeptide = px.modPeptide "
 //			  + "AND gx.charge = px.charge "
-			  + "AND px.iniProb >= " + globals.iniProbTH + " "
+			  + "AND px.iniProb >= " + Globals.iniProbTH + " "
 			  + "GROUP BY gx.tag, gx.geneid, gx.modPeptide, gx.wt " //gx.charge, gx.wt "
 			  + "ORDER BY gx.tag, gx.geneid, gx.modPeptide "
 			  + ") ";
@@ -1245,7 +1244,7 @@ public class hyperSQLObject_gene extends hyperSQLObject {
 		String numProts = Integer.toString( rs.getInt(1) );
 		int factor = numProts.length() + 1;
 		double NSAF_FACTOR = Math.pow(10,factor); // we multiply all NSAF values by this
-		globals.NSAF_FACTOR = NSAF_FACTOR;
+		Globals.NSAF_FACTOR = NSAF_FACTOR;
 		rs.close();
 
 		msg = "  NSAF_FACTOR = 10^" + factor + " = " + NSAF_FACTOR + "\n";

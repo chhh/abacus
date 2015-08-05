@@ -10,7 +10,7 @@ import javax.xml.stream.XMLStreamReader;
 /*
  * Class defining the protXML object
 */
-public class protXML {
+public class ProtXML {
 	private String srcFile;
 	private int groupid;
 	private double Pw;
@@ -21,11 +21,11 @@ public class protXML {
 	private HashMap<String, Integer> protIdClass; //holds protId and isFwd (0/1)
 	private HashMap<String, String> protIds; // holds protIds and deflines
 	private HashMap<String, Integer> protLen; // holds protIds and protein lengths
-	private HashMap<String, pepXML> peptides; //holds modPeps and their pepXML objects
+	private HashMap<String, PepXML> peptides; //holds modPeps and their pepXML objects
 
-	public protXML() {}; // default constructor
+	public ProtXML() {}; // default constructor
 
-	public protXML(String txt, boolean iProphet_status) {
+	public ProtXML(String txt, boolean iProphet_status) {
 
 		this.srcFile = txt;
 		this.protIds = new HashMap<>();
@@ -73,7 +73,7 @@ public class protXML {
 			attrName  = xmlStreamReader.getAttributeLocalName(i);
 			attrValue = xmlStreamReader.getAttributeValue(i);
 
-			if(attrName.equals("protein_name")) protid_ = globals.formatProtId(attrValue);
+			if(attrName.equals("protein_name")) protid_ = Globals.formatProtId(attrValue);
 			if(attrName.equals("probability")) this.localPw = Double.parseDouble(attrValue);
 			if(attrName.equals("group_sibling_id")) this.siblingGroup = attrValue;
 		}
@@ -99,8 +99,8 @@ public class protXML {
 	 *  Function records the current peptide into protXML object
 	 */
 	public String parse_peptide_line(XMLStreamReader xmlStreamReader) {
-		pepXML curPep = null;
-		curPep = new pepXML();
+		PepXML curPep = null;
+		curPep = new PepXML();
 		String attrName  = null;
 		String attrValue = null;
 		int pepCtr = 0;
@@ -155,7 +155,7 @@ public class protXML {
 	 *  Function records the current peptide's modifications (if any)
 	 */
 	public void record_AA_mod_protXML(XMLStreamReader xmlStreamReader, String k) {
-		pepXML curPep = peptides.get(k);
+		PepXML curPep = peptides.get(k);
 		curPep.record_AA_mod(xmlStreamReader);
 		peptides.put(k, curPep);
 		curPep = null;
@@ -167,7 +167,7 @@ public class protXML {
 	 *  Function to annotate modPeptide string
 	 */
 	public void annotate_modPeptide_protXML(String k) {
-		pepXML curPep = peptides.get(k);
+		PepXML curPep = peptides.get(k);
 		
 		if(curPep.getModPeptide() == null) {
 			curPep.annotate_modPeptide();
@@ -207,7 +207,7 @@ public class protXML {
 		while(protIter.hasNext()) {
 			k = protIter.next();
 
-			if( k.startsWith( globals.decoyTag ) ) this.protIdClass.put(k, 0);
+			if( k.startsWith( Globals.decoyTag ) ) this.protIdClass.put(k, 0);
 			else {
 				this.protIdClass.put(k, 1);
 				isFwd_ctr++;
@@ -229,7 +229,7 @@ public class protXML {
 			while(protIter.hasNext()) { // remove decoys from group
 				k = protIter.next();
 
-				if( !k.startsWith(globals.decoyTag) ) {
+				if( !k.startsWith(Globals.decoyTag) ) {
 					newProtids.put(k, protIds.get(k));
 					newProtidsClass.put(k, 1);
 				}
@@ -275,16 +275,16 @@ public class protXML {
 			Iterator<String> pepIter = pepKeys.iterator();
 			String pepId = "";
 
-			pepXML curPep = null;
+			PepXML curPep = null;
 
 			while(pepIter.hasNext()) { // iterate over peptides
 				pepId = pepIter.next();
 				curPep = null;
 				curPep = this.peptides.get(pepId);
 
-				if( !globals.check_modPeptide( curPep.getModPeptide() ) ) continue;
+				if( !Globals.check_modPeptide(curPep.getModPeptide()) ) continue;
 
-				if(curPep.getIniProb() < globals.iniProbTH) continue;
+				if(curPep.getIniProb() < Globals.iniProbTH) continue;
 				try {
 					prep.setString(1, this.srcFile.toUpperCase());
 					prep.setInt(2, this.groupid);
@@ -303,7 +303,7 @@ public class protXML {
 
 					prep.setString(13, defline);
 					prep.addBatch();
-					globals.proceedWithQuery = true; // by incrementing this you imply the that insertion worked
+					Globals.proceedWithQuery = true; // by incrementing this you imply the that insertion worked
 				}
 				catch (Exception e) {
 					e.printStackTrace();

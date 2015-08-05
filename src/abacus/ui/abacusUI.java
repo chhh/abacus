@@ -4,12 +4,12 @@
  */
 
 /*
- * abacusUI.java
+ * ui.java
  *
  * Created on Jul 19, 2010, 11:26:35 AM
  */
 
-package abacus.abacusUI;
+package abacus.ui;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -22,10 +22,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import abacus.globals;
-import abacus.hyperSQLObject;
-import abacus.hyperSQLObject_gene;
-import abacus.abacus;
+import abacus.Globals;
+import abacus.HyperSQLObject;
+import abacus.HyperSQLObjectGene;
+import abacus.Abacus;
 import abacus_textArea.abacus_textArea;
 import java.util.HashMap;
 
@@ -40,7 +40,7 @@ public class abacusUI extends javax.swing.JFrame {
 
     workThread t;
 
-    /** Creates new form abacusUI */
+    /** Creates new form ui */
     public abacusUI() {
         initComponents();
     }
@@ -1073,32 +1073,32 @@ public class abacusUI extends javax.swing.JFrame {
 
 	// function clears out all global variables
 	private void clearGlobalVariables() {
-		globals.DBname = null;
-		globals.paramFile = null;
-		globals.gene2protFile = null;
-		globals.outputFilePath = null;
-		globals.outputPath = null;
-		globals.combinedFile = null;
-		globals.combinedFilePath = null;
-		globals.pepRegexText = null;
-		globals.pepMods_minus = null;
-		globals.pepMods_minus = null;
-		globals.fastaFile = null;
+		Globals.DBname = null;
+		Globals.paramFile = null;
+		Globals.gene2protFile = null;
+		Globals.outputFilePath = null;
+		Globals.outputPath = null;
+		Globals.combinedFile = null;
+		Globals.combinedFilePath = null;
+		Globals.pepRegexText = null;
+		Globals.pepMods_minus = null;
+		Globals.pepMods_minus = null;
+		Globals.fastaFile = null;
 
-		globals.iniProbTH = -1;
-		globals.maxIniProbTH = -1;
-		globals.minCombinedFilePw = -1;
-		globals.minPw = -1;
-		globals.epiThreshold = -1;
-		globals.recalcPepWts = false;
+		Globals.iniProbTH = -1;
+		Globals.maxIniProbTH = -1;
+		Globals.minCombinedFilePw = -1;
+		Globals.minPw = -1;
+		Globals.epiThreshold = -1;
+		Globals.recalcPepWts = false;
 
-		if(globals.protLen != null) globals.protLen.clear();
-		if(globals.pepTagHash != null) globals.pepTagHash.clear();
-		if(globals.protTagHash != null) globals.protTagHash.clear();
-		if(globals.pepXmlFiles != null) globals.pepXmlFiles.clear();
-		if(globals.protXmlFiles != null) globals.protXmlFiles.clear();
-		if(globals.printC != null) globals.printC.clear();
-		if(globals.printE != null) globals.printE.clear();
+		if(Globals.protLen != null) Globals.protLen.clear();
+		if(Globals.pepTagHash != null) Globals.pepTagHash.clear();
+		if(Globals.protTagHash != null) Globals.protTagHash.clear();
+		if(Globals.pepXmlFiles != null) Globals.pepXmlFiles.clear();
+		if(Globals.protXmlFiles != null) Globals.protXmlFiles.clear();
+		if(Globals.printC != null) Globals.printC.clear();
+		if(Globals.printE != null) Globals.printE.clear();
 	}
 
 
@@ -1140,8 +1140,8 @@ public class abacusUI extends javax.swing.JFrame {
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
             File f = fc.getSelectedFile();
-            globals.srcDir = f.getPath();
-            srcDirTextField.setText(globals.srcDir);
+            Globals.srcDir = f.getPath();
+            srcDirTextField.setText(Globals.srcDir);
         }
     }//GEN-LAST:event_srcDirBrowseButtonActionPerformed
 
@@ -1156,8 +1156,8 @@ public class abacusUI extends javax.swing.JFrame {
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
             File f = fc.getSelectedFile();
-            globals.fastaFile = f.getPath();
-            fastaTextField.setText(globals.fastaFile);
+            Globals.fastaFile = f.getPath();
+            fastaTextField.setText(Globals.fastaFile);
         }
     }//GEN-LAST:event_fastaBrowseButtonActionPerformed
 
@@ -1173,8 +1173,8 @@ public class abacusUI extends javax.swing.JFrame {
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
             File f = fc.getSelectedFile();
-            globals.gene2protFile = f.getPath();
-            gene2protTextField.setText(globals.gene2protFile);
+            Globals.gene2protFile = f.getPath();
+            gene2protTextField.setText(Globals.gene2protFile);
         }
     }//GEN-LAST:event_gene2protBrowseButtonActionPerformed
 
@@ -1189,8 +1189,8 @@ public class abacusUI extends javax.swing.JFrame {
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
             File f = fc.getSelectedFile();
-            globals.combinedFile = f.getPath();
-            combinedFileTextField.setText(globals.combinedFile);
+            Globals.combinedFile = f.getPath();
+            combinedFileTextField.setText(Globals.combinedFile);
         }
     }//GEN-LAST:event_combinedFileBrowseButtonActionPerformed
 
@@ -1204,128 +1204,128 @@ public class abacusUI extends javax.swing.JFrame {
 
         if(retVal == JFileChooser.APPROVE_OPTION) {
             File f = fc.getSelectedFile();
-            globals.paramFile = f.getPath();
-            paramFileTextField.setText(globals.paramFile);
+            Globals.paramFile = f.getPath();
+            paramFileTextField.setText(Globals.paramFile);
 
             // parse the given file
-            globals.parseParametersFile();
+            Globals.parseParametersFile();
 
             // update the form with the data from the file
-            dbNameTextField.setText(globals.DBname);
+            dbNameTextField.setText(Globals.DBname);
 
-			if(!globals.fastaFile.isEmpty()) {
-				fastaTextField.setText(globals.fastaFile);
+			if(!Globals.fastaFile.isEmpty()) {
+				fastaTextField.setText(Globals.fastaFile);
 			}
 			
-			if(globals.byPeptide) {
+			if(Globals.byPeptide) {
 				this.peptideOutputRB.doClick();
 			}
 			
-            if(globals.keepDB) {
+            if(Globals.keepDB) {
                 keepDBCB.doClick();
             }
 
-			if(globals.doNSAF) {
+			if(Globals.doNSAF) {
 				nsafCB.doClick();
 			}
 
-			if(globals.recalcPepWts) {
+			if(Globals.recalcPepWts) {
 				recalcPepWtCB.doClick();
 			}
 			
-			if(globals.decoyTag != null) {
-                decoyTagTextField.setText(globals.decoyTag);
+			if(Globals.decoyTag != null) {
+                decoyTagTextField.setText(Globals.decoyTag);
             }
             else {
                 decoyTagTextField.setText("");
             }
 
-			if(globals.makeVerboseOutput == true) verboseResultsCB.doClick();
+			if(Globals.makeVerboseOutput == true) verboseResultsCB.doClick();
 
-			if(globals.pepRegexText != null) {
-				pepRegexTextField.setText(globals.pepRegexText);
+			if(Globals.pepRegexText != null) {
+				pepRegexTextField.setText(Globals.pepRegexText);
 			}
 
 
-            maxIniProbTextField.setText(Double.toString(globals.maxIniProbTH));
-            minCombinedFilePwTextField.setText(Double.toString(globals.minCombinedFilePw));
+            maxIniProbTextField.setText(Double.toString(Globals.maxIniProbTH));
+            minCombinedFilePwTextField.setText(Double.toString(Globals.minCombinedFilePw));
             ///minPwTextField.setText(Double.toString(globals.minPw));
-            iniProbTextField.setText(Double.toString(globals.iniProbTH));
+            iniProbTextField.setText(Double.toString(Globals.iniProbTH));
             //pepXMLsuffixTextField.setText(globals.pepXMLsuffix);
             //protXMLsuffixTextField.setText(globals.protXMLsuffix);
             //fastaTextField.setText(globals.fastaFile);
-            combinedFileTextField.setText(globals.combinedFilePath);
-			epiTextField.setText(Double.toString(globals.epiThreshold));
+            combinedFileTextField.setText(Globals.combinedFilePath);
+			epiTextField.setText(Double.toString(Globals.epiThreshold));
 
-            if(globals.srcDir.equals(".")) {
-                File cd = new File(globals.paramFile);
+            if(Globals.srcDir.equals(".")) {
+                File cd = new File(Globals.paramFile);
                 String cd_path = cd.getAbsolutePath();
                 srcDirTextField.setText(cd_path);
-                globals.srcDir = cd_path;
+                Globals.srcDir = cd_path;
             }
-            else { srcDirTextField.setText(globals.srcDir); }
+            else { srcDirTextField.setText(Globals.srcDir); }
 
-            if(globals.gene2protFile != null) {
-                gene2protTextField.setText(globals.gene2protFile);
+            if(Globals.gene2protFile != null) {
+                gene2protTextField.setText(Globals.gene2protFile);
             }
             else {
                 gene2protTextField.setText("");
             }
 
             // need to select Custom Radio button and load the specified options
-            if(globals.outputFormat == globals.customOutput) {
+            if(Globals.outputFormat == Globals.customOutput) {
                 customRB.doClick();
                 jPanel4_customOutput.setEnabled(rootPaneCheckingEnabled);
 
                 //printC options
-                if(globals.printC.contains("ALL_ID")) ALL_IDCB.setSelected(rootPaneCheckingEnabled);
-                if(globals.printC.contains("ALL_PW")) ALL_PwCB.setSelected(rootPaneCheckingEnabled);
-                if(globals.printC.contains("ALL_LOCALPW")) ALL_localPwCB.setSelected(rootPaneCheckingEnabled);
-                if(globals.printC.contains("ALL_NUMPEPSTOT")) ALL_numPepsTotCB.setSelected(rootPaneCheckingEnabled);
-                if(globals.printC.contains("ALL_NUMPEPSUNIQ")) ALL_numPepsUniqCB.setSelected(rootPaneCheckingEnabled);
-                if(globals.printC.contains("ALL_NUMSPECSTOT")) ALL_numSpecsTotCB.setSelected(rootPaneCheckingEnabled);
-                if(globals.printC.contains("ALL_NUMSPECSUNIQ")) ALL_numSpecsUniqCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printC.contains("ALL_ID")) ALL_IDCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printC.contains("ALL_PW")) ALL_PwCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printC.contains("ALL_LOCALPW")) ALL_localPwCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printC.contains("ALL_NUMPEPSTOT")) ALL_numPepsTotCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printC.contains("ALL_NUMPEPSUNIQ")) ALL_numPepsUniqCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printC.contains("ALL_NUMSPECSTOT")) ALL_numSpecsTotCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printC.contains("ALL_NUMSPECSUNIQ")) ALL_numSpecsUniqCB.setSelected(rootPaneCheckingEnabled);
 
-                if(globals.printC.contains("MAXPW")) maxPwCB.setSelected(rootPaneCheckingEnabled);
-                if(globals.printC.contains("MAXINIPROB")) maxIniProbCB.setSelected(rootPaneCheckingEnabled);
-                if(globals.printC.contains("WT_MAXINIPROB")) wt_maxIniProbCB.setSelected(rootPaneCheckingEnabled);
-                if(globals.printC.contains("MAXINIPROBUNIQ")) maxIniProbUniqCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printC.contains("MAXPW")) maxPwCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printC.contains("MAXINIPROB")) maxIniProbCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printC.contains("WT_MAXINIPROB")) wt_maxIniProbCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printC.contains("MAXINIPROBUNIQ")) maxIniProbUniqCB.setSelected(rootPaneCheckingEnabled);
 
-                if(globals.printC.contains("PROTID")) protidCB.setSelected(rootPaneCheckingEnabled);
-                if(globals.printC.contains("ISFWD")) isFwdCB.setSelected(rootPaneCheckingEnabled);
-                if(globals.printC.contains("DEFLINE")) deflineCB.setSelected(rootPaneCheckingEnabled);
-                if(globals.printC.contains("NUMXML")) numXMLCB.setSelected(rootPaneCheckingEnabled);
-                if(globals.printC.contains("PROTLEN")) protLenCB.setSelected(rootPaneCheckingEnabled);
-                if(globals.printC.contains("GENEID")) geneidCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printC.contains("PROTID")) protidCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printC.contains("ISFWD")) isFwdCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printC.contains("DEFLINE")) deflineCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printC.contains("NUMXML")) numXMLCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printC.contains("PROTLEN")) protLenCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printC.contains("GENEID")) geneidCB.setSelected(rootPaneCheckingEnabled);
 
                 //printE options
-                if(globals.printE.contains("_id")) Expt_IDCB.setSelected(rootPaneCheckingEnabled);
-                if(globals.printE.contains("_Pw")) Expt_PwCB.setSelected(rootPaneCheckingEnabled);
-                if(globals.printE.contains("_numPepsTot")) Expt_numPepsTotCB.setSelected(rootPaneCheckingEnabled);
-                if(globals.printE.contains("_numPepsUniq")) Expt_numPepsUniqCB.setSelected(rootPaneCheckingEnabled);
-                if(globals.printE.contains("_numSpecsTot")) Expt_numSpecsTotCB.setSelected(rootPaneCheckingEnabled);
-                if(globals.printE.contains("_numSpecsUniq")) Expt_numSpecsUniqCB.setSelected(rootPaneCheckingEnabled);
-                if(globals.printE.contains("_numSpecsAdj")) Expt_numSpecsAdjCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printE.contains("_id")) Expt_IDCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printE.contains("_Pw")) Expt_PwCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printE.contains("_numPepsTot")) Expt_numPepsTotCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printE.contains("_numPepsUniq")) Expt_numPepsUniqCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printE.contains("_numSpecsTot")) Expt_numSpecsTotCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printE.contains("_numSpecsUniq")) Expt_numSpecsUniqCB.setSelected(rootPaneCheckingEnabled);
+                if(Globals.printE.contains("_numSpecsAdj")) Expt_numSpecsAdjCB.setSelected(rootPaneCheckingEnabled);
             }
-			else if(globals.outputFormat == globals.geneOutput) {
+			else if(Globals.outputFormat == Globals.geneOutput) {
 				geneRB.doClick();
 			}
-			else if(globals.outputFormat == globals.geneQspecFormat) {
+			else if(Globals.outputFormat == Globals.geneQspecFormat) {
 				qspecRB_gene.doClick();
 			}
-			else if(globals.outputFormat == globals.protQspecFormat) {
+			else if(Globals.outputFormat == Globals.protQspecFormat) {
 				qspecRB_prot.doClick();
 			}
-			else if(globals.outputFormat == globals.defaultOutput) {
+			else if(Globals.outputFormat == Globals.defaultOutput) {
 				defaultOutputRB.doClick();
 			}
 
 			// this has to be set last otherwise output 'doClick()' options will overwrite it
-			outputFileTextField.setText(globals.outputFilePath);
+			outputFileTextField.setText(Globals.outputFilePath);
 
 			//capture the path of the outputFile and use it to prepend all output options
-			f = new File(globals.outputFilePath);
-			globals.outputPath = f.getParent() + System.getProperty("file.separator");
+			f = new File(Globals.outputFilePath);
+			Globals.outputPath = f.getParent() + System.getProperty("file.separator");
 			f = null;
 
         }
@@ -1384,7 +1384,7 @@ public class abacusUI extends javax.swing.JFrame {
 					BufferedWriter out = new BufferedWriter(new FileWriter(outFile));
 
 					out.append("\n#\n# ABACUS parameter file\n" + "# Generated on: ")
-                            .append(globals.formatCurrentTime())
+                            .append(Globals.formatCurrentTime())
                             .append("\n#\n\n");
 
 					out.append("# Name to give the database\n" + "dbName=")
@@ -1488,7 +1488,7 @@ public class abacusUI extends javax.swing.JFrame {
 					 }
 					
 					
-					if(globals.gene2protFile != null) {
+					if(Globals.gene2protFile != null) {
 						out.append("# The path the file that maps between protein IDs and gene IDs\n" + "# File format: geneId protId description. All lines must be tab separated.\n" + "# Comment lines (like the column header) start with '#'.\n" + "gene2prot=").append(gene2protTextField.getText()).append("\n\n");
 					}
 
@@ -1510,7 +1510,7 @@ public class abacusUI extends javax.swing.JFrame {
 							 "output=GeneQspec\n\n"
 						);
 					}
-					if( geneRB.isSelected() && (globals.gene2protFile != null) ) {
+					if( geneRB.isSelected() && (Globals.gene2protFile != null) ) {
 						out.append(
 							 "# Output format that will be produced by this parameter file\n" +
 							 "output=Gene\n\n"
@@ -1600,7 +1600,7 @@ public class abacusUI extends javax.swing.JFrame {
      * This block of code adds the custom output format options to the global.printE/C sets
      */
     private void keepDBCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_keepDBCBActionPerformed
-        globals.keepDB = true;
+        Globals.keepDB = true;
     }//GEN-LAST:event_keepDBCBActionPerformed
 
     private void RunButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RunButtonActionPerformed
@@ -1631,61 +1631,61 @@ public class abacusUI extends javax.swing.JFrame {
 		// on the main menu. If the field is blank, we will assume the user
 		// is not using any decoy's.
 		if( this.decoyTagTextField.getText().trim().equals("") )
-			globals.decoyTag = UUID.randomUUID().toString().replace('-','x');
-		else globals.decoyTag = this.decoyTagTextField.getText().trim();
+			Globals.decoyTag = UUID.randomUUID().toString().replace('-','x');
+		else Globals.decoyTag = this.decoyTagTextField.getText().trim();
 
 
 		if(this.gene2protTextField.getText().trim().isEmpty()) {
-			globals.byGene = false;
-			globals.gene2protFile = null;
+			Globals.byGene = false;
+			Globals.gene2protFile = null;
 		}
 
 
 		// set the combinedFile field in globals
 		File f = new File(this.combinedFileTextField.getText().trim());
 		if(f.exists()) {
-			globals.combinedFile = f.getName();
+			Globals.combinedFile = f.getName();
 		}
 		f = null;
 
-		globals.DBname = dbNameTextField.getText().trim();
-		globals.outputFilePath = this.outputFileTextField.getText().trim();
+		Globals.DBname = dbNameTextField.getText().trim();
+		Globals.outputFilePath = this.outputFileTextField.getText().trim();
 
-		if(this.nsafCB.isSelected()) globals.doNSAF = true;
-		else globals.doNSAF = false;
+		if(this.nsafCB.isSelected()) Globals.doNSAF = true;
+		else Globals.doNSAF = false;
 
-		if(this.recalcPepWtCB.isSelected()) globals.recalcPepWts = true;
-		else globals.recalcPepWts = false;
+		if(this.recalcPepWtCB.isSelected()) Globals.recalcPepWts = true;
+		else Globals.recalcPepWts = false;
 
 		// user provided a peptide regex to filter on
 		if( !this.pepRegexTextField.getText().trim().isEmpty() ) {
-			globals.pepRegexText = this.pepRegexTextField.getText().trim().toUpperCase();
-			globals.formatPepRegex();
+			Globals.pepRegexText = this.pepRegexTextField.getText().trim().toUpperCase();
+			Globals.formatPepRegex();
 		}
 
-		if( this.verboseResultsCB.isSelected() ) globals.makeVerboseOutput = true;
-		else globals.makeVerboseOutput = false;
+		if( this.verboseResultsCB.isSelected() ) Globals.makeVerboseOutput = true;
+		else Globals.makeVerboseOutput = false;
 
 		if(this.qspecRB_gene.isSelected()) {
-			globals.outputFormat = globals.geneQspecFormat;
-			globals.byGene = true;
+			Globals.outputFormat = Globals.geneQspecFormat;
+			Globals.byGene = true;
 		}
 		else if(this.qspecRB_prot.isSelected()) {
-			globals.outputFormat = globals.protQspecFormat;
-			globals.byGene = false;
+			Globals.outputFormat = Globals.protQspecFormat;
+			Globals.byGene = false;
 		}
-		else if(this.geneRB.isSelected()) globals.byGene = true;
+		else if(this.geneRB.isSelected()) Globals.byGene = true;
 		else if(this.customRB.isSelected()) {
-			globals.outputFormat = globals.customOutput;
-			globals.byGene = false;
+			Globals.outputFormat = Globals.customOutput;
+			Globals.byGene = false;
 		}
 		else if(this.defaultOutputRB.isSelected()) {
-			globals.outputFormat = globals.defaultOutput;
-			globals.byGene = false;
+			Globals.outputFormat = Globals.defaultOutput;
+			Globals.byGene = false;
 		}
 		else if(this.peptideOutputRB.isSelected()) {
-			globals.outputFormat = globals.peptideOutput;
-			globals.byPeptide = true;
+			Globals.outputFormat = Globals.peptideOutput;
+			Globals.byPeptide = true;
 		}
 
 
@@ -1694,73 +1694,73 @@ public class abacusUI extends javax.swing.JFrame {
 		if( this.customRB.isSelected() ) {
 
 			// clear these hashes for work
-			globals.printC.clear();
-			globals.printE.clear();
+			Globals.printC.clear();
+			Globals.printE.clear();
 
 			// check on combined file variables
-			if(this.protidCB.isSelected()) globals.printC.add("PROTID");
-			if(this.protLenCB.isSelected()) globals.printC.add("PROTLEN");
-			if(this.isFwdCB.isSelected()) globals.printC.add("ISFWD");
-			if(this.deflineCB.isSelected()) globals.printC.add("DEFLINE");
-			if(this.numXMLCB.isSelected()) globals.printC.add("NUMXML");
-			if(this.maxPwCB.isSelected()) globals.printC.add("MAXPW");
-			if(this.maxIniProbCB.isSelected()) globals.printC.add("MAXINIPROB");
-			if(this.wt_maxIniProbCB.isSelected()) globals.printC.add("WT_MAXINIPROB");
-			if(this.maxIniProbUniqCB.isSelected()) globals.printC.add("MAXINIPROBUNIQ");
+			if(this.protidCB.isSelected()) Globals.printC.add("PROTID");
+			if(this.protLenCB.isSelected()) Globals.printC.add("PROTLEN");
+			if(this.isFwdCB.isSelected()) Globals.printC.add("ISFWD");
+			if(this.deflineCB.isSelected()) Globals.printC.add("DEFLINE");
+			if(this.numXMLCB.isSelected()) Globals.printC.add("NUMXML");
+			if(this.maxPwCB.isSelected()) Globals.printC.add("MAXPW");
+			if(this.maxIniProbCB.isSelected()) Globals.printC.add("MAXINIPROB");
+			if(this.wt_maxIniProbCB.isSelected()) Globals.printC.add("WT_MAXINIPROB");
+			if(this.maxIniProbUniqCB.isSelected()) Globals.printC.add("MAXINIPROBUNIQ");
 
-			if(this.ALL_IDCB.isSelected()) globals.printC.add("ALL_ID");
-			if(this.ALL_PwCB.isSelected()) globals.printC.add("ALL_PW");
-			if(this.ALL_localPwCB.isSelected()) globals.printC.add("ALL_LOCALPW");
-			if(this.ALL_numPepsTotCB.isSelected()) globals.printC.add("ALL_NUMPEPSTOT");
-			if(this.ALL_numPepsUniqCB.isSelected()) globals.printC.add("ALL_NUMPEPSUNIQ");
-			if(this.ALL_numSpecsTotCB.isSelected()) globals.printC.add("ALL_NUMSPECSTOT");
-			if(this.ALL_numSpecsUniqCB.isSelected()) globals.printC.add("ALL_NUMSPECSUNIQ");
+			if(this.ALL_IDCB.isSelected()) Globals.printC.add("ALL_ID");
+			if(this.ALL_PwCB.isSelected()) Globals.printC.add("ALL_PW");
+			if(this.ALL_localPwCB.isSelected()) Globals.printC.add("ALL_LOCALPW");
+			if(this.ALL_numPepsTotCB.isSelected()) Globals.printC.add("ALL_NUMPEPSTOT");
+			if(this.ALL_numPepsUniqCB.isSelected()) Globals.printC.add("ALL_NUMPEPSUNIQ");
+			if(this.ALL_numSpecsTotCB.isSelected()) Globals.printC.add("ALL_NUMSPECSTOT");
+			if(this.ALL_numSpecsUniqCB.isSelected()) Globals.printC.add("ALL_NUMSPECSUNIQ");
 
-			if( (globals.gene2protFile != null) && (this.geneidCB.isSelected()) ) {
-				globals.printC.add("GENEID");
+			if( (Globals.gene2protFile != null) && (this.geneidCB.isSelected()) ) {
+				Globals.printC.add("GENEID");
 			}
 
 			// check on individual file variables
-			if(this.Expt_IDCB.isSelected()) globals.printE.add("_id");
-			if(this.Expt_PwCB.isSelected()) globals.printE.add("_Pw");
-			if(this.Expt_numPepsTotCB.isSelected()) globals.printE.add("_numPepsTot");
-			if(this.Expt_numPepsUniqCB.isSelected()) globals.printE.add("_numPepsUniq");
-			if(this.Expt_numSpecsTotCB.isSelected()) globals.printE.add("_numSpecsTot");
-			if(this.Expt_numSpecsUniqCB.isSelected()) globals.printE.add("_numSpecsUniq");
-			if(this.Expt_numSpecsAdjCB.isSelected()) globals.printE.add("_numSpecsAdj");
+			if(this.Expt_IDCB.isSelected()) Globals.printE.add("_id");
+			if(this.Expt_PwCB.isSelected()) Globals.printE.add("_Pw");
+			if(this.Expt_numPepsTotCB.isSelected()) Globals.printE.add("_numPepsTot");
+			if(this.Expt_numPepsUniqCB.isSelected()) Globals.printE.add("_numPepsUniq");
+			if(this.Expt_numSpecsTotCB.isSelected()) Globals.printE.add("_numSpecsTot");
+			if(this.Expt_numSpecsUniqCB.isSelected()) Globals.printE.add("_numSpecsUniq");
+			if(this.Expt_numSpecsAdjCB.isSelected()) Globals.printE.add("_numSpecsAdj");
 
 			if(this.nsafCB.isSelected()) {
-				if(this.Expt_numSpecsTotCB.isSelected()) globals.printE.add("_totNSAF");
-				if(this.Expt_numSpecsUniqCB.isSelected()) globals.printE.add("_uniqNSAF");
-				if(this.Expt_numSpecsAdjCB.isSelected()) globals.printE.add("_adjNSAF");
+				if(this.Expt_numSpecsTotCB.isSelected()) Globals.printE.add("_totNSAF");
+				if(this.Expt_numSpecsUniqCB.isSelected()) Globals.printE.add("_uniqNSAF");
+				if(this.Expt_numSpecsAdjCB.isSelected()) Globals.printE.add("_adjNSAF");
 			}
 		}
 
 
-		globals.srcDir = this.srcDirTextField.getText().trim();
-		globals.maxIniProbTH = Double.parseDouble( this.maxIniProbTextField.getText().trim() );
-		globals.fastaFile = this.fastaTextField.getText().trim();
-		globals.minCombinedFilePw = Double.parseDouble( this.minCombinedFilePwTextField.getText().trim() );
+		Globals.srcDir = this.srcDirTextField.getText().trim();
+		Globals.maxIniProbTH = Double.parseDouble( this.maxIniProbTextField.getText().trim() );
+		Globals.fastaFile = this.fastaTextField.getText().trim();
+		Globals.minCombinedFilePw = Double.parseDouble( this.minCombinedFilePwTextField.getText().trim() );
 //		globals.minPw = Double.parseDouble( this.minPwTextField.getText().trim() );
-		globals.iniProbTH = Double.parseDouble( this.iniProbTextField.getText().trim() );
+		Globals.iniProbTH = Double.parseDouble( this.iniProbTextField.getText().trim() );
 //		globals.pepXMLsuffix = this.pepXMLsuffixTextField.getText().trim();
 //		globals.protXMLsuffix = this.protXMLsuffixTextField.getText().trim();
 
-		if(this.recalcPepWtCB.isSelected()) globals.recalcPepWts = true;
-		else globals.recalcPepWts = false;
+		if(this.recalcPepWtCB.isSelected()) Globals.recalcPepWts = true;
+		else Globals.recalcPepWts = false;
 		
-		if(this.keepDBCB.isSelected()) globals.keepDB = true;
-		else globals.keepDB = false;
+		if(this.keepDBCB.isSelected()) Globals.keepDB = true;
+		else Globals.keepDB = false;
 
 		if( !this.epiTextField.getText().trim().isEmpty() ) {
-			globals.epiThreshold = Double.parseDouble(this.epiTextField.getText().trim());
+			Globals.epiThreshold = Double.parseDouble(this.epiTextField.getText().trim());
 		}
-		else globals.epiThreshold = 0;
+		else Globals.epiThreshold = 0;
 
-		globals.protTagHash = null;
-		globals.pepTagHash = null;
-		globals.protTagHash = new HashMap<>();
-		globals.pepTagHash = new HashMap<>();
+		Globals.protTagHash = null;
+		Globals.pepTagHash = null;
+		Globals.protTagHash = new HashMap<>();
+		Globals.pepTagHash = new HashMap<>();
 	}
 
 
@@ -1808,16 +1808,16 @@ public class abacusUI extends javax.swing.JFrame {
 	}//GEN-LAST:event_outputFileButtonActionPerformed
 
 	private void nsafCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nsafCBActionPerformed
-		globals.doNSAF = true;
+		Globals.doNSAF = true;
 	}//GEN-LAST:event_nsafCBActionPerformed
 
 	private void customRBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_customRBActionPerformed
 		// This enables the custom output panel and sets the output type
 		// to be custom
-		globals.outputFormat = globals.customOutput;
+		Globals.outputFormat = Globals.customOutput;
 
-		if(globals.outputPath == null) globals.outputPath = System.getProperty("user.dir") + System.getProperty("file.separator");
-		this.outputFileTextField.setText(globals.outputPath + "ABACUS_custom.tsv");
+		if(Globals.outputPath == null) Globals.outputPath = System.getProperty("user.dir") + System.getProperty("file.separator");
+		this.outputFileTextField.setText(Globals.outputPath + "ABACUS_custom.tsv");
 
 		// Make the custom output menu visible
 		protidCB.setEnabled(true);
@@ -1851,10 +1851,10 @@ public class abacusUI extends javax.swing.JFrame {
 
 	private void geneRBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_geneRBActionPerformed
 		// sets the byGene output to be true
-		globals.byGene = true;
+		Globals.byGene = true;
 
-		if(globals.outputPath == null) globals.outputPath = System.getProperty("user.dir") + System.getProperty("file.separator");
-		this.outputFileTextField.setText(globals.outputPath + "ABACUS_gene.tsv");
+		if(Globals.outputPath == null) Globals.outputPath = System.getProperty("user.dir") + System.getProperty("file.separator");
+		this.outputFileTextField.setText(Globals.outputPath + "ABACUS_gene.tsv");
 
 		// Make the custom output menu invisible
 		protidCB.setEnabled(false);
@@ -1888,10 +1888,10 @@ public class abacusUI extends javax.swing.JFrame {
 
 	private void qspecRB_protActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_qspecRB_protActionPerformed
 		// sets the output to be 'protein qspec'
-		globals.outputFormat = globals.protQspecFormat;
+		Globals.outputFormat = Globals.protQspecFormat;
 
-		if(globals.outputPath == null) globals.outputPath = System.getProperty("user.dir") + System.getProperty("file.separator");
-		this.outputFileTextField.setText(globals.outputPath + "ABACUS_forQspec.tsv");
+		if(Globals.outputPath == null) Globals.outputPath = System.getProperty("user.dir") + System.getProperty("file.separator");
+		this.outputFileTextField.setText(Globals.outputPath + "ABACUS_forQspec.tsv");
 
 		// Make the custom output menu invisible
 		protidCB.setEnabled(false);
@@ -1925,11 +1925,11 @@ public class abacusUI extends javax.swing.JFrame {
 
 	private void defaultOutputRBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_defaultOutputRBActionPerformed
 		// sets the output to be 'default'
-		globals.outputFormat = 0;
+		Globals.outputFormat = 0;
 
-		if(globals.outputPath == null) globals.outputPath = System.getProperty("user.dir") + System.getProperty("file.separator");
+		if(Globals.outputPath == null) Globals.outputPath = System.getProperty("user.dir") + System.getProperty("file.separator");
 
-		this.outputFileTextField.setText(globals.outputPath + "ABACUS_output.tsv");
+		this.outputFileTextField.setText(Globals.outputPath + "ABACUS_output.tsv");
 
 		// Make the custom output menu invisible
 		protidCB.setEnabled(false);
@@ -1962,107 +1962,107 @@ public class abacusUI extends javax.swing.JFrame {
 }//GEN-LAST:event_defaultOutputRBActionPerformed
 
 	private void Expt_numSpecsAdjCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Expt_numSpecsAdjCBActionPerformed
-		globals.printE.add("numSpecsAdj");
+		Globals.printE.add("numSpecsAdj");
 }//GEN-LAST:event_Expt_numSpecsAdjCBActionPerformed
 
 	private void Expt_numSpecsUniqCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Expt_numSpecsUniqCBActionPerformed
-		globals.printE.add("numSpecsUniq");
+		Globals.printE.add("numSpecsUniq");
 }//GEN-LAST:event_Expt_numSpecsUniqCBActionPerformed
 
 	private void Expt_numSpecsTotCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Expt_numSpecsTotCBActionPerformed
-		globals.printE.add("numSpecsTot");
+		Globals.printE.add("numSpecsTot");
 }//GEN-LAST:event_Expt_numSpecsTotCBActionPerformed
 
 	private void Expt_numPepsUniqCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Expt_numPepsUniqCBActionPerformed
-		globals.printE.add("numPepsUniq");
+		Globals.printE.add("numPepsUniq");
 }//GEN-LAST:event_Expt_numPepsUniqCBActionPerformed
 
 	private void Expt_numPepsTotCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Expt_numPepsTotCBActionPerformed
-		globals.printE.add("numPepsTot");
+		Globals.printE.add("numPepsTot");
 }//GEN-LAST:event_Expt_numPepsTotCBActionPerformed
 
 	private void Expt_PwCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Expt_PwCBActionPerformed
-		globals.printE.add("Pw");
+		Globals.printE.add("Pw");
 }//GEN-LAST:event_Expt_PwCBActionPerformed
 
 	private void Expt_IDCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Expt_IDCBActionPerformed
-		globals.printE.add("id");
+		Globals.printE.add("id");
 }//GEN-LAST:event_Expt_IDCBActionPerformed
 
 	private void ALL_numSpecsUniqCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ALL_numSpecsUniqCBActionPerformed
-		globals.printC.add("numSpecsUniq");
+		Globals.printC.add("numSpecsUniq");
 }//GEN-LAST:event_ALL_numSpecsUniqCBActionPerformed
 
 	private void ALL_numSpecsTotCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ALL_numSpecsTotCBActionPerformed
-		globals.printC.add("numSpecsTot");
+		Globals.printC.add("numSpecsTot");
 }//GEN-LAST:event_ALL_numSpecsTotCBActionPerformed
 
 	private void ALL_numPepsUniqCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ALL_numPepsUniqCBActionPerformed
-		globals.printC.add("numPepsUniq");
+		Globals.printC.add("numPepsUniq");
 }//GEN-LAST:event_ALL_numPepsUniqCBActionPerformed
 
 	private void ALL_numPepsTotCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ALL_numPepsTotCBActionPerformed
-		globals.printC.add("numPepsTot");
+		Globals.printC.add("numPepsTot");
 }//GEN-LAST:event_ALL_numPepsTotCBActionPerformed
 
 	private void maxIniProbUniqCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_maxIniProbUniqCBActionPerformed
-		globals.printC.add("maxIniProbUniq");
+		Globals.printC.add("maxIniProbUniq");
 }//GEN-LAST:event_maxIniProbUniqCBActionPerformed
 
 	private void wt_maxIniProbCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_wt_maxIniProbCBActionPerformed
-		globals.printC.add("wt_maxIniProb");
+		Globals.printC.add("wt_maxIniProb");
 }//GEN-LAST:event_wt_maxIniProbCBActionPerformed
 
 	private void maxIniProbCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_maxIniProbCBActionPerformed
-		globals.printC.add("maxIniProb");
+		Globals.printC.add("maxIniProb");
 }//GEN-LAST:event_maxIniProbCBActionPerformed
 
 	private void ALL_localPwCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ALL_localPwCBActionPerformed
-		globals.printC.add("localPw");
+		Globals.printC.add("localPw");
 }//GEN-LAST:event_ALL_localPwCBActionPerformed
 
 	private void ALL_PwCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ALL_PwCBActionPerformed
-		globals.printC.add("allPw");
+		Globals.printC.add("allPw");
 }//GEN-LAST:event_ALL_PwCBActionPerformed
 
 	private void maxPwCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_maxPwCBActionPerformed
-		globals.printC.add("maxPw");
+		Globals.printC.add("maxPw");
 }//GEN-LAST:event_maxPwCBActionPerformed
 
 	private void ALL_IDCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ALL_IDCBActionPerformed
-		globals.printC.add("id");
+		Globals.printC.add("id");
 }//GEN-LAST:event_ALL_IDCBActionPerformed
 
 	private void numXMLCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_numXMLCBActionPerformed
-		globals.printC.add("numXML");
+		Globals.printC.add("numXML");
 }//GEN-LAST:event_numXMLCBActionPerformed
 
 	private void deflineCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deflineCBActionPerformed
-		globals.printC.add("defline");
+		Globals.printC.add("defline");
 }//GEN-LAST:event_deflineCBActionPerformed
 
 	private void isFwdCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_isFwdCBActionPerformed
-		globals.printC.add("isFwd");
+		Globals.printC.add("isFwd");
 }//GEN-LAST:event_isFwdCBActionPerformed
 
 	private void protLenCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_protLenCBActionPerformed
-		globals.printC.add("protLen");
+		Globals.printC.add("protLen");
 }//GEN-LAST:event_protLenCBActionPerformed
 
 	private void geneidCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_geneidCBActionPerformed
-		globals.printC.add("geneid");
+		Globals.printC.add("geneid");
 }//GEN-LAST:event_geneidCBActionPerformed
 
 	private void protidCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_protidCBActionPerformed
-		globals.printC.add("protid");
+		Globals.printC.add("protid");
 }//GEN-LAST:event_protidCBActionPerformed
 
 	private void qspecRB_geneActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_qspecRB_geneActionPerformed
 		// sets the output to be 'gene qspec'
-		globals.outputFormat = globals.geneQspecFormat;
+		Globals.outputFormat = Globals.geneQspecFormat;
 
-		if(globals.outputPath == null) globals.outputPath = System.getProperty("user.dir") + System.getProperty("file.separator");
-		this.outputFileTextField.setText(globals.outputPath + "ABACUS_forQspec.tsv");
+		if(Globals.outputPath == null) Globals.outputPath = System.getProperty("user.dir") + System.getProperty("file.separator");
+		this.outputFileTextField.setText(Globals.outputPath + "ABACUS_forQspec.tsv");
 
 		// Make the custom output menu invisible
 		protidCB.setEnabled(false);
@@ -2095,11 +2095,11 @@ public class abacusUI extends javax.swing.JFrame {
 	}//GEN-LAST:event_qspecRB_geneActionPerformed
 
 	private void peptideOutputRBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_peptideOutputRBActionPerformed
-		globals.byPeptide = true;
-		globals.outputFormat = globals.peptideOutput;
+		Globals.byPeptide = true;
+		Globals.outputFormat = Globals.peptideOutput;
 		
-		if(globals.outputPath == null) globals.outputPath = System.getProperty("user.dir") + System.getProperty("file.separator");
-		this.outputFileTextField.setText(globals.outputPath + "ABACUS_peptide.tsv");
+		if(Globals.outputPath == null) Globals.outputPath = System.getProperty("user.dir") + System.getProperty("file.separator");
+		this.outputFileTextField.setText(Globals.outputPath + "ABACUS_peptide.tsv");
 		
 		// Make the custom output menu invisible
 		protidCB.setEnabled(false);
@@ -2132,7 +2132,7 @@ public class abacusUI extends javax.swing.JFrame {
 	}//GEN-LAST:event_peptideOutputRBActionPerformed
 
 	private void recalcPepWtCBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_recalcPepWtCBActionPerformed
-		globals.recalcPepWts = true;
+		Globals.recalcPepWts = true;
 	}//GEN-LAST:event_recalcPepWtCBActionPerformed
 
 
@@ -2146,7 +2146,7 @@ public class abacusUI extends javax.swing.JFrame {
 		 File tf;
 		 boolean fastaFileGiven = true;
 		 
-		 if( (null == globals.fastaFile) || globals.fastaFile.isEmpty() ) fastaFileGiven = false;
+		 if( (null == Globals.fastaFile) || Globals.fastaFile.isEmpty() ) fastaFileGiven = false;
 		 
 		 if( this.dbNameTextField.getText().trim().equals("") ) {
 			 err = "'dbName' cannot be blank.";
@@ -2195,7 +2195,7 @@ public class abacusUI extends javax.swing.JFrame {
 //			 return false;
 //		 }
 
-		 if( this.combinedFileTextField.getText().trim().equals("") && !globals.byPeptide ) {
+		 if( this.combinedFileTextField.getText().trim().equals("") && !Globals.byPeptide ) {
 			 err = "'Combined File' cannot be blank.";
 			 guiAlert(err);
 			 this.combinedFileTextField.requestFocus();
@@ -2287,7 +2287,7 @@ public class abacusUI extends javax.swing.JFrame {
 			 }
 		 }
 
-		 if(!globals.byPeptide) {
+		 if(!Globals.byPeptide) {
 			tf = new File (this.combinedFileTextField.getText().trim());
 			if(!tf.exists()) {
 				String fn = tf.getName();
@@ -2552,12 +2552,12 @@ public class abacusUI extends javax.swing.JFrame {
 class workThread extends Thread {
 
 	abacus_textArea console;
-	abacus pmasc;
+	Abacus pmasc;
 
 	File dir = null;
 	Connection conn = null;
-	hyperSQLObject forProteins = null;
-	hyperSQLObject_gene forGenes = null;
+	HyperSQLObject forProteins = null;
+	HyperSQLObjectGene forGenes = null;
 	String db = "jdbc:hsqldb";
 
 	String err; // used for error messages
@@ -2570,13 +2570,13 @@ class workThread extends Thread {
 		long start_time = System.currentTimeMillis();
 		long elapsed_time = 0;
 
-        pmasc = new abacus();
+        pmasc = new Abacus();
         console = new abacus_textArea();
         console.setVisible(true);
         console.append(pmasc.printHeader());
-		console.append(globals.printParameters());
+		console.append(Globals.printParameters());
 
-        dir = new File(globals.srcDir);
+        dir = new File(Globals.srcDir);
 
 
         /*
@@ -2588,7 +2588,7 @@ class workThread extends Thread {
         String[] toRemove = {".properties", ".script", ".tmp", ".log", ".lck"};
         File f = null;
         for (String aToRemove : toRemove) {
-            String tmpFile = "" + globals.DBname + aToRemove;
+            String tmpFile = "" + Globals.DBname + aToRemove;
             f = new File(tmpFile);
             if (f.exists()) {
                 f.delete();
@@ -2600,26 +2600,26 @@ class workThread extends Thread {
 
         pmasc.record_XML_files(dir); // record only the protXML and pepXML files
 
-		if(globals.pepXmlFiles.isEmpty()) {
+		if(Globals.pepXmlFiles.isEmpty()) {
 			makeAlert();
-			console.append("No pepXML files were found in '" + globals.srcDir + "'\n");
+			console.append("No pepXML files were found in '" + Globals.srcDir + "'\n");
 			return;
 		}
 
-		if(!globals.byPeptide && globals.protXmlFiles.isEmpty()) {
+		if(!Globals.byPeptide && Globals.protXmlFiles.isEmpty()) {
 			makeAlert();
-			console.append("No protXML files were found in '" + globals.srcDir + "'\n");
+			console.append("No protXML files were found in '" + Globals.srcDir + "'\n");
 			return;
 		}
 
 
-		if(!globals.byPeptide) {
-			if(globals.fastaFile.isEmpty()) {
+		if(!Globals.byPeptide) {
+			if(Globals.fastaFile.isEmpty()) {
 				console.append("No fasta file was given so protein lengths will not be reported\n\n");
 			}
 			else {
-				console.append("Retrieving protein lengths from '" + globals.fastaFile + "'\n\n");
-				if( globals.parseFasta(console) ) {
+				console.append("Retrieving protein lengths from '" + Globals.fastaFile + "'\n\n");
+				if( Globals.parseFasta(console) ) {
 					makeAlert();
 					return; // exit this thread
 				}
@@ -2632,12 +2632,12 @@ class workThread extends Thread {
          * If the user wants to keep the database, this code allows them to.
          * NOTE: writing to disk is much slower!!!
          */
-        if(globals.keepDB) {
-                db += ":file:" + globals.DBname;
+        if(Globals.keepDB) {
+                db += ":file:" + Globals.DBname;
                 console.append("\nDatabase will be written to disk within the following files and folders:\n");
-                console.append("\t" + globals.DBname + ".script\n");
-                console.append("\t" + globals.DBname + ".properties\n");
-                console.append("\t" + globals.DBname + ".tmp\n\n");
+                console.append("\t" + Globals.DBname + ".script\n");
+                console.append("\t" + Globals.DBname + ".properties\n");
+                console.append("\t" + Globals.DBname + ".tmp\n\n");
                 console.append("NOTE: Writing to disk slows things down so please be patient...\n\n");
         }
         else {
@@ -2660,7 +2660,7 @@ class workThread extends Thread {
 		System.gc(); // System clean up
 
 		try {
-			if(!globals.byPeptide) {
+			if(!Globals.byPeptide) {
 				if (pmasc.load_protXML(conn, console)) {
 					makeAlert();
 					console.changeCloseStatus("allowClose");
@@ -2696,8 +2696,8 @@ class workThread extends Thread {
 		// now the work begins
 		try {
 			
-			if(globals.byPeptide) { // user wants peptide-level results
-				forProteins = new hyperSQLObject();
+			if(Globals.byPeptide) { // user wants peptide-level results
+				forProteins = new HyperSQLObject();
 				forProteins.initialize();
 				forProteins.makeSrcFileTable(conn, console);
 				
@@ -2707,9 +2707,9 @@ class workThread extends Thread {
 				forProteins.peptideLevelResults(conn, console);
 				console.updateProgress(20);
 			}
-			else if(globals.byGene) { // user wants gene-centric output
+			else if(Globals.byGene) { // user wants gene-centric output
 
-				forGenes = new hyperSQLObject_gene();
+				forGenes = new HyperSQLObjectGene();
 				forGenes.initialize();
 
 				//forGenes.makeProtLenTable(conn, console); //deprecated function
@@ -2768,7 +2768,7 @@ class workThread extends Thread {
 				console.changeBarType("progress");
 				console.append("\n");
 
-				if(globals.doNSAF) {
+				if(Globals.doNSAF) {
 					forGenes.getNSAF_values_gene(conn, console);
 					console.append("\n");
 				}
@@ -2776,14 +2776,14 @@ class workThread extends Thread {
 				console.updateProgress(1);
 
 
-				if(globals.genesHaveDescriptions) { // append gene descriptions
+				if(Globals.genesHaveDescriptions) { // append gene descriptions
 					forGenes.appendGeneDescriptions(conn);
 					console.updateProgress(1);
 				}
 				else console.updateProgress(2);
 
 				// choose output format
-				if(globals.outputFormat == globals.geneQspecFormat)
+				if(Globals.outputFormat == Globals.geneQspecFormat)
 					forGenes.formatQspecOutput(conn, console);
 				else
 					forGenes.defaultResults(conn, console);
@@ -2791,7 +2791,7 @@ class workThread extends Thread {
 				console.updateProgress(1);
 			}
 			else { // default protein-centric output
-				forProteins = new hyperSQLObject();
+				forProteins = new HyperSQLObject();
 				forProteins.initialize();
 
 				//forProteins.makeProtLenTable(conn, console); // deprecated function
@@ -2817,7 +2817,7 @@ class workThread extends Thread {
 				console.updateProgress(1);
 
 
-				if(globals.gene2protFile != null) {
+				if(Globals.gene2protFile != null) {
 					forProteins.makeGeneTable(conn, console);
 					forProteins.appendGeneIDs(conn, console);
 					console.append("\n");
@@ -2850,24 +2850,24 @@ class workThread extends Thread {
 				// by merging the groupid and siblingGroup fields
 				forProteins.mergeIDfields(conn);
 
-				if(globals.doNSAF) {
+				if(Globals.doNSAF) {
 					forProteins.getNSAF_values_prot(conn, console);
 					console.changeCloseStatus("allowClose");
 					console.append("\n");
 				}
 
 
-				if(globals.makeVerboseOutput) {
+				if(Globals.makeVerboseOutput) {
 					forProteins.addExtraProteins(conn, console);
 					forProteins.addProteinLengths(conn, console, 1);
 				}
 
 				// choose output format
-				switch(globals.outputFormat) {
-					case globals.protQspecFormat:
+				switch(Globals.outputFormat) {
+					case Globals.protQspecFormat:
 						forProteins.formatQspecOutput(conn, console);
 						break;
-					case globals.customOutput:
+					case Globals.customOutput:
 						forProteins.customOutput(conn, console);
 						break;
 					default:
@@ -2877,13 +2877,13 @@ class workThread extends Thread {
 			}
 
 			// user has elected to keep database, remove unnecessary tables.
-			if(globals.keepDB) {
-				if(globals.byGene) forGenes.cleanUp(conn);
+			if(Globals.keepDB) {
+				if(Globals.byGene) forGenes.cleanUp(conn);
 				else forProteins.cleanUp(conn);
 			}
 			else { // left over files that should be removed
 				f = null;
-				String tmpFile = "" + globals.DBname + ".properties";
+				String tmpFile = "" + Globals.DBname + ".properties";
 				f = new File( tmpFile );
 				if( f.exists() ) f.delete();
 				f = null;
@@ -2892,7 +2892,7 @@ class workThread extends Thread {
 			console.changeCloseStatus("allowClose");
 
 			elapsed_time = System.currentTimeMillis() - start_time;
-			timeStr = globals.formatTime(elapsed_time);
+			timeStr = Globals.formatTime(elapsed_time);
 			console.append("\n\nTotal runtime (hh:mm:ss): " + timeStr + "\n");
 
 			console.append("\nYou may now close this window\n\n");

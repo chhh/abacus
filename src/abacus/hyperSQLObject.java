@@ -31,7 +31,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 
-public class hyperSQLObject {
+public class HyperSQLObject {
 
 	// variables specific to the database queries
 	protected String combinedFile = null;
@@ -45,18 +45,18 @@ public class hyperSQLObject {
 	// this variable is fixed and not adjusted by the user
 	protected double wtTH = 0.9;
 
-	public hyperSQLObject() {}; // default constructor
+	public HyperSQLObject() {}; // default constructor
 
 
 	public void initialize() {
-		if(!globals.byPeptide) {
-			combinedFile = globals.combinedFile;
-			decoyTag = globals.decoyTag;
-			maxIniProbTH = globals.maxIniProbTH;
-			minCombinedFilePw = globals.minCombinedFilePw;
-			minPw = globals.minPw;
+		if(!Globals.byPeptide) {
+			combinedFile = Globals.combinedFile;
+			decoyTag = Globals.decoyTag;
+			maxIniProbTH = Globals.maxIniProbTH;
+			minCombinedFilePw = Globals.minCombinedFilePw;
+			minPw = Globals.minPw;
 		}
-		iniProbTH = globals.iniProbTH;
+		iniProbTH = Globals.iniProbTH;
 	}
 	
 
@@ -71,7 +71,7 @@ public class hyperSQLObject {
 		int N = 0;
 		int ctr = 0;
 
-		if(globals.pepTagHash.isEmpty()) globals.recordPepXMLtags();
+		if(Globals.pepTagHash.isEmpty()) Globals.recordPepXMLtags();
 		
 		stmt.executeUpdate("DROP TABLE IF EXISTS srcFileTags");
 
@@ -83,20 +83,20 @@ public class hyperSQLObject {
 		stmt.executeUpdate(query);
 
 		N = 3; // 3 indexes need to be built so we preset N to 3
-		N += globals.protTagHash.size();
-		N += globals.pepTagHash.size();
+		N += Globals.protTagHash.size();
+		N += Globals.pepTagHash.size();
 		if(console != null) console.monitorBoxInit(N, "srcFileTags Table");
 
-		if(!globals.byPeptide) {
+		if(!Globals.byPeptide) {
 			// first load protXML files
-			iter = globals.protTagHash.entrySet().iterator();
+			iter = Globals.protTagHash.entrySet().iterator();
 			ctr = 1;
 			while(iter.hasNext()) {
 				Map.Entry<String, String> pairs = iter.next();
 				String srcFile = pairs.getKey();
 				String t = pairs.getValue();
 
-				String tag = globals.replaceAll(globals.replaceAll(pairs.getValue(), '.', '_'), '-', '_');
+				String tag = Globals.replaceAll(Globals.replaceAll(pairs.getValue(), '.', '_'), '-', '_');
 				String type = "prot";
 
 				if(Character.isDigit(tag.charAt(0))) {
@@ -120,11 +120,11 @@ public class hyperSQLObject {
 		}
 		
 		// now load pepXML files
-		iter = globals.pepTagHash.entrySet().iterator();
+		iter = Globals.pepTagHash.entrySet().iterator();
 		while(iter.hasNext()) {
 			Map.Entry<String, String> pairs = iter.next();
 			String srcFile = pairs.getKey();
-			String tag = globals.replaceAll(globals.replaceAll(pairs.getValue(), '.', '_'), '-', '_');
+			String tag = Globals.replaceAll(Globals.replaceAll(pairs.getValue(), '.', '_'), '-', '_');
 			String type = "pep";
 
 			if(Character.isDigit(tag.charAt(0))) {
@@ -155,8 +155,8 @@ public class hyperSQLObject {
 		if(console != null) console.closeMonitorBox();
 
 		// save on memory
-		globals.protTagHash.clear(); globals.protTagHash = null;
-		globals.pepTagHash.clear(); globals.pepTagHash = null;
+		Globals.protTagHash.clear(); Globals.protTagHash = null;
+		Globals.pepTagHash.clear(); Globals.pepTagHash = null;
 
 		stmt.close();
 		if(console != null) console.append("\n"); // for pretty output
@@ -174,8 +174,8 @@ public class hyperSQLObject {
 	 */
 	public void makeCombinedTable(Connection conn, abacus_textArea console) throws SQLException {
 
-		if(console != null) console.append("Creating combined table from '" + globals.combinedFile + "'\n");
-		else System.err.print("Creating combined table from '" + globals.combinedFile + "'\n");
+		if(console != null) console.append("Creating combined table from '" + Globals.combinedFile + "'\n");
+		else System.err.print("Creating combined table from '" + Globals.combinedFile + "'\n");
 
 		Statement stmt = conn.createStatement();
 		String query = null;
@@ -263,9 +263,9 @@ public class hyperSQLObject {
 			
 			String protid = rs.getString(5);
 			int len = 0;
-			if(globals.fastaFile == null || globals.fastaFile.isEmpty() ) len = 0;
+			if(Globals.fastaFile == null || Globals.fastaFile.isEmpty() ) len = 0;
 			else {
-				if( globals.protLen.containsKey(protid) ) len = globals.protLen.get(protid);
+				if( Globals.protLen.containsKey(protid) ) len = Globals.protLen.get(protid);
 			}
 			
 			prep.setInt(6, len);
@@ -300,7 +300,7 @@ public class hyperSQLObject {
 		
 
 		// clean up combined file cases where maxLocalPw
-		this.curate_on_maxLocalPw(globals.combinedFile, conn, console);
+		this.curate_on_maxLocalPw(Globals.combinedFile, conn, console);
 		this.recalculatePeptideWts(conn, "combined", console);
 
 		stmt.close();
@@ -345,7 +345,7 @@ public class hyperSQLObject {
 					query = "DELETE "
 						  + "FROM combined "
 						  + "WHERE groupid = " + gid + " "
-						  + "AND localPw < " + globals.minCombinedFilePw + " ";
+						  + "AND localPw < " + Globals.minCombinedFilePw + " ";
 					conn.createStatement().executeUpdate(query);
 				}
 			}
@@ -568,7 +568,7 @@ public class hyperSQLObject {
 			prep.addBatch();
 
 			if(console != null) console.monitorBoxUpdate(iter);
-			else globals.cursorStatus(iter, msg);
+			else Globals.cursorStatus(iter, msg);
 			iter++;
 		}
 		conn.setAutoCommit(false);
@@ -637,10 +637,10 @@ public class hyperSQLObject {
 		// if the epiThreshold != iniProbTH then we have to remove
 		// all entries where the protein does not have at least 1 peptide with a
 		// probability >= epiThreshold
-		if( globals.epiThreshold > globals.iniProbTH ) {
+		if( Globals.epiThreshold > Globals.iniProbTH ) {
 
 			msg = "  Applying Experimental Peptide Inclusion threshold (EPI >= "
-				+ globals.epiThreshold + ")\n";
+				+ Globals.epiThreshold + ")\n";
 			if(console != null) console.append(msg);
 			else System.err.print(msg);
 
@@ -659,7 +659,7 @@ public class hyperSQLObject {
 			stmt.executeUpdate("CREATE INDEX x_4 ON x_(groupid, siblingGroup)");
 
 
-			query = "SELECT * FROM x_ WHERE maxIniProb < " + globals.epiThreshold;
+			query = "SELECT * FROM x_ WHERE maxIniProb < " + Globals.epiThreshold;
 			rs = stmt.executeQuery(query);
 
 			while(rs.next()) {
@@ -681,7 +681,7 @@ public class hyperSQLObject {
 		}
 
 		
-		if(globals.recalcPepWts) {
+		if(Globals.recalcPepWts) {
 			/*************************************
 			** Recalculate peptide weights for peptides that are only shared among isoforms
 			** within the same protein group within each protXML file
@@ -809,7 +809,7 @@ public class hyperSQLObject {
 		try {
 			stmt = conn.createStatement();
 		} catch (SQLException ex) {
-			Logger.getLogger(hyperSQLObject.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(HyperSQLObject.class.getName()).log(Level.SEVERE, null, ex);
 		}
 
 		if(tag.equals("combined")) {
@@ -1011,7 +1011,7 @@ public class hyperSQLObject {
 
 			iter++;
 			if(console != null) console.monitorBoxUpdate(iter);
-			else globals.cursorStatus(iter, msg);
+			else Globals.cursorStatus(iter, msg);
 		}
 		conn.setAutoCommit(false);
 		prep.executeBatch();
@@ -1193,7 +1193,7 @@ public class hyperSQLObject {
 			stmt.executeUpdate(query);
 			iter++;
 			if(console != null) console.monitorBoxUpdate(iter);
-			else globals.cursorStatus(iter, "  Getting protein frequencies ");
+			else Globals.cursorStatus(iter, "  Getting protein frequencies ");
 		}
 		rs.close();
 		if(console != null) console.closeMonitorBox();
@@ -1222,7 +1222,7 @@ public class hyperSQLObject {
 			stmt.executeUpdate(query);
 			iter++;
 			if(console != null) console.monitorBoxUpdate(iter);
-			else globals.cursorStatus(iter, "  Collecting protein probabilities ");
+			else Globals.cursorStatus(iter, "  Collecting protein probabilities ");
 		}
 		rs.close();
 		if(console != null) console.closeMonitorBox();
@@ -1445,7 +1445,7 @@ public class hyperSQLObject {
 			prep.addBatch();
 
 			iter++;
-			if(console == null) globals.cursorStatus(iter, msg);
+			if(console == null) Globals.cursorStatus(iter, msg);
 			else console.monitorBoxUpdate(iter);
 		}
 		conn.setAutoCommit(false);
@@ -1543,7 +1543,7 @@ public class hyperSQLObject {
 			iter++;
 
 			if(console != null) console.monitorBoxUpdate(iter);
-			else globals.cursorStatus(iter, msg);
+			else Globals.cursorStatus(iter, msg);
 		}
 
 		stmt.executeUpdate("CREATE INDEX ps_idx1 ON protidSummary(groupid, siblingGroup)");
@@ -1551,7 +1551,7 @@ public class hyperSQLObject {
 		stmt.executeUpdate("CREATE INDEX ps_idx2 ON protidSummary(repID)");
 		if(console != null) console.monitorBoxUpdate(iter++);
 
-		if(globals.gene2protFile != null) {
+		if(Globals.gene2protFile != null) {
 			stmt.executeUpdate("ALTER TABLE protidSummary ADD COLUMN geneID VARCHAR(100) BEFORE numXML;");
 		}
 
@@ -1579,7 +1579,7 @@ public class hyperSQLObject {
 		ResultSet rs = null;
 		int ret = 0;
 
-		if(tag.equals(globals.combinedFile)) tag = "combined";
+		if(tag.equals(Globals.combinedFile)) tag = "combined";
 
 		query = "CREATE MEMORY TABLE nptmp_ ( "
 			  + "  modPeptide, charge "
@@ -1615,7 +1615,7 @@ public class hyperSQLObject {
 		ResultSet rs = null;
 		double ret = 0;
 
-		if(tag.equals(globals.combinedFile)) tag = "combined";
+		if(tag.equals(Globals.combinedFile)) tag = "combined";
 
 		query = "SELECT MAX(iniProb) "
 			  + "FROM prot2peps_" + tag + " "
@@ -1645,7 +1645,7 @@ public class hyperSQLObject {
 		Statement stmt = null;
 		ResultSet rs = null;
 
-		if(tag.equals(globals.combinedFile)) tag = "combined";
+		if(tag.equals(Globals.combinedFile)) tag = "combined";
 
 		query = "SELECT MAX(wt) "
 			  + "FROM prot2peps_" + tag + " "
@@ -1677,7 +1677,7 @@ public class hyperSQLObject {
 		ResultSet rs = null;
 		String query = null;
 
-		if(tag.equals(globals.combinedFile)) tag = "combined";
+		if(tag.equals(Globals.combinedFile)) tag = "combined";
 
 		query = "SELECT SUM(nspecs) "
 			  + "FROM prot2peps_" + tag + " "
@@ -1700,11 +1700,11 @@ public class hyperSQLObject {
 	public boolean makeGeneTable(Connection conn, abacus_textArea console) throws SQLException {
 
 		if(console != null) {
-			if(!globals.byGene) console.append("  ");
+			if(!Globals.byGene) console.append("  ");
 			console.append("Mapping protein IDs to their Gene IDs\n\n");
 		}
 		 else {
-			if(!globals.byGene) System.err.print("  ");
+			if(!Globals.byGene) System.err.print("  ");
 			System.err.print("Mapping protein IDs to their Gene IDs\n\n");
 		 }
 
@@ -1734,17 +1734,17 @@ public class hyperSQLObject {
 
 
 		//open the user's file for reading
-		File mapFile = new File(globals.gene2protFile);
+		File mapFile = new File(Globals.gene2protFile);
 		if( !mapFile.exists() ) {
 			String err = null;
 			if(console == null) {
 				err = "\n\nERROR loading gene2prot map file\n"
-						   + "The file '" + globals.gene2protFile + "' doesn't exist!\n\n";
+						   + "The file '" + Globals.gene2protFile + "' doesn't exist!\n\n";
 				System.err.print(err);
 				System.exit(-1);
 			}
 			else {
-				err = "\n\nI could not open '" + globals.gene2protFile + "'\n"
+				err = "\n\nI could not open '" + Globals.gene2protFile + "'\n"
 				    + "Please check your file paths and names then try again.\n";
 
 				console.append(err);
@@ -1768,10 +1768,10 @@ public class hyperSQLObject {
 				}
 				
 				if(ary.length == 3) {
-					globals.genesHaveDescriptions = true;
+					Globals.genesHaveDescriptions = true;
 
 					String defline = null;
-					if(ary[2].length() > 1000) defline = globals.replaceAll( ary[2].substring(0,990), '#', '_' );
+					if(ary[2].length() > 1000) defline = Globals.replaceAll(ary[2].substring(0, 990), '#', '_');
 					else defline = ary[2];
 
 					prep.setString(3, defline);
@@ -1787,7 +1787,7 @@ public class hyperSQLObject {
 			conn.setAutoCommit(true);
 
 		} catch(Exception e) {
-			String err = "Error parsing '" + globals.gene2protFile + "'\n"
+			String err = "Error parsing '" + Globals.gene2protFile + "'\n"
 					   + e.toString() + "\n\n";
 
 			if(console != null) {
@@ -1850,7 +1850,7 @@ public class hyperSQLObject {
 
 			query = "CREATE CACHED TABLE results ( protid, ";
 
-			if( globals.gene2protFile != null )
+			if( Globals.gene2protFile != null )
 				query += "geneid, ";
 
 			query += "  isFwd, defline, numXML, ALL_groupid, ALL_siblingGroup, "
@@ -1860,7 +1860,7 @@ public class hyperSQLObject {
 				  + ") AS ("
 				  + "SELECT b.repID, ";
 
-			if( globals.gene2protFile != null )
+			if( Globals.gene2protFile != null )
 				query += "b.geneid, ";
 
 			query += "c.isFwd, "
@@ -1900,7 +1900,7 @@ public class hyperSQLObject {
 				  + "b.numSpecsTot, "
 				  + "b.numSpecsUniq";
 
-			if( globals.gene2protFile != null )
+			if( Globals.gene2protFile != null )
 				query += ", b.geneid";
 
 			query += " ORDER BY b.groupid ASC, b.siblingGroup ASC"
@@ -1915,7 +1915,7 @@ public class hyperSQLObject {
 			query = "CREATE INDEX res_pid_idx ON results(protid)";
 			stmt.executeUpdate(query);
 
-			if( globals.gene2protFile != null )
+			if( Globals.gene2protFile != null )
 				stmt.executeUpdate("UPDATE results SET geneid = 'DECOY' WHERE isFwd = 0");
 
 			stmt.executeUpdate("UPDATE results SET defline = 'DECOY PROTEIN' WHERE isFwd = 0");
@@ -1923,7 +1923,7 @@ public class hyperSQLObject {
 			stmt.close();
 			stmt = null;
 		} catch (SQLException ex) {
-			Logger.getLogger(hyperSQLObject.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(HyperSQLObject.class.getName()).log(Level.SEVERE, null, ex);
 			return true;
 		}
 
@@ -2000,7 +2000,7 @@ public class hyperSQLObject {
 				
 				ctr++;
 				if(console != null) console.monitorBoxUpdate(ctr);
-				else globals.cursorStatus(ctr, "  Appending additional protein lengths...");
+				else Globals.cursorStatus(ctr, "  Appending additional protein lengths...");
 
 			}
 			conn.setAutoCommit(false);
@@ -2109,7 +2109,7 @@ public class hyperSQLObject {
 				console.monitorBoxInit(N, "Indexing Peptide Usage ("+tag+")...");
 				console.append("  Indexing Peptide Usage for: "+ tag + "\n");
 			}
-			else globals.cursorStatus(N, "  Peptide usage index ("+tag+")... ");
+			else Globals.cursorStatus(N, "  Peptide usage index (" + tag + ")... ");
 
 			query = "SELECT s.repid, a.modPeptide, a.charge, a.nspecs, b.nspecsUniq "
 				  + "FROM prot2peps_"+tag+" AS a, wt9X_"+tag+" AS b, protidSummary AS s "
@@ -2130,7 +2130,7 @@ public class hyperSQLObject {
 
 				iter++;
 				if(console != null) console.monitorBoxUpdate(iter);
-				else globals.cursorStatus(iter, "  Peptide usage index ("+tag+")... ");
+				else Globals.cursorStatus(iter, "  Peptide usage index (" + tag + ")... ");
 			}
 			rs2.close();
 
@@ -2375,7 +2375,7 @@ public class hyperSQLObject {
 	 */
 	public void defaultResults(Connection conn, abacus_textArea console) throws Exception {
 
-		String outputFileName = globals.outputFilePath;
+		String outputFileName = Globals.outputFilePath;
 
 		if(console != null) console.append("\nWriting results to: '" + outputFileName + "'\n");
 		else System.err.print("\nWriting results to: '" + outputFileName + "'\n");
@@ -2392,10 +2392,10 @@ public class hyperSQLObject {
 			stmt = conn.createStatement();
 
 			query = "SELECT * FROM results ORDER BY ALL_id;";
-			if(globals.makeVerboseOutput)
+			if(Globals.makeVerboseOutput)
 				query = "SELECT * FROM v_results ORDER BY ALL_id;";
 
-			if(globals.byGene) {
+			if(Globals.byGene) {
 				query = "SELECT * FROM geneResults ORDER BY geneid;";
 			}
 
@@ -2424,7 +2424,7 @@ public class hyperSQLObject {
 							break;
 						default:
 							double d1 = rs.getDouble(i);
-							out.append(Double.toString(globals.roundDbl(d1, 4)));
+							out.append(Double.toString(Globals.roundDbl(d1, 4)));
 							break;
 					}
 					if(i != numColumns) out.append("\t");
@@ -2452,7 +2452,7 @@ public class hyperSQLObject {
 		ResultSetMetaData rsmd = null;
 		String query = null;
 
-		String outputFileName = globals.outputFilePath;
+		String outputFileName = Globals.outputFilePath;
 		if(console != null) console.append("\nWriting spectral counts for QSpec to file:\n\t'" + outputFileName + "'\n");
 		else System.err.print("\nWriting spectral counts for QSpec to file:\n\t'" + outputFileName + "'\n");
 
@@ -2460,11 +2460,11 @@ public class hyperSQLObject {
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(outputFileName));
 
-			if(globals.outputFormat == globals.protQspecFormat) {
+			if(Globals.outputFormat == Globals.protQspecFormat) {
 				query = "SELECT * FROM results ORDER BY ALL_id";
-				if(globals.makeVerboseOutput) query = "SELECT * FROM v_results ORDER BY ALL_id";
+				if(Globals.makeVerboseOutput) query = "SELECT * FROM v_results ORDER BY ALL_id";
 			}
-			else if(globals.outputFormat == globals.geneQspecFormat) // assume user wants gene-centric output
+			else if(Globals.outputFormat == Globals.geneQspecFormat) // assume user wants gene-centric output
 				query = "SELECT * FROM geneResults ORDER BY geneid ";
 
 			rs = stmt.executeQuery(query);
@@ -2478,7 +2478,7 @@ public class hyperSQLObject {
 			for(int i = 1; i <= numColumns; i++) {
 				c = rsmd.getColumnName(i);
 
-				if(globals.outputFormat == globals.geneQspecFormat) { // gene-centric output
+				if(Globals.outputFormat == Globals.geneQspecFormat) { // gene-centric output
 					if(c.equalsIgnoreCase("geneid")) {
 						colHdrs.put(i,"geneid");
 					}
@@ -2566,13 +2566,13 @@ public class hyperSQLObject {
 
 		// first construct the field names for the individual experiments
 		// using the data in printE Set
-		if(globals.printE.size() > 0) {
+		if(Globals.printE.size() > 0) {
 			exptSet = new HashSet<>();
 			rs1 = stmt1.executeQuery("SELECT DISTINCT tag FROM srcFileTags WHERE fileType = 'prot';");
 			while(rs1.next()) {
 				String tag = rs1.getString(1);
 
-                for (String suffix : globals.printE) {
+                for (String suffix : Globals.printE) {
                     String colName = tag.toUpperCase() + suffix.toUpperCase();
                     exptSet.add(colName);
                 }
@@ -2581,8 +2581,8 @@ public class hyperSQLObject {
 		}
 
 		query = "SELECT * FROM results LIMIT 1";
-		if(globals.makeVerboseOutput) query = "SELECT * FROM v_results LIMIT 1";
-		else if(globals.byGene) query = "SELECT * FROM geneResults LIMIT 1";
+		if(Globals.makeVerboseOutput) query = "SELECT * FROM v_results LIMIT 1";
+		else if(Globals.byGene) query = "SELECT * FROM geneResults LIMIT 1";
 
 		rs1 = stmt1.executeQuery(query);
 		rsmd = rs1.getMetaData();
@@ -2593,15 +2593,15 @@ public class hyperSQLObject {
 		for(int i = 1; i <= numCols; i++) {
 			String colName = rsmd.getColumnName(i);
 
-			if( !globals.printC.isEmpty() ) {
-				if(globals.printC.contains(colName)) {
+			if( !Globals.printC.isEmpty() ) {
+				if(Globals.printC.contains(colName)) {
 					selectCols.put(i, colName);
 					//if(console != null) console.append("Adding " + colName + "\n");
 				}
 
 			}
 
-			if( !globals.printE.isEmpty() ) {
+			if( !Globals.printE.isEmpty() ) {
 				if(exptSet.contains(colName)) {
 					selectCols.put(i, colName);
 					//if(console != null) console.append("Adding " + colName + "\n");
@@ -2643,7 +2643,7 @@ public class hyperSQLObject {
 
 		// write data to file
 		NumberFormat formatter = new DecimalFormat("#0.0000");
-		String outputFileName = globals.outputFilePath;
+		String outputFileName = Globals.outputFilePath;
 
 		if(console != null) console.append("\nWriting results to: '" + outputFileName + "'\n");
 		else System.err.print("\nWriting results to: '" + outputFileName + "'\n");
@@ -2652,9 +2652,9 @@ public class hyperSQLObject {
 			BufferedWriter out = new BufferedWriter(new FileWriter(outputFileName));
 
 			query = "SELECT DISTINCT " + queryBody + " FROM results";
-			if(globals.makeVerboseOutput)
+			if(Globals.makeVerboseOutput)
 				query = "SELECT DISTINCT " + queryBody + " FROM v_results";
-			else if(globals.byGene)
+			else if(Globals.byGene)
 				query = "SELECT DISTINCT " + queryBody + " FROM geneResults";
 
 			rs1 = stmt1.executeQuery(query);
@@ -2729,7 +2729,7 @@ public class hyperSQLObject {
 		stmt.executeUpdate("DROP TABLE IF EXISTS prot2peps_combined");
 
 
-		if(globals.byGene) {
+		if(Globals.byGene) {
 			stmt.executeUpdate("DROP INDEX IF EXISTS g2pep_idx1");
 			stmt.executeUpdate("DROP INDEX IF EXISTS g2pep_idx2");
 			stmt.executeUpdate("DROP INDEX IF EXISTS g2pep_idx3");
@@ -2769,7 +2769,7 @@ public class hyperSQLObject {
 
 		String query = null;
 
-		if(!globals.byGene){
+		if(!Globals.byGene){
 			query = "ALTER TABLE results ADD COLUMN ALL_id VARCHAR(20) BEFORE maxPw";
 			stmt.executeUpdate(query);
 
@@ -2904,7 +2904,7 @@ public class hyperSQLObject {
 		String numProts = Integer.toString( rs.getInt(1) );
 		int factor = numProts.length() + 1;
 		double NSAF_FACTOR = Math.pow(10,factor); // we multiply all NSAF values by this
-		globals.NSAF_FACTOR = NSAF_FACTOR;
+		Globals.NSAF_FACTOR = NSAF_FACTOR;
 		rs.close();
 
 		msg = "  NSAF_FACTOR = 10^" + factor + " = " + NSAF_FACTOR + "\n";
@@ -3070,7 +3070,7 @@ public class hyperSQLObject {
 		for(int j = 1; j < tags.length; j++) {
 			i = j - 1;
 
-			if(globals.byGene) {
+			if(Globals.byGene) {
 				query = "ALTER TABLE geneResults "
 					  + "  ADD COLUMN " + tags[i] + "_totNSAF DOUBLE "
 					  + "BEFORE " + tags[i] + "_numSpecsUniq ";
@@ -3161,7 +3161,7 @@ public class hyperSQLObject {
 		 */
 		String tag = tags[ (N-1) ]; // the last tag
 
-		if(globals.byGene) {
+		if(Globals.byGene) {
 
 			stmt.executeUpdate("ALTER TABLE geneResults ADD COLUMN " + tag + "_totNSAF DOUBLE BEFORE " + tag + "_numSpecsUniq ");
 			stmt.executeUpdate("ALTER TABLE geneResults ADD COLUMN " + tag + "_uniqNSAF DOUBLE BEFORE " + tag + "_numSpecsAdj ");
@@ -3256,9 +3256,9 @@ public String getGeneId(Connection conn, abacus_textArea console, String protid)
 public int getProtLen(String protid) {
 	int ret = 0;
 
-	if( globals.fastaFile == null || globals.fastaFile.isEmpty() ) ret = 0; 
+	if( Globals.fastaFile == null || Globals.fastaFile.isEmpty() ) ret = 0;
 	else {
-		if(globals.protLen.containsKey(protid)) ret = globals.protLen.get(protid);
+		if(Globals.protLen.containsKey(protid)) ret = Globals.protLen.get(protid);
 	}
 	
 	return ret;
@@ -3326,7 +3326,7 @@ public void addExtraProteins(Connection conn, abacus_textArea console) throws SQ
 			String curId = rs2.getString(1);
 			String curDefline = rs2.getString(2);
 
-			if(globals.gene2protFile != null)
+			if(Globals.gene2protFile != null)
 				geneId = getGeneId(conn, console, curId);
 
 			int protLen = getProtLen(curId);
@@ -3483,7 +3483,7 @@ public void peptideLevelResults(Connection conn, abacus_textArea console) throws
 	
 	// now write this table to disk
 	try {
-		BufferedWriter out = new BufferedWriter(new FileWriter(globals.outputFilePath));
+		BufferedWriter out = new BufferedWriter(new FileWriter(Globals.outputFilePath));
 		
 		rs = stmt.executeQuery("SELECT * FROM pepResults");
 		rsmd = rs.getMetaData();

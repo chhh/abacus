@@ -8,7 +8,7 @@
 	<property name="jar.dir" value="${build.dir}/jar"/>
 	<property name="version.num" value="2.00"/>
 
-	<property name="main-class" value="mainFunction.mainFunction"/>
+	<property name="main-class" value="main.MainFunction"/>
 	
 	<target name="clean">
 		<delete dir="${build.dir}"/>

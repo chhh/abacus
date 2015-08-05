@@ -8,7 +8,7 @@ import javax.xml.stream.XMLStreamReader;
 /*
  * Class defining the pepXML object
  */
-public class pepXML {
+public class PepXML {
 	//private String searchEngine;   // stores the name/type of search tool used
 	private String srcFile;
 	private String specId;
@@ -49,10 +49,10 @@ public class pepXML {
 	private double sequest_spscore;
 	private double sequest_sprank;
 
-	public pepXML() {
+	public PepXML() {
 	} // default constructor
 
-	public pepXML(String txt, boolean b) {
+	public PepXML(String txt, boolean b) {
 		this.srcFile = txt;
 		this.isProphetData = b;
 		this.hitRank = -1; // once you have read in the top hit this goes to 1
@@ -384,7 +384,7 @@ public class pepXML {
 
 	public void write_to_db(PreparedStatement prep) {
 
-		if( !globals.check_modPeptide(this.modPeptide) ) {
+		if( !Globals.check_modPeptide(this.modPeptide) ) {
             // do nothing (don't add it into database
         }
 		else if(this.iniProb > 0) {
@@ -396,7 +396,7 @@ public class pepXML {
 				prep.setString(5, this.modPeptide);
 				prep.setDouble(6, this.iniProb);
 				prep.addBatch();
-				globals.proceedWithQuery = true; // true means you are implying the insertion worked
+				Globals.proceedWithQuery = true; // true means you are implying the insertion worked
 
 			} catch (SQLException e) {
 				e.printStackTrace();
