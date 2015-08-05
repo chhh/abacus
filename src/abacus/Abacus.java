@@ -1,6 +1,5 @@
 package abacus;
 
-import abacus.console.AbacusTextArea;
 import abacus.ui.UIAlerter;
 import java.awt.Component;
 import java.io.File;
@@ -58,44 +57,24 @@ public class Abacus {
         }
 
 
+        // checking inputs and cleaning
         cleanup(System.err);
         record_XML_files(dir); // record only the protXML and pepXML files
         if (!checkPepXmlFiles(System.err, null, null)) return;
         if (!checkProtXmlFiles(System.err, null, null)) return;
         if (!checkFastaFile(System.err, null, null)) return;
 
-        /*
-         * By default, the program stores the database in memory.
-         * If the user wants to keep the database, this code allows them to.
-         * NOTE: writing to disk is much slower!!!
-         */
-        if (Globals.keepDB) {
-            db += ":file:" + Globals.DBname;
-            System.err.println("\nDatabase will be written to disk within the following files and folders:");
-            System.err.print("\t" + Globals.DBname + ".script\n");
-            System.err.print("\t" + Globals.DBname + ".properties\n");
-            System.err.print("\t" + Globals.DBname + ".tmp\n\n");
-            System.err.println("NOTE: Writing to disk slows things down so please be patient...\n\n");
-        } else {
-            db += ":mem:memoryDB"; //default method, do everything in memory
+        db = checkJdbcInMemDb(db, System.err);
+
+        conn = createDbConnection(db, System.err, null, null);
+        if (conn == null) return;
+
+        if (!Globals.byPeptide) {
+            if (load_protXML(conn, System.err, null, null)) return;
         }
+        if (load_pepXML(conn, System.err, null, null)) return;
+        
 
-        //Connect to hyperSQL database object
-        try {
-            Class.forName("org.hsqldb.jdbc.JDBCDriver");
-            conn = DriverManager.getConnection(db, "SA", "");
-            if (!Globals.byPeptide) {
-                load_protXML(conn, null);
-                System.err.print("\n");
-            }
-
-            load_pepXML(conn, null);
-            System.err.print("\n");
-
-        } catch (Exception e) {
-            System.err.print(e.toString());
-            System.exit(-1);
-        }
 
         try {
 
@@ -238,6 +217,60 @@ public class Abacus {
     }
 
     /**
+     *
+     * @param db
+     * @param err
+     * @param alerter
+     * @param comp
+     * @return null if connection could not be established
+     * @throws IOException
+     */
+    public Connection createDbConnection(String db, Appendable err, UIAlerter alerter, Component comp) throws IOException {
+        Connection conn;
+        //Connect to hyperSQL database object
+        try {
+            Class.forName("org.hsqldb.jdbc.JDBCDriver");
+            conn = DriverManager.getConnection(db, "SA", "");
+
+        } catch (ClassNotFoundException | SQLException e) {
+            if (err != null) {
+                err.append("There was an error connecting to the HyperSQL database\n");
+                err.append(e.toString());
+                err.append("\n");
+            }
+            if (alerter != null) {
+                alerter.alert(comp);
+            }
+            return null;
+        }
+        return conn;
+    }
+
+    /**
+     * By default, the program stores the database in memory.<br/>
+     * If the user wants to keep the database, this code allows them to.<br/>
+     * NOTE: writing to disk is much slower!!!
+     * @param db
+     * @param err
+     * @return
+     */
+    public String checkJdbcInMemDb(String db, Appendable err) throws IOException {
+        if (Globals.keepDB) {
+            db += ":file:" + Globals.DBname;
+            if (err != null) {
+                err.append("\nDatabase will be written to disk within the following files and folders:\n");
+                err.append("\t" + Globals.DBname + ".script\n");
+                err.append("\t" + Globals.DBname + ".properties\n");
+                err.append("\t" + Globals.DBname + ".tmp\n\n");
+                err.append("NOTE: Writing to disk slows things down so please be patient...\n\n\n");
+            }
+        } else {
+            db += ":mem:memoryDB"; //default method, do everything in memory
+        }
+        return db;
+    }
+
+    /**
      * Check the provided FASTA file for proper contents.
      * @param err error stream for textual output
      * @param alerter something that alerts the user visually
@@ -308,6 +341,7 @@ public class Abacus {
      * exists if it does, delete it first. HyperSQL makes several files when it
      * makes a database so we have to iterate through them.
      * @param err
+     * @throws java.io.IOException
      */
     public void cleanup(Appendable err) throws IOException {
         
@@ -327,11 +361,12 @@ public class Abacus {
     }
 
     /**
-     * *******************
-     *
      * Converts the contents of a file into a CharSequence suitable for use by
      * the regex package.
      *
+     * @param filename
+     * @return
+     * @throws java.io.IOException
      */
     public static CharSequence fromFile(String filename) throws IOException {
         FileInputStream fis = new FileInputStream(filename);
@@ -344,9 +379,8 @@ public class Abacus {
     }
 
     /**
-     * ***************
      * Function opens up files in the given directory and determines if they are
-     * protXML files based upon their content
+     * protXML files based upon their content.
      *
      * @param dir
      */
@@ -385,7 +419,7 @@ public class Abacus {
 
     }
 
-    public static boolean parseXMLDocument(String xmlFile, String dataType, PreparedStatement prep, int fileNumber, AbacusTextArea console) {
+    public static boolean parseXMLDocument(String xmlFile, String dataType, PreparedStatement prep, int fileNumber, Appendable console) throws IOException {
         XMLInputFactory inputFactory = XMLInputFactory.newInstance();
 
         InputStream input = null;
@@ -431,23 +465,29 @@ public class Abacus {
         }
 
         try {
-            xmlStreamReader.close();
+            if (xmlStreamReader != null)
+                xmlStreamReader.close();
         } catch (XMLStreamException e) {
             if (console != null) {
                 console.append(e.toString());
-            } else {
-                e.printStackTrace();
             }
-            System.exit(-1);
+            e.printStackTrace();
         }
 
         return false;
     }
 
-    /*
-     *  Function parses protXML files
+    /**
+     * Function parses protXML files
+     * @param xmlStreamReader
+     * @param xmlFile
+     * @param prep
+     * @param fileNumber
+     * @param console
+     * @return
+     * @throws java.io.IOException
      */
-    public static boolean parseProtXML(XMLStreamReader xmlStreamReader, String xmlFile, PreparedStatement prep, int fileNumber, AbacusTextArea console) {
+    public static boolean parseProtXML(XMLStreamReader xmlStreamReader, String xmlFile, PreparedStatement prep, int fileNumber, Appendable console) throws IOException {
         ProtXML curGroup = null;   // current protein group
         String curProtid_ = null;   // need this to get protein description
         String curPep_ = null;   // need this to annotate any AA modifications
@@ -634,19 +674,26 @@ public class Abacus {
     }
 
 
-    /*
-     *  Function written to parse pepXML files
+    /**
+     * Function written to parse pepXML files.
+     * @param xmlStreamReader
+     * @param xmlFile
+     * @param prep
+     * @param fileNumber
+     * @param out
+     * @return
+     * @throws IOException
      */
-    public static boolean parsePepXML(XMLStreamReader xmlStreamReader, String xmlFile, PreparedStatement prep, int fileNumber, AbacusTextArea console) {
+    public static boolean parsePepXML(XMLStreamReader xmlStreamReader, String xmlFile, PreparedStatement prep, int fileNumber, Appendable out) throws IOException {
 
         PepXML curPSM = null;  // current peptide-to-spectrum match
-        String err = null; // holds string for stderr or console
+        String err; // holds string for stderr or console
         boolean is_iprophet_data = false; // true means the file is an i-prophet file
 
         err = "Parsing pepXML [ " + (fileNumber + 1) + " of " + Globals.pepXmlFiles.size() + " ]: " + xmlFile + "\n";
 
-        if (console != null) {
-            console.append(err);
+        if (out != null) {
+            out.append(err);
         } else {
             System.err.print(err);
         }
@@ -723,185 +770,212 @@ public class Abacus {
                 }
             }
         } catch (XMLStreamException | NullPointerException e) {
-            if (console != null) {
-                console.append("\nDied parsing " + xmlFile + "\n");
-                console.append("This error means there is a problem with the formatting of your pepXML file.\n");
-                console.append("Exiting now... sorry\n");
+            if (out != null) {
+                out.append("\nDied parsing " + xmlFile + "\n");
+                out.append("This error means there is a problem with the formatting of your pepXML file.\n");
+                out.append("Exiting now... sorry\n");
                 return true;
-            } else {
-                e.printStackTrace();
-                System.exit(-1);
             }
+            e.printStackTrace();
         }
         return false;
     }
 
-    /*
+    /**
      * Function iterates through the protXML files and loads them into SQLite
      * Loading is always handled by the prot version of the SQLite objects since
-     * the basic starting material is always protein-centric
+     * the basic starting material is always protein-centric.
+     * 
+     * @param conn
+     * @param out
+     * @param alerter
+     * @param comp
+     * @return
+     * @throws java.io.IOException
      */
-    public boolean load_protXML(Connection conn, AbacusTextArea console) throws Exception {
-        String err = "Loading protXML files\n";
-
-        if (console != null) {
-            console.append(err);
-        } else {
-            System.err.print(err);
-        }
-
-        Statement stmt = conn.createStatement();
-        String query = null;
+    public boolean load_protXML(Connection conn, Appendable out, UIAlerter alerter, Component comp) throws IOException {
         boolean status = false;
-        stmt.executeUpdate("DROP TABLE IF EXISTS RAWprotXML");
+        Statement stmt = null;
+        PreparedStatement prep = null;
+        try {
+            String err = "Loading protXML files\n";
 
-        query = "CREATE CACHED TABLE RAWprotXML ("
-                + "  srcFile VARCHAR(250),"
-                + "  groupid INT,"
-                + "  siblingGroup VARCHAR(5),"
-                + "  Pw DECIMAL(8,6),"
-                + "  localPw DECIMAL(8,6),"
-                + "  protId VARCHAR(100),"
-                + "  isFwd INT,"
-                + "  peptide VARCHAR(250),"
-                + "  modPeptide VARCHAR(250),"
-                + "  charge INT,"
-                + "  iniProb DECIMAL(8,6),"
-                + "  wt DECIMAL(8,6),"
-                + "  defline VARCHAR(1000)"
-                + ")";
-        stmt.executeUpdate(query);
+            if (out != null) {
+                out.append(err);
+            }
 
-        query = "INSERT INTO RAWprotXML VALUES ("
-                + "?, " //srcFile
-                + "?, " //groupid
-                + "?, " //siblingGroup
-                + "?, " //Pw
-                + "?, " //localPw
-                + "?, " //protId
-                + "?, " //isFwd
-                + "?, " //peptide
-                + "?, " //modPeptide
-                + "?, " //charge
-                + "?, " //iniProb
-                + "?, " //wt
-                + "? " //defline
-                + ");";
-        PreparedStatement prep = conn.prepareStatement(query);
+            stmt = conn.createStatement();
+            String query;
+            stmt.executeUpdate("DROP TABLE IF EXISTS RAWprotXML");
+
+            query = "CREATE CACHED TABLE RAWprotXML ("
+                    + "  srcFile VARCHAR(250),"
+                    + "  groupid INT,"
+                    + "  siblingGroup VARCHAR(5),"
+                    + "  Pw DECIMAL(8,6),"
+                    + "  localPw DECIMAL(8,6),"
+                    + "  protId VARCHAR(100),"
+                    + "  isFwd INT,"
+                    + "  peptide VARCHAR(250),"
+                    + "  modPeptide VARCHAR(250),"
+                    + "  charge INT,"
+                    + "  iniProb DECIMAL(8,6),"
+                    + "  wt DECIMAL(8,6),"
+                    + "  defline VARCHAR(1000)"
+                    + ")";
+            stmt.executeUpdate(query);
+
+            query = "INSERT INTO RAWprotXML VALUES ("
+                    + "?, " //srcFile
+                    + "?, " //groupid
+                    + "?, " //siblingGroup
+                    + "?, " //Pw
+                    + "?, " //localPw
+                    + "?, " //protId
+                    + "?, " //isFwd
+                    + "?, " //peptide
+                    + "?, " //modPeptide
+                    + "?, " //charge
+                    + "?, " //iniProb
+                    + "?, " //wt
+                    + "? " //defline
+                    + ");";
+            prep = conn.prepareStatement(query);
 
 		// At this juncture, the database should have been created.
-        // We will now iterate through the protXML files loading the relevant content
-        for (int i = 0; i < Globals.protXmlFiles.size(); i++) {
-            Globals.proceedWithQuery = false;
-            status = parseXMLDocument(Globals.protXmlFiles.get(i), "protXML", prep, i, console);
-            if (status) {
-                return status; // a return of 'true' means something went wrong
+            // We will now iterate through the protXML files loading the relevant content
+            for (int i = 0; i < Globals.protXmlFiles.size(); i++) {
+                Globals.proceedWithQuery = false;
+                status = parseXMLDocument(Globals.protXmlFiles.get(i), "protXML", prep, i, out);
+                if (status) {
+                    return status; // a return of 'true' means something went wrong
+                }
+                if (Globals.proceedWithQuery) { // if queryCtr = true then you got at least 1 row to insert into the DB
+                    conn.setAutoCommit(false);
+                    prep.executeBatch();
+                    conn.setAutoCommit(true);
+                    prep.clearBatch();
+                }
             }
-            if (Globals.proceedWithQuery) { // if queryCtr = true then you got at least 1 row to insert into the DB
-                conn.setAutoCommit(false);
-                prep.executeBatch();
-                conn.setAutoCommit(true);
-                prep.clearBatch();
-            }
-        }
-        try {
+
             prep.clearBatch();
         } catch (SQLException e) {
-            if (console != null) {
-                console.append("\nThere was an error parsing your protXML files.\n");
-                console.append("This usually happens due to a syntax or formatting error in the protXML file.\n");
+            if (out != null) {
+                out.append("\nThere was an error parsing your protXML files.\n");
+                out.append("This usually happens due to a syntax or formatting error in the protXML file.\n");
+            }
+            if (alerter != null) {
+                alerter.alert(comp);
+            }
+            e.printStackTrace();
+            status = true;
+        } finally {
+            // clean up
+            try {
+            if (stmt != null)
+                stmt.close();
+            if (prep != null)
+                prep.close();
+            } catch (SQLException e) {
                 e.printStackTrace();
-                status = true;
-            } else {
-                e.printStackTrace();
-                System.exit(-1);
             }
         }
 
-        // clean up
-        stmt.close();
-        prep.close();
-
-        return status;
-    }
-
-    /*
-     * Function iterates through the pepXML files and loads them into HyperSQL
-     * Loading is always handled by the prot version of the SQLite objects since
-     * the basic starting material is always protein-centric
-     */
-    public boolean load_pepXML(Connection conn, AbacusTextArea console) throws SQLException {
-        String err = "Loading pepXML files\n";
-        if (console != null) {
-            console.append(err);
-        } else {
-            System.err.print(err);
-        }
-
-        Statement stmt = conn.createStatement();
-        String query = null;
-        boolean status = false;
-        stmt.executeUpdate("DROP TABLE IF EXISTS pepXML");
-
-        query = "CREATE CACHED TABLE pepXML ("
-                + "  srcFile VARCHAR(250),"
-                + "  specId VARCHAR(250),"
-                + "  charge TINYINT,"
-                + "  peptide VARCHAR(250),"
-                + "  modPeptide VARCHAR(250),"
-                + "  iniProb DECIMAL(8,6)"
-                + ")";
-
-        stmt.executeUpdate(query);
-
-        query = "INSERT INTO pepXML VALUES ("
-                + "?, " //srcFile
-                + "?, " //specId
-                + "?, " //charge
-                + "?, " //peptide
-                + "?, " //modPeptide
-                + "? " //iniProb
-                + ")";
-        PreparedStatement prep = conn.prepareStatement(query);
-
-		// At this juncture, the database should have been created.
-        // We will now iterate through the pepXML files loading the relevant content
-        for (int i = 0; i < Globals.pepXmlFiles.size(); i++) {
-            Globals.proceedWithQuery = false;
-            status = parseXMLDocument(Globals.pepXmlFiles.get(i), "pepXML", prep, i, console);
-            if (status) {
-                return status; // a return of 'true' means something went wrong
-            }
-            if (Globals.proceedWithQuery) { // if queryCtr > 0 then you got at least 1 row to insert into the DB
-                conn.setAutoCommit(false);
-                prep.executeBatch();
-                conn.setAutoCommit(true);
-                prep.clearBatch();
-            }
-        }
-        try {
-            prep.clearBatch();
-        } catch (SQLException e) {
-            if (console != null) {
-                console.append("There was an error parsing your pepXML files\n\n");
-                status = true;
-            } else {
-                e.printStackTrace();
-                System.exit(-1);
-            }
-        }
-
-        stmt.close();
-        prep.close();
-
+        if (out != null) out.append("\n");
         return status;
     }
 
     /**
-     * *************
+     * Function iterates through the pepXML files and loads them into HyperSQL
+     * Loading is always handled by the prot version of the SQLite objects since
+     * the basic starting material is always protein-centric.
      *
-     * Function just reports version and built-date for program
-     *
+     * @param conn
+     * @param out
+     * @param alerter
+     * @param comp
+     * @return
+     * @throws java.io.IOException
+     */
+    public boolean load_pepXML(Connection conn, Appendable out, UIAlerter alerter, Component comp) throws IOException {
+        boolean status = false;
+        Statement stmt = null;
+        PreparedStatement prep = null;
+        try {
+            String err = "Loading pepXML files\n";
+            if (out != null) {
+                out.append(err);
+            }
+
+            stmt = conn.createStatement();
+            String query;
+
+            stmt.executeUpdate("DROP TABLE IF EXISTS pepXML");
+
+            query = "CREATE CACHED TABLE pepXML ("
+                    + "  srcFile VARCHAR(250),"
+                    + "  specId VARCHAR(250),"
+                    + "  charge TINYINT,"
+                    + "  peptide VARCHAR(250),"
+                    + "  modPeptide VARCHAR(250),"
+                    + "  iniProb DECIMAL(8,6)"
+                    + ")";
+
+            stmt.executeUpdate(query);
+
+            query = "INSERT INTO pepXML VALUES ("
+                    + "?, " //srcFile
+                    + "?, " //specId
+                    + "?, " //charge
+                    + "?, " //peptide
+                    + "?, " //modPeptide
+                    + "? " //iniProb
+                    + ")";
+            prep = conn.prepareStatement(query);
+
+		// At this juncture, the database should have been created.
+            // We will now iterate through the pepXML files loading the relevant content
+            for (int i = 0; i < Globals.pepXmlFiles.size(); i++) {
+                Globals.proceedWithQuery = false;
+                status = parseXMLDocument(Globals.pepXmlFiles.get(i), "pepXML", prep, i, out);
+                if (status) {
+                    return status; // a return of 'true' means something went wrong
+                }
+                if (Globals.proceedWithQuery) { // if queryCtr > 0 then you got at least 1 row to insert into the DB
+                    conn.setAutoCommit(false);
+                    prep.executeBatch();
+                    conn.setAutoCommit(true);
+                    prep.clearBatch();
+                }
+            }
+            prep.clearBatch();
+        } catch (SQLException | IOException e) {
+            if (out != null) {
+                out.append("There was an error parsing your pepXML files\n\n");
+                status = true;
+            }
+            if (alerter != null) {
+                alerter.alert(comp);
+            }
+            e.printStackTrace();
+        } finally {
+            try {
+                if (stmt != null) stmt.close();
+                if (prep != null) prep.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (out != null) {
+            out.append("\n");
+        }
+        return status;
+    }
+
+    /**
+     * Function just reports version and built-date for program.
+     * @return
      */
     public String printHeader() {
         String ret;

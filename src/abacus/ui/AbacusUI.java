@@ -21,8 +21,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -2576,89 +2574,37 @@ class WorkerThread extends Thread {
         dir = new File(Globals.srcDir);
 
 
+        // checking inputs and cleaning
         try {
             pmasc.cleanup(console);
             pmasc.record_XML_files(dir); // record only the protXML and pepXML files
-            pmasc.checkPepXmlFiles(console, alerter, console);
-            pmasc.checkProtXmlFiles(console, alerter, console);
-            pmasc.checkFastaFile(console, alerter, console);
-            if (!checkFastaFile(System.err, null, null)) return;
+            if (!pmasc.checkPepXmlFiles(console, alerter, console)) return;
+            if (!pmasc.checkProtXmlFiles(console, alerter, console)) return;
+            if (!pmasc.checkFastaFile(console, alerter, console)) return;
+
+            db = pmasc.checkJdbcInMemDb(db, console);
+            conn = pmasc.createDbConnection(db, console, alerter, AbacusUI.this);
+            if (conn == null) {
+                return;
+            }
+
             if (!Globals.byPeptide) {
-                if (Globals.fastaFile == null || Globals.fastaFile.isEmpty()) {
-                    console.append("No fasta file was given so protein lengths will not be reported\n\n");
-                } else {
-                    console.append("Retrieving protein lengths from '" + Globals.fastaFile + "'\n\n");
-                    if (Globals.parseFasta(console, alerter, console)) {
-                        return; // exit this thread
-                    }
+                if (pmasc.load_protXML(conn, console, alerter, AbacusUI.this)) {
+                    console.changeCloseStatus("allowClose");
+                    return;
                 }
+            }
+            if (pmasc.load_pepXML(conn, console, alerter, AbacusUI.this)) {
+                console.changeCloseStatus("allowClose");
+                return;
             }
 
         } catch (IOException ex) {
             Logger.getLogger(WorkerThread.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        /*
-         * By default, the program stores the database in memory.
-         * If the user wants to keep the database, this code allows them to.
-         * NOTE: writing to disk is much slower!!!
-         */
-        if (Globals.keepDB) {
-            db += ":file:" + Globals.DBname;
-            console.append("\nDatabase will be written to disk within the following files and folders:\n");
-            console.append("\t" + Globals.DBname + ".script\n");
-            console.append("\t" + Globals.DBname + ".properties\n");
-            console.append("\t" + Globals.DBname + ".tmp\n\n");
-            console.append("NOTE: Writing to disk slows things down so please be patient...\n\n");
-        } else {
-            db += ":mem:memoryDB"; //default method, do everything in memory
-        }
-
-        //Connect to hyperSQL database object
-        try {
-            Class.forName("org.hsqldb.jdbc.JDBCDriver");
-            conn = DriverManager.getConnection(db, "SA", "");
-        } catch (ClassNotFoundException | SQLException e) {
-            alerter.alert(AbacusUI.this);
-            console.append("There was an error connecting to the HyperSQL database\n");
-            console.append(e.toString());
-            return;
-        }
-
         System.gc(); // System clean up
 
-        try {
-            if (!Globals.byPeptide) {
-                if (pmasc.load_protXML(conn, console)) {
-                    alerter.alert(AbacusUI.this);
-                    console.changeCloseStatus("allowClose");
-                    return;
-                }
-                console.append("\n");
-            }
-        } catch (Exception e) {
-            alerter.alert(AbacusUI.this);
-            console.append("Error parsing protXML files\n");
-            console.append(e.toString());
-            console.changeCloseStatus("allowClose");
-            return;
-        }
-
-        try {
-            if (pmasc.load_pepXML(conn, console)) {
-                alerter.alert(AbacusUI.this);
-                console.changeCloseStatus("allowClose");
-                return;
-            }
-            console.append("\n");
-
-        } catch (Exception e) {
-            alerter.alert(AbacusUI.this);
-            console.append("Error parsing pepXML files\n");
-            console.append(e.toString());
-            console.changeCloseStatus("allowClose");
-            return;
-        }
         console.updateProgress(1);
 
         // now the work begins

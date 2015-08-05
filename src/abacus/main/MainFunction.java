@@ -6,7 +6,7 @@
 package abacus.main;
 
 import abacus.Abacus;
-import abacus.ui.AZZZbacusUI;
+import abacus.ui.AbacusUI;
 import java.io.File;
 import java.io.IOException;
 import org.hsqldb.util.DatabaseManagerSwing;
@@ -22,7 +22,7 @@ import org.hsqldb.util.DatabaseManagerSwing;
 public class MainFunction {
 
 	public static void main(String[] args) throws IOException {
-		AZZZbacusUI gui;
+		AbacusUI gui;
 		Abacus cmdLine;
 		String inputFile;
 		DatabaseManagerSwing dbGUI;
@@ -62,7 +62,7 @@ public class MainFunction {
 				System.exit(-1);
 			}
 			else {
-				gui = new AZZZbacusUI();
+				gui = new AbacusUI();
 				gui.main(args);
 			}
 		}
