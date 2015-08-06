@@ -1,5 +1,6 @@
 package abacus;
 
+import abacus.console.ProgressBarHandler;
 import abacus.ui.UIAlerter;
 import java.awt.Component;
 import java.io.File;
@@ -22,15 +23,12 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-
 public class Abacus {
 
     public void main(String[] args) throws IOException {
 
         File dir = null;
         Connection conn = null;
-        HyperSQLObject forProteins = null;
-        HyperSQLObjectGene forGenes = null;
         String db = "jdbc:hsqldb";
 
         long start_time = System.currentTimeMillis();
@@ -56,143 +54,243 @@ public class Abacus {
             Globals.printError(Globals.ERR_DIR, System.err);
         }
 
-
         // checking inputs and cleaning
         cleanup(System.err);
         record_XML_files(dir); // record only the protXML and pepXML files
-        if (!checkPepXmlFiles(System.err, null, null)) return;
-        if (!checkProtXmlFiles(System.err, null, null)) return;
-        if (!checkFastaFile(System.err, null, null)) return;
+        if (!checkPepXmlFiles(System.err, null, null)) {
+            return;
+        }
+        if (!checkProtXmlFiles(System.err, null, null)) {
+            return;
+        }
+        if (!checkFastaFile(System.err, null, null)) {
+            return;
+        }
 
         db = checkJdbcInMemDb(db, System.err);
 
         conn = createDbConnection(db, System.err, null, null);
-        if (conn == null) return;
+        if (conn == null) {
+            return;
+        }
 
         if (!Globals.byPeptide) {
-            if (load_protXML(conn, System.err, null, null)) return;
+            if (load_protXML(conn, System.err, null, null)) {
+                return;
+            }
         }
-        if (load_pepXML(conn, System.err, null, null)) return;
-        
+        if (load_pepXML(conn, System.err, null, null)) {
+            return;
+        }
+
+        HyperSQLObject forProteins = null;
+        HyperSQLObjectGene forGenes = null;
 
 
+        // the main processing function
+        long startTime = System.nanoTime();
+        Appendable out = System.err;
+        if (process(startTime, conn, out, null, null, null)) {
+            return;
+        }
+
+    }
+
+    private void updateProgress(ProgressBarHandler pbh, int N) {
+        if (pbh != null) {
+            pbh.updateProgress(N);
+        }
+    }
+
+    private void updateProgressType(ProgressBarHandler pbh, ProgressBarHandler.PROGRESS_TYPE type) {
+        if (pbh != null) {
+            pbh.changeBarType(type);
+        }
+    }
+
+    private void updateProgressCloseStatus(ProgressBarHandler pbh, ProgressBarHandler.WND_CLOSE_STATUS status) {
+        if (pbh != null) {
+            pbh.changeCloseStatus(status);
+        }
+    }
+
+    private void updateOutput(Appendable out, CharSequence seq) {
+        if (out != null) {
+            try {
+                out.append(seq);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    private void updateAlerter(UIAlerter alerter, Component comp) {
+        if (alerter != null) {
+            alerter.alert(comp);
+        }
+    }
+
+    /**
+     * The main part of the program doing the calculations.
+     *
+     * @param startTime use {@code System.nanoTime()} if you don't have a better
+     * idea
+     * @param out a printable stream, can be null
+     * @param pbh if you have a progress bar, use this for updates, can be null
+     * @param alerter will pop up a message for the user, can be null
+     * @param comp can be null, the parent to use for alerter
+     * @return
+     */
+    public boolean process(long startTime, Connection conn, Appendable out, ProgressBarHandler pbh, UIAlerter alerter, Component comp) {
+        long elapsed_time;
+        String timeStr;
+        HyperSQLObject forProteins = null;
+        HyperSQLObjectGene forGenes = null;
+        // now the work begins
         try {
-
-            if (Globals.byPeptide) { // user wants peptide-level results
+            if (Globals.byPeptide) {
+                // user wants peptide-level results
                 forProteins = new HyperSQLObject();
                 forProteins.initialize();
-                forProteins.makeSrcFileTable(conn, null);
+                forProteins.makeSrcFileTable(conn, pbh, out);
 
                 forProteins.correctPepXMLTags(conn);
-                forProteins.peptideLevelResults(conn, null);
+                updateProgress(pbh, 1);
 
-            } else if (Globals.byGene) { // user wants gene-centric output
+                forProteins.peptideLevelResults(conn, out);
+                updateProgress(pbh, 20);
+            } else if (Globals.byGene) {
+                // user wants gene-centric output
 
                 forGenes = new HyperSQLObjectGene();
                 forGenes.initialize();
-
-                forGenes.makeSrcFileTable(conn, null);
-                //forGenes.makeProtLenTable(conn, null); //deprecated function
+                //forGenes.makeProtLenTable(conn, console); //deprecated function
+                forGenes.makeSrcFileTable(conn, pbh, out);
+                updateProgress(pbh, 1);
                 forGenes.correctPepXMLTags(conn);
-
-                forGenes.makeGeneTable(conn, null);
-                forGenes.makeCombinedTable(conn, null);
-                forGenes.makeProtXMLTable(conn, null);
-
-                System.gc(); // need more memory
-
-                forGenes.makeGeneCombined(conn, null);
-                forGenes.makeGeneXML(conn, null);
-                forGenes.adjustGenePeptideWT(conn, null);
-
-                forGenes.makeTempGene2pepTable(conn);
-
-                forGenes.makeGeneidSummary(conn, null);
-                forGenes.makeGeneResults(conn, null);
-
-                forGenes.makeGenePepUsageTable(conn, null);
-                forGenes.appendIndividualExpts_GC(conn, null);
-
-                if (Globals.doNSAF) { //generate NSAF data
-                    forGenes.getNSAF_values_gene(conn, null);
+                if (forGenes.makeGeneTable(conn, out)) {
+                    updateAlerter(alerter, comp);
+                    updateProgressCloseStatus(pbh, ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
+                    return true;
                 }
-
+                updateProgress(pbh, 1);
+                forGenes.makeCombinedTable(conn, out, pbh);
+                updateProgress(pbh, 1);
+                forGenes.makeProtXMLTable(conn, out, pbh);
+                updateProgress(pbh, 1);
+                System.gc(); // need more RAM
+                forGenes.makeGeneCombined(conn, out);
+                updateProgress(pbh, 1);
+                forGenes.makeGeneXML(conn, out);
+                updateProgress(pbh, 1);
+                forGenes.adjustGenePeptideWT(conn, out, pbh);
+                updateProgress(pbh, 1);
+                forGenes.makeTempGene2pepTable(conn);
+                System.gc(); // System clean up
+                updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.SHAKER);
+                forGenes.makeGeneidSummary(conn, out, pbh);
+                updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.PROGRESS);
+                updateProgress(pbh, 1);
+                forGenes.makeGeneResults(conn, out);
+                updateProgress(pbh, 1);
+                updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.SHAKER);
+                forGenes.makeGenePepUsageTable(conn, out, pbh);
+                updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.PROGRESS);
+                updateProgress(pbh, 1);
+                System.gc(); // System clean up
+                updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.SHAKER);
+                forGenes.appendIndividualExpts_GC(conn, out, pbh);
+                updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.PROGRESS);
+                updateOutput(out, "\n");
+                if (Globals.doNSAF) {
+                    forGenes.getNSAF_values_gene(conn, out);
+                    updateOutput(out, "\n");
+                }
+                updateProgress(pbh, 1);
                 if (Globals.genesHaveDescriptions) { // append gene descriptions
                     forGenes.appendGeneDescriptions(conn);
+                    updateProgress(pbh, 1);
+                } else {
+                    updateProgress(pbh, 2);
                 }
-
                 // choose output format
                 if (Globals.outputFormat == Globals.geneQspecFormat) {
-                    forGenes.formatQspecOutput(conn, null);
+                    forGenes.formatQspecOutput(conn, out);
                 } else {
-                    forGenes.defaultResults(conn, null);
+                    forGenes.defaultResults(conn, out);
                 }
-
-            } else { // default protein-centric output
-
+                updateProgress(pbh, 1);
+            } else {
+                // default protein-centric output
                 forProteins = new HyperSQLObject();
                 forProteins.initialize();
-
-                forProteins.makeSrcFileTable(conn, null, null);
-                //forProteins.makeProtLenTable(conn, null); //deprecated function
+                //forProteins.makeProtLenTable(conn, console); // deprecated function
+                forProteins.makeSrcFileTable(conn, pbh, out);
+                updateProgress(pbh, 1);
                 forProteins.correctPepXMLTags(conn);
-
-                forProteins.makeCombinedTable(conn, null);
-                forProteins.makeProtXMLTable(conn, null);
-
-                System.gc(); // need more memory
-
-                forProteins.makeTempProt2PepTable(conn, null);
-
-                forProteins.makeProtidSummary(conn, null);
-
+                forProteins.makeCombinedTable(conn, out, pbh);
+                updateProgress(pbh, 1);
+                forProteins.makeProtXMLTable(conn, out, pbh);
+                updateProgress(pbh, 1);
+                System.gc(); // need more RAM
+                forProteins.makeTempProt2PepTable(conn, out, pbh);
+                System.gc(); // System clean up
+                //console.changeBarType("shaker");
+                forProteins.makeProtidSummary(conn, out, pbh);
+                //console.changeBarType("progress");
+                updateProgress(pbh, 1);
                 if (Globals.gene2protFile != null) {
-                    if (forProteins.makeGeneTable(conn, null)) return;
-                    forProteins.appendGeneIDs(conn, null);
-                    System.err.print("\n");
+                    forProteins.makeGeneTable(conn, out);
+                    forProteins.appendGeneIDs(conn, out);
+                    updateOutput(out, "\n");
+
                 }
-
-                forProteins.makeResultsTable(conn, null);
-                forProteins.addProteinLengths(conn, null, 0);
-
+                if (forProteins.makeResultsTable(conn, out)) {
+                    updateAlerter(alerter, comp);
+                    updateOutput(out, "\nError creating results table.\n");
+                    updateProgressCloseStatus(pbh, ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
+                    return true;
+                }
+                updateProgress(pbh, 1);
+                forProteins.addProteinLengths(conn, 0, out, pbh);
+                updateProgress(pbh, 1);
                 // these functions deal with adjusting spectral counts
                 forProteins.makeWT9XgroupsTable(conn);
-                forProteins.makePepUsageTable(conn, null);
-
+                forProteins.makePepUsageTable(conn, out, pbh);
+                updateProgress(pbh, 1);
                 // add individual experiment data to results table
-                forProteins.appendIndividualExpts(conn, null);
-
-				// reduce the number of columns in the results table
+                forProteins.appendIndividualExpts(conn, out);
+                updateProgress(pbh, 1);
+                    // reduce the number of columns in the results table
                 // by merging the groupid and siblingGroup fields
                 forProteins.mergeIDfields(conn);
-
                 if (Globals.doNSAF) {
-                    forProteins.getNSAF_values_prot(conn, null);
+                    forProteins.getNSAF_values_prot(conn, out);
+                    updateProgressCloseStatus(pbh, ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
+                    updateOutput(out, "\n");
                 }
-
                 if (Globals.makeVerboseOutput) {
-                    forProteins.addExtraProteins(conn, null);
-                    forProteins.addProteinLengths(conn, null, 1);
+                    forProteins.addExtraProteins(conn, out);
+                    forProteins.addProteinLengths(conn, 1, out, pbh);
                 }
-
                 // choose output format
                 switch (Globals.outputFormat) {
                     case Globals.protQspecFormat:
-                        forProteins.formatQspecOutput(conn, null);
+                        forProteins.formatQspecOutput(conn, out);
                         break;
                     case Globals.customOutput:
-                        forProteins.customOutput(conn, null);
+                        forProteins.customOutput(conn, out);
                         break;
                     default:
-                        forProteins.defaultResults(conn, null);
+                        forProteins.defaultResults(conn, out);
                 }
+                updateProgress(pbh, 1);
             }
-
             // user has elected to keep database, remove unnecessary tables.
             if (Globals.keepDB) {
-                if (Globals.byGene) {
+                if (Globals.byGene && forGenes != null) {
                     forGenes.cleanUp(conn);
-                } else {
+                } else if (forProteins != null) {
                     forProteins.cleanUp(conn);
                 }
             } else { // left over files that should be removed
@@ -201,21 +299,28 @@ public class Abacus {
                 if (f.exists()) {
                     f.delete();
                 }
-                f = null;
             }
+            updateProgressCloseStatus(pbh, ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
+            elapsed_time = System.currentTimeMillis() - startTime;
+            timeStr = Globals.formatTime(elapsed_time);
+            updateOutput(out, "\n\nTotal runtime (hh:mm:ss): " + timeStr + "\n");
+            updateOutput(out, "\nYou may now close this window\n\n");
+        } catch (Exception ex) {
+            throw new RuntimeException("Somethign awful happened during main processing step", ex);
+        } finally {
+            try {
+                // Whatever happens, shutdown the HSQLDB connection nicely
+                if (conn != null) {
+                    conn.createStatement().execute("SHUTDOWN");
+                    conn.close();
+                }
+            } catch (Exception e) {
+                updateOutput(out, e.toString());
+                updateProgressCloseStatus(pbh, ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
 
-            //shut things down
-            conn.createStatement().execute("SHUTDOWN");
-            conn.close();
-            conn = null;
-            elapsed_time = System.currentTimeMillis() - start_time;
-            String timeStr = Globals.formatTime(elapsed_time);
-            System.err.println("\nTotal runtime (hh:mm:ss): " + timeStr + "\n");
-            System.gc();
-
-        } catch (Exception e) {
-            e.printStackTrace();
+            }
         }
+        return false;
     }
 
     /**
@@ -252,6 +357,7 @@ public class Abacus {
      * By default, the program stores the database in memory.<br/>
      * If the user wants to keep the database, this code allows them to.<br/>
      * NOTE: writing to disk is much slower!!!
+     *
      * @param db
      * @param err
      * @return
@@ -274,6 +380,7 @@ public class Abacus {
 
     /**
      * Check the provided FASTA file for proper contents.
+     *
      * @param err error stream for textual output
      * @param alerter something that alerts the user visually
      * @param comp parent component of the alerter
@@ -285,14 +392,17 @@ public class Abacus {
         if (!Globals.byPeptide) {
 
             if (Globals.fastaFile == null || Globals.fastaFile.isEmpty()) {
-                if (err != null)
+                if (err != null) {
                     err.append("No fasta file was given so protein lengths will not be reported\n\n");
+                }
             } else {
-                if (err != null)
+                if (err != null) {
                     err.append("Retrieving protein lengths from\n'" + Globals.fastaFile + "'\n");
+                }
                 result = Globals.parseFasta(err, null, null);
-                if (err != null)
+                if (err != null) {
                     err.append("\n");
+                }
             }
         }
         return result;
@@ -300,6 +410,7 @@ public class Abacus {
 
     /**
      * Check the provided prot.xml files for existence.
+     *
      * @param err error stream for textual output
      * @param alerter something that alerts the user visually
      * @param comp parent component of the alerter
@@ -308,19 +419,21 @@ public class Abacus {
      */
     public boolean checkProtXmlFiles(Appendable err, UIAlerter alerter, Component comp) throws IOException {
         if (!Globals.byPeptide && (Globals.protXmlFiles == null || Globals.protXmlFiles.isEmpty())) {
-            if (err != null)
+            if (err != null) {
                 err.append("No protXML files were found in '" + Globals.srcDir + "'\n");
-            if (alerter != null)
+            }
+            if (alerter != null) {
                 alerter.alert(comp);
-            
+            }
+
             return false;
         }
         return true;
     }
 
-
     /**
      * Check the provided pep.xml files for existence.
+     *
      * @param err error stream for textual output
      * @param alerter something that alerts the user visually
      * @param comp parent component of the alerter
@@ -329,10 +442,12 @@ public class Abacus {
      */
     public boolean checkPepXmlFiles(Appendable err, UIAlerter alerter, Component comp) throws IOException {
         if (Globals.pepXmlFiles == null || Globals.pepXmlFiles.isEmpty()) {
-            if (err != null)
+            if (err != null) {
                 err.append("No pepXML files were found in '" + Globals.srcDir + "'\n");
-            if (alerter != null)
+            }
+            if (alerter != null) {
                 alerter.alert(comp);
+            }
             return false;
         }
         return true;
@@ -342,13 +457,14 @@ public class Abacus {
      * This code checks to see if the database we are going to create already
      * exists if it does, delete it first. HyperSQL makes several files when it
      * makes a database so we have to iterate through them.
+     *
      * @param err
      * @throws java.io.IOException
      */
     public void cleanup(Appendable err) throws IOException {
-        
+
         String[] toRemove = {".data", ".properties", ".script", ".tmp", ".log"};
-        
+
         for (String aToRemove : toRemove) {
             String tmpFile = "" + Globals.DBname + aToRemove;
             File f = new File(tmpFile);
@@ -467,8 +583,9 @@ public class Abacus {
         }
 
         try {
-            if (xmlStreamReader != null)
+            if (xmlStreamReader != null) {
                 xmlStreamReader.close();
+            }
         } catch (XMLStreamException e) {
             if (console != null) {
                 console.append(e.toString());
@@ -481,6 +598,7 @@ public class Abacus {
 
     /**
      * Function parses protXML files
+     *
      * @param xmlStreamReader
      * @param xmlFile
      * @param prep
@@ -529,7 +647,7 @@ public class Abacus {
                             break;
 
                         case "protein_summary_header":
-                             // This code identifies the pepXML files used for this protXML file
+                            // This code identifies the pepXML files used for this protXML file
                             // This information is used to map between these files.
                             if (Globals.parseProtXML_header(xmlStreamReader, xmlFile)) {
                                 err = "\nERROR:\n"
@@ -675,9 +793,9 @@ public class Abacus {
         return false;
     }
 
-
     /**
      * Function written to parse pepXML files.
+     *
      * @param xmlStreamReader
      * @param xmlFile
      * @param prep
@@ -748,7 +866,7 @@ public class Abacus {
                         curPSM.record_iniProb(xmlStreamReader);
                     }
 
-					// If the user provided iProphet input, we wil take the iProphet probability
+                    // If the user provided iProphet input, we wil take the iProphet probability
                     // and use that instead of the PeptideProphet probability
                     if (elementName.equals("interprophet_result")) {
                         curPSM.record_iniProb(xmlStreamReader);
@@ -787,7 +905,7 @@ public class Abacus {
      * Function iterates through the protXML files and loads them into SQLite
      * Loading is always handled by the prot version of the SQLite objects since
      * the basic starting material is always protein-centric.
-     * 
+     *
      * @param conn
      * @param out
      * @param alerter
@@ -844,7 +962,7 @@ public class Abacus {
                     + ");";
             prep = conn.prepareStatement(query);
 
-		// At this juncture, the database should have been created.
+            // At this juncture, the database should have been created.
             // We will now iterate through the protXML files loading the relevant content
             for (int i = 0; i < Globals.protXmlFiles.size(); i++) {
                 Globals.proceedWithQuery = false;
@@ -874,16 +992,20 @@ public class Abacus {
         } finally {
             // clean up
             try {
-            if (stmt != null)
-                stmt.close();
-            if (prep != null)
-                prep.close();
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (prep != null) {
+                    prep.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         }
 
-        if (out != null) out.append("\n");
+        if (out != null) {
+            out.append("\n");
+        }
         return status;
     }
 
@@ -935,7 +1057,7 @@ public class Abacus {
                     + ")";
             prep = conn.prepareStatement(query);
 
-		// At this juncture, the database should have been created.
+            // At this juncture, the database should have been created.
             // We will now iterate through the pepXML files loading the relevant content
             for (int i = 0; i < Globals.pepXmlFiles.size(); i++) {
                 Globals.proceedWithQuery = false;
@@ -962,8 +1084,12 @@ public class Abacus {
             e.printStackTrace();
         } finally {
             try {
-                if (stmt != null) stmt.close();
-                if (prep != null) prep.close();
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (prep != null) {
+                    prep.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -977,6 +1103,7 @@ public class Abacus {
 
     /**
      * Function just reports version and built-date for program.
+     *
      * @return
      */
     public String printHeader() {
