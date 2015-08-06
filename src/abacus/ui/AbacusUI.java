@@ -2909,42 +2909,42 @@ public class AbacusUI extends javax.swing.JFrame {
                     forGenes.makeSrcFileTable(conn, pbh, out);
                     updateProgress(pbh, 1);
                     forGenes.correctPepXMLTags(conn);
-                    if (forGenes.makeGeneTable(conn, console)) {
+                    if (forGenes.makeGeneTable(conn, out)) {
                         updateAlerter(alerter, comp);
                         updateProgressCloseStatus(pbh, ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
                         return true;
                     }
                     updateProgress(pbh, 1);
-                    forGenes.makeCombinedTable(conn, console);
+                    forGenes.makeCombinedTable(conn, out, pbh);
                     updateProgress(pbh, 1);
-                    forGenes.makeProtXMLTable(conn, console);
+                    forGenes.makeProtXMLTable(conn, out, pbh);
                     updateProgress(pbh, 1);
                     System.gc(); // need more RAM
-                    forGenes.makeGeneCombined(conn, console);
+                    forGenes.makeGeneCombined(conn, out);
                     updateProgress(pbh, 1);
-                    forGenes.makeGeneXML(conn, console);
+                    forGenes.makeGeneXML(conn, out);
                     updateProgress(pbh, 1);
-                    forGenes.adjustGenePeptideWT(conn, console);
+                    forGenes.adjustGenePeptideWT(conn, out, pbh);
                     updateProgress(pbh, 1);
                     forGenes.makeTempGene2pepTable(conn);
                     System.gc(); // System clean up
                     updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.SHAKER);
-                    forGenes.makeGeneidSummary(conn, console);
+                    forGenes.makeGeneidSummary(conn, out, pbh);
                     updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.PROGRESS);
                     updateProgress(pbh, 1);
-                    forGenes.makeGeneResults(conn, console);
+                    forGenes.makeGeneResults(conn, out);
                     updateProgress(pbh, 1);
                     updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.SHAKER);
-                    forGenes.makeGenePepUsageTable(conn, console);
+                    forGenes.makeGenePepUsageTable(conn, out, pbh);
                     updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.PROGRESS);
                     updateProgress(pbh, 1);
                     System.gc(); // System clean up
                     updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.SHAKER);
-                    forGenes.appendIndividualExpts_GC(conn, console);
+                    forGenes.appendIndividualExpts_GC(conn, out, pbh);
                     updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.PROGRESS);
                     updateOutput(out, "\n");
                     if (Globals.doNSAF) {
-                        forGenes.getNSAF_values_gene(conn, console);
+                        forGenes.getNSAF_values_gene(conn, out);
                         updateOutput(out, "\n");
                     }
                     updateProgress(pbh, 1);
@@ -2956,9 +2956,9 @@ public class AbacusUI extends javax.swing.JFrame {
                     }
                     // choose output format
                     if (Globals.outputFormat == Globals.geneQspecFormat) {
-                        forGenes.formatQspecOutput(conn, console);
+                        forGenes.formatQspecOutput(conn, out);
                     } else {
-                        forGenes.defaultResults(conn, console);
+                        forGenes.defaultResults(conn, out);
                     }
                     updateProgress(pbh, 1);
                 } else {
@@ -2969,15 +2969,15 @@ public class AbacusUI extends javax.swing.JFrame {
                     forProteins.makeSrcFileTable(conn, pbh, out);
                     updateProgress(pbh, 1);
                     forProteins.correctPepXMLTags(conn);
-                    forProteins.makeCombinedTable(conn, console);
+                    forProteins.makeCombinedTable(conn, out, pbh);
                     updateProgress(pbh, 1);
-                    forProteins.makeProtXMLTable(conn, console);
+                    forProteins.makeProtXMLTable(conn, out, pbh);
                     updateProgress(pbh, 1);
                     System.gc(); // need more RAM
-                    forProteins.makeTempProt2PepTable(conn, console);
+                    forProteins.makeTempProt2PepTable(conn, out, pbh);
                     System.gc(); // System clean up
                     //console.changeBarType("shaker");
-                    forProteins.makeProtidSummary(conn, console);
+                    forProteins.makeProtidSummary(conn, out, pbh);
                     //console.changeBarType("progress");
                     updateProgress(pbh, 1);
                     if (Globals.gene2protFile != null) {

@@ -194,12 +194,10 @@ public class HyperSQLObject {
      * @throws SQLException
      *
      */
-    public void makeCombinedTable(Connection conn, AbacusTextArea console) throws SQLException {
+    public void makeCombinedTable(Connection conn, Appendable out, ProgressBarHandler pbh) throws SQLException, IOException {
 
-        if (console != null) {
-            console.append("Creating combined table from '" + Globals.combinedFile + "'\n");
-        } else {
-            System.err.print("Creating combined table from '" + Globals.combinedFile + "'\n");
+        if (out != null) {
+            out.append("Creating combined table from '" + Globals.combinedFile + "'\n");
         }
 
         Statement stmt = conn.createStatement();
@@ -255,17 +253,18 @@ public class HyperSQLObject {
                     + "Nothing in your COMBINED file met your input parameters.\n"
                     + "Please adjust your Abacus parameters and try again.\n"
                     + "Now quiting....\n";
-            if (console != null) {
+            if (pbh != null) {
                 JFrame frame = new JFrame();
                 JOptionPane.showMessageDialog(frame, err);
-            } else {
-                System.err.print(err);
+            }
+            if (out != null) {
+                out.append(err);
             }
             System.exit(-1);
         }
 
-        if (console != null) {
-            console.monitorBoxInit(N, "COMBINED table");
+        if (pbh != null) {
+            pbh.monitorBoxInit(N, "COMBINED table");
         }
 
         query = "SELECT groupid, siblingGroup, Pw, localPw, protId, isFwd,"
@@ -306,8 +305,8 @@ public class HyperSQLObject {
             prep.setString(12, rs.getString(11)); // defline
 
             prep.addBatch();
-            if (console != null) {
-                console.monitorBoxUpdate(iter);
+            if (pbh != null) {
+                pbh.monitorBoxUpdate(iter);
             }
             iter++;
         }
@@ -316,8 +315,8 @@ public class HyperSQLObject {
         conn.setAutoCommit(true);
         prep.clearBatch();
         prep.close();
-        if (console != null) {
-            console.closeMonitorBox();
+        if (pbh != null) {
+            pbh.closeMonitorBox();
         }
 
         stmt.executeUpdate("CREATE INDEX com_idx1 ON combined(groupid, siblingGroup)");
@@ -329,14 +328,13 @@ public class HyperSQLObject {
         stmt.executeUpdate(query);
 
         // clean up combined file cases where maxLocalPw
-        this.curate_on_maxLocalPw(Globals.combinedFile, conn, console);
-        this.recalculatePeptideWts(conn, "combined", console);
+        this.curate_on_maxLocalPw(Globals.combinedFile, conn, out);
+        this.recalculatePeptideWts(conn, "combined", out);
 
         stmt.close();
-        if (console != null) {
-            console.append("\n\n");
+        if (out != null) {
+            out.append("\n\n");
         }
-        System.err.append("\n\n");
     }
 
     /**
@@ -344,12 +342,10 @@ public class HyperSQLObject {
      * From the combined table, only keep siblingGroups that meet the combined
      * file localPw threshold set by the user
      */
-    private void curate_on_maxLocalPw(String xmlId, Connection conn, AbacusTextArea console) throws SQLException {
+    private void curate_on_maxLocalPw(String xmlId, Connection conn, Appendable out) throws SQLException, IOException {
 
-        if (console != null) {
-            console.append("  Curating " + xmlId);
-        } else {
-            System.err.print("  Curating " + xmlId);
+        if (out != null) {
+            out.append("  Curating " + xmlId);
         }
 
         String query = null;
@@ -502,19 +498,18 @@ public class HyperSQLObject {
 //		prep2.close();
 //	}
     /**
-     * *******************
-     *
      * Function creates protXML table
      *
      * @param conn
+     * @param out
+     * @param pbh
      * @throws SQLException
+     * @throws java.io.IOException
      *
      */
-    public void makeProtXMLTable(Connection conn, AbacusTextArea console) throws SQLException {
-        if (console != null) {
-            console.append("Creating protXML table\n");
-        } else {
-            System.err.print("Creating protXML table\n");
+    public void makeProtXMLTable(Connection conn, Appendable out, ProgressBarHandler pbh) throws SQLException, IOException {
+        if (out != null) {
+            out.append("Creating protXML table\n");
         }
 
         Statement stmt = conn.createStatement();
@@ -568,8 +563,8 @@ public class HyperSQLObject {
         rs.next();
         int N = rs.getInt(1);
 
-        if (console != null) {
-            console.monitorBoxInit(N, "protXML table");
+        if (pbh != null) {
+            pbh.monitorBoxInit(N, "protXML table");
         }
 
         query = "SELECT srcFile, srcFile, "
@@ -602,8 +597,8 @@ public class HyperSQLObject {
             prep.setString(13, rs.getString(13)); // defline
             prep.addBatch();
 
-            if (console != null) {
-                console.monitorBoxUpdate(iter);
+            if (pbh != null) {
+                pbh.monitorBoxUpdate(iter);
             } else {
                 Globals.cursorStatus(iter, msg);
             }
@@ -615,46 +610,42 @@ public class HyperSQLObject {
         prep.clearBatch();
         prep.close();
 
-        if (console != null) {
-            console.closeMonitorBox();
-        } else {
-            System.err.print("\n");
+        if (pbh != null) {
+            pbh.closeMonitorBox();
         }
-
-        if (console != null) {
-            console.append("  Indexing protXML table (This can take a while...)\n");
-        } else {
-            System.err.print("  Indexing protXML table (This can take a while...)\n");
+        if (out != null) {
+            out.append("\n");
+            out.append("  Indexing protXML table (This can take a while...)\n");
         }
 
         N = 9; //number of indexes to create
-        if (console != null) {
-            console.monitorBoxInit(N, "Indexing protXML...");
+        if (pbh != null) {
+            pbh.monitorBoxInit(N, "Indexing protXML...");
         }
         iter = 0;
         stmt.executeUpdate("CREATE INDEX protXML_idx1 ON protXML(tag)");
-        if (console != null) {
-            console.monitorBoxUpdate(iter++);
+        if (pbh != null) {
+            pbh.monitorBoxUpdate(iter++);
         }
 
         stmt.executeUpdate("CREATE INDEX protXML_idx2 ON protXML(groupid, siblingGroup)");
-        if (console != null) {
-            console.monitorBoxUpdate(iter++);
+        if (pbh != null) {
+            pbh.monitorBoxUpdate(iter++);
         }
 
         stmt.executeUpdate("CREATE INDEX protXML_idx3 ON protXML(modPeptide, charge)");
-        if (console != null) {
-            console.monitorBoxUpdate(iter++);
+        if (pbh != null) {
+            pbh.monitorBoxUpdate(iter++);
         }
 
         stmt.executeUpdate("CREATE INDEX protXML_idx4 ON protXML(protid)");
-        if (console != null) {
-            console.monitorBoxUpdate(iter++);
+        if (pbh != null) {
+            pbh.monitorBoxUpdate(iter++);
         }
 
         stmt.executeUpdate("CREATE INDEX protXML_idx5 ON protXML(srcFile)");
-        if (console != null) {
-            console.monitorBoxUpdate(iter++);
+        if (pbh != null) {
+            pbh.monitorBoxUpdate(iter++);
         }
 
         query = "SELECT srcFile, tag "
@@ -670,45 +661,43 @@ public class HyperSQLObject {
             stmt2.executeUpdate(query);
         }
 
-        if (console != null) {
-            console.monitorBoxUpdate(iter++);
+        if (pbh != null) {
+            pbh.monitorBoxUpdate(iter++);
         }
 
         stmt.executeUpdate("DROP INDEX IF EXISTS protXML_idx9");
-        if (console != null) {
-            console.monitorBoxUpdate(iter++);
+        if (pbh != null) {
+            pbh.monitorBoxUpdate(iter++);
         }
 
         stmt.executeUpdate("ALTER TABLE protXML DROP COLUMN srcFile");
-        if (console != null) {
-            console.monitorBoxUpdate(iter++);
+        if (pbh != null) {
+            pbh.monitorBoxUpdate(iter++);
         }
 
         stmt.executeUpdate("CREATE INDEX protXML_idx6 ON protXML(tag)");
-        if (console != null) {
-            console.monitorBoxUpdate(iter++);
+        if (pbh != null) {
+            pbh.monitorBoxUpdate(iter++);
         }
 
         stmt.executeUpdate("DROP TABLE IF EXISTS RAWprotXML");
 
-        if (console != null) {
-            console.closeMonitorBox();
-            console.append("  Indexing of protXML completed\n");
-        } else {
-            System.err.print("  Indexing of protXML completed\n");
+        if (pbh != null) {
+            pbh.closeMonitorBox();
+        }
+        if (out != null) {
+            out.append("  Indexing of protXML completed\n");
         }
 
-		// if the epiThreshold != iniProbTH then we have to remove
+        // if the epiThreshold != iniProbTH then we have to remove
         // all entries where the protein does not have at least 1 peptide with a
         // probability >= epiThreshold
         if (Globals.epiThreshold > Globals.iniProbTH) {
 
             msg = "  Applying Experimental Peptide Inclusion threshold (EPI >= "
                     + Globals.epiThreshold + ")\n";
-            if (console != null) {
-                console.append(msg);
-            } else {
-                System.err.print(msg);
+            if (out != null) {
+                out.append(msg);
             }
 
             query = "CREATE MEMORY TABLE x_ ("
@@ -760,8 +749,8 @@ public class HyperSQLObject {
 
             while (rs.next()) {
                 String tag = rs.getString(1);
-                recalculatePeptideWts(conn, tag, console);
-                recalculateLocalPw(conn, tag, console);
+                recalculatePeptideWts(conn, tag, out);
+                recalculateLocalPw(conn, tag);
             }
             /**
              * ******** End wt recalculation ***********
@@ -774,21 +763,22 @@ public class HyperSQLObject {
         rs = null;
         stmt2 = null;
 
-        if (console == null) {
-            System.err.print("\n");
-        } else {
-            console.append("\n");
+        if (out != null) {
+            out.append("\n");
         }
     }
 
     /**
-     * **********************
      * Function recomputes the localPw of a sibling group in a given protXML.
      * This needs to be done for highly degenerate protein groups where all of
      * the sibling groups are interrelated isoforms all sharing the same common
      * set of peptides.
+     *
+     * @param conn
+     * @param tag
+     * @throws java.sql.SQLException
      */
-    public void recalculateLocalPw(Connection conn, String tag, AbacusTextArea console) throws SQLException {
+    public void recalculateLocalPw(Connection conn, String tag) throws SQLException {
 
         String query = null;
         Statement stmt = conn.createStatement();
@@ -853,21 +843,19 @@ public class HyperSQLObject {
     }
 
     /**
-     * *********************
-     *
      * Function adjusts peptide weights in protXML or combined file. This is
      * done because peptides which are shared among isoforms have different
      * weights. When in fact they should have the same weight in all cases.
      *
      * @param conn
      * @param tag
+     * @param out
+     * @throws java.io.IOException
      *
      */
-    public void recalculatePeptideWts(Connection conn, String tag, AbacusTextArea console) {
-        if (console != null) {
-            console.append("\n  Recalculating peptide weights for " + tag);
-        } else {
-            System.err.print("\n  Recalculating peptide weights for " + tag);
+    public void recalculatePeptideWts(Connection conn, String tag, Appendable out) throws IOException {
+        if (out != null) {
+            out.append("\n  Recalculating peptide weights for " + tag);
         }
 
         Statement stmt = null;
@@ -912,10 +900,8 @@ public class HyperSQLObject {
             stmt.executeUpdate("CREATE INDEX wt_idx1 ON wt_ (groupid)");
             stmt.executeUpdate("CREATE INDEX wt_idx2 ON wt_ (modPeptide)");
         } catch (SQLException e) {
-            if (console != null) {
-                console.append("\n" + e.toString());
-            } else {
-                e.printStackTrace();
+            if (out != null) {
+                out.append("\n" + e.toString());
             }
         }
 
@@ -932,20 +918,16 @@ public class HyperSQLObject {
         try {
             prep = conn.prepareStatement(query);
         } catch (SQLException e) {
-            if (console != null) {
-                console.append("\n" + e.toString());
-            } else {
-                e.printStackTrace();
+            if (out != null) {
+                out.append("\n" + e.toString());
             }
         }
 
         try {
             rs1 = stmt.executeQuery("SELECT DISTINCT modPeptide FROM wt_");
         } catch (SQLException e) {
-            if (console != null) {
-                console.append("\n" + e.toString());
-            } else {
-                e.printStackTrace();
+            if (out != null) {
+                out.append("\n" + e.toString());
             }
         }
 
@@ -958,10 +940,8 @@ public class HyperSQLObject {
         try {
             stmt2 = conn.createStatement();
         } catch (SQLException e) {
-            if (console != null) {
-                console.append("\n" + e.toString());
-            } else {
-                e.printStackTrace();
+            if (out != null) {
+                out.append("\n" + e.toString());
             }
         }
 
@@ -986,10 +966,8 @@ public class HyperSQLObject {
                 prep.addBatch();
             }
         } catch (SQLException e) {
-            if (console != null) {
-                console.append("\n" + e.toString());
-            } else {
-                e.printStackTrace();
+            if (out != null) {
+                out.append("\n" + e.toString());
             }
         }
 
@@ -998,10 +976,8 @@ public class HyperSQLObject {
             prep.executeBatch();
             conn.setAutoCommit(true);
         } catch (SQLException e) {
-            if (console != null) {
-                console.append("\n###" + e.toString());
-            } else {
-                e.printStackTrace();
+            if (out != null) {
+                out.append("\n###" + e.toString());
             }
         }
 
@@ -1023,731 +999,659 @@ public class HyperSQLObject {
             prep = null;
 
         } catch (SQLException e) {
-            if (console != null) {
-                console.append("\n" + e.toString());
-            } else {
-                e.printStackTrace();
+            if (out != null) {
+                out.append("\n" + e.toString());
             }
         }
     }
 
     /**
-     * ****************
-     *
      * Function creates a temporary table that summarizes the peptide data used
-     * for all the proteins in the combined and the protXML tables
-     *
-     */
-    public void makeTempProt2PepTable(Connection conn, AbacusTextArea console) throws Exception {
-        Statement stmt = conn.createStatement();
-        ResultSet rs = null;
-        ResultSet rs2 = null;
-        PreparedStatement prep = null;
-        String query = null;
-        String msg = null;
-        int N = 0;
-        int iter = 0;
-
-        stmt.executeUpdate("DROP TABLE IF EXISTS prot2peps_combined");
-
-        // combined file table
-        query = "CREATE TABLE prot2peps_combined ("
-                + " protid VARCHAR(100), "
-                + " modpeptide VARCHAR(250), "
-                + " charge INT, "
-                + " wt DECIMAL(8,6), "
-                + " iniProb DECIMAL(8,6), "
-                + " nspecs INT "
-                + ")";
-        stmt.executeUpdate(query);
-
-        rs = stmt.executeQuery("SELECT COUNT(*) FROM combined");
-        rs.next();
-        N = rs.getInt(1);
-
-        query = "INSERT INTO prot2peps_combined VALUES ("
-                + "?, " // protid
-                + "?, " // modPeptide
-                + "?, " // charge
-                + "?, " // wt
-                + "?, " // iniProb
-                + "? " // count
-                + ")";
-        prep = conn.prepareStatement(query);
-
-        msg = "  Mapping peptides to proteins (combined) ";
-        if (console != null) {
-            console.append(msg + "\n");
-            console.monitorBoxInit((N + 2), "Combined file peptides...");
-        } else {
-            System.err.println(msg);
-        }
-
-        // combined file peptides
-        query = "SELECT c.protid, c.modPeptide, c.charge, c.wt, c.iniProb, "
-                + "    COUNT(DISTINCT px.specId) "
-                + "FROM combined c, pepXML px "
-                + "WHERE c.modPeptide = px.modPeptide "
-                + "AND c.charge = px.charge "
-                + "GROUP BY c.protid, c.modPeptide, c.charge, c.wt, c.iniProb "
-                + "ORDER BY c.protid, c.modPeptide, c.charge ";
-        rs = stmt.executeQuery(query);
-
-        iter = 0;
-        while (rs.next()) {
-            prep.setString(1, rs.getString(1));
-            prep.setString(2, rs.getString(2));
-            prep.setInt(3, rs.getInt(3));
-            prep.setDouble(4, rs.getDouble(4));
-            prep.setDouble(5, rs.getDouble(5));
-            prep.setInt(6, rs.getInt(6));
-            prep.addBatch();
-
-            iter++;
-            if (console != null) {
-                console.monitorBoxUpdate(iter);
-            } else {
-                Globals.cursorStatus(iter, msg);
-            }
-        }
-        conn.setAutoCommit(false);
-        prep.executeBatch();
-        conn.setAutoCommit(true);
-        prep.clearBatch();
-        prep.close();
-
-        stmt.executeUpdate("CREATE INDEX pt2pep_combined_idx1 ON prot2peps_combined(protid)");
-        if (console != null) {
-            console.monitorBoxUpdate(iter++);
-        }
-        stmt.executeUpdate("CREATE INDEX pt2pep_combined_idx2 ON prot2peps_combined(modPeptide, charge)");
-        if (console != null) {
-            console.monitorBoxUpdate(iter++);
-        }
-
-        if (console != null) {
-            console.closeMonitorBox();
-        } else {
-            System.err.print("\n");
-        }
-
-        /*
-         * Now process the individual experimental files.
-         * To make things faster, we will make one table per record in srcFileTags
-         */
-        rs = stmt.executeQuery("SELECT COUNT(DISTINCT tag) FROM srcFileTags WHERE fileType = 'prot'");
-        rs.next();
-        int numTags = rs.getInt(1);
-        rs.close();
-
-        rs = stmt.executeQuery("SELECT DISTINCT tag FROM srcFileTags WHERE fileType = 'prot'");
-        prep = null;
-
-        String tag = null;
-        while (rs.next()) {
-            // create the table for this particular experimental file
-            tag = rs.getString(1);
-
-            if (console != null) {
-                console.append("  Mapping peptides to proteins (" + tag + ")\n");
-            } else {
-                System.err.print("  Mapping peptides to proteins (" + tag + ")\n");
-            }
-
-            stmt.executeUpdate("DROP TABLE IF EXISTS prot2peps_" + tag);
-
-            query = "CREATE TABLE prot2peps_" + tag + " ( "
-                    + " protid, modPeptide, charge, wt, iniProb, nspecs "
-                    + ") AS ( "
-                    + "SELECT pr.protid, pr.modPeptide, pr.charge, pr.wt, pr.iniProb, "
-                    + "  COUNT(DISTINCT px.specId) "
-                    + "FROM protXML pr, pepXML px "
-                    + "WHERE pr.tag = '" + tag + "' "
-                    + "AND pr.tag = px.tag "
-                    + "AND px.modPeptide = pr.modPeptide "
-                    + "AND px.charge = pr.charge "
-                    + "GROUP BY pr.protid, pr.modPeptide, pr.charge, pr.wt, pr.iniProb "
-                    + "ORDER BY pr.protid, pr.modPeptide, pr.charge "
-                    + ") WITH DATA ";
-            stmt.executeUpdate(query);
-
-            stmt.executeUpdate("CREATE INDEX pt2pep_" + tag + "_idx1 ON prot2peps_" + tag + "(protid)");
-            stmt.executeUpdate("CREATE INDEX pt2pep_" + tag + "_idx2 ON prot2peps_" + tag + "(modPeptide, charge)");
-        }
-
-        if (console != null) {
-            console.append("\n");
-        } else {
-            System.err.print("\n");
-        }
-        rs.close();
-        rs = null;
-
-        stmt.close();
-        stmt = null;
-    }
-
-    /**
-     * *****************
-     *
-     * Function creates the protidSummary table
+     * for all the proteins in the combined and the protXML tables.
      *
      * @param conn
-     * @throws Exception
-     *
+     * @param out
+     * @param pbh
+     * @throws java.sql.SQLException
      */
-    public void makeProtidSummary(Connection conn, AbacusTextArea console) throws Exception {
-        if (console != null) {
-            console.append("\nCreating protidSummary table\n");
-        } else {
-            System.err.print("\nCreating protidSummary table\n");
+    public void makeTempProt2PepTable(Connection conn, Appendable out, ProgressBarHandler pbh) throws SQLException, IOException {
+        try (Statement stmt = conn.createStatement()) {
+            ResultSet rs, rs2 = null;
+            PreparedStatement prep;
+            String query;
+            String msg;
+            int N = 0;
+            int iter = 0;
+
+            stmt.executeUpdate("DROP TABLE IF EXISTS prot2peps_combined");
+
+            // combined file table
+            query = "CREATE TABLE prot2peps_combined ("
+                    + " protid VARCHAR(100), "
+                    + " modpeptide VARCHAR(250), "
+                    + " charge INT, "
+                    + " wt DECIMAL(8,6), "
+                    + " iniProb DECIMAL(8,6), "
+                    + " nspecs INT "
+                    + ")";
+            stmt.executeUpdate(query);
+
+            rs = stmt.executeQuery("SELECT COUNT(*) FROM combined");
+            rs.next();
+            N = rs.getInt(1);
+
+            query = "INSERT INTO prot2peps_combined VALUES ("
+                    + "?, " // protid
+                    + "?, " // modPeptide
+                    + "?, " // charge
+                    + "?, " // wt
+                    + "?, " // iniProb
+                    + "? " // count
+                    + ")";
+            prep = conn.prepareStatement(query);
+
+            msg = "  Mapping peptides to proteins (combined) ";
+            if (out != null) {
+                out.append(msg + "\n");
+            }
+            if (pbh != null) {
+                pbh.monitorBoxInit((N + 2), "Combined file peptides...");
+            }
+
+            // combined file peptides
+            query = "SELECT c.protid, c.modPeptide, c.charge, c.wt, c.iniProb, "
+                    + "    COUNT(DISTINCT px.specId) "
+                    + "FROM combined c, pepXML px "
+                    + "WHERE c.modPeptide = px.modPeptide "
+                    + "AND c.charge = px.charge "
+                    + "GROUP BY c.protid, c.modPeptide, c.charge, c.wt, c.iniProb "
+                    + "ORDER BY c.protid, c.modPeptide, c.charge ";
+            rs = stmt.executeQuery(query);
+
+            iter = 0;
+            while (rs.next()) {
+                prep.setString(1, rs.getString(1));
+                prep.setString(2, rs.getString(2));
+                prep.setInt(3, rs.getInt(3));
+                prep.setDouble(4, rs.getDouble(4));
+                prep.setDouble(5, rs.getDouble(5));
+                prep.setInt(6, rs.getInt(6));
+                prep.addBatch();
+
+                iter++;
+                if (pbh != null) {
+                    pbh.monitorBoxUpdate(iter);
+                } else {
+                    Globals.cursorStatus(iter, msg);
+                }
+            }
+            conn.setAutoCommit(false);
+            prep.executeBatch();
+            conn.setAutoCommit(true);
+            prep.clearBatch();
+            prep.close();
+
+            stmt.executeUpdate("CREATE INDEX pt2pep_combined_idx1 ON prot2peps_combined(protid)");
+            if (pbh != null) {
+                pbh.monitorBoxUpdate(iter++);
+            }
+            stmt.executeUpdate("CREATE INDEX pt2pep_combined_idx2 ON prot2peps_combined(modPeptide, charge)");
+            if (pbh != null) {
+                pbh.monitorBoxUpdate(iter++);
+            }
+
+            if (pbh != null) {
+                pbh.closeMonitorBox();
+            }
+            if (out != null) {
+                out.append("\n");
+            }
+
+            /*
+             * Now process the individual experimental files.
+             * To make things faster, we will make one table per record in srcFileTags
+             */
+            rs = stmt.executeQuery("SELECT COUNT(DISTINCT tag) FROM srcFileTags WHERE fileType = 'prot'");
+            rs.next();
+            int numTags = rs.getInt(1);
+            rs.close();
+
+            rs = stmt.executeQuery("SELECT DISTINCT tag FROM srcFileTags WHERE fileType = 'prot'");
+
+            String tag;
+            while (rs.next()) {
+                // create the table for this particular experimental file
+                tag = rs.getString(1);
+
+                if (out != null) {
+                    out.append("  Mapping peptides to proteins (" + tag + ")\n");
+                }
+
+                stmt.executeUpdate("DROP TABLE IF EXISTS prot2peps_" + tag);
+
+                query = "CREATE TABLE prot2peps_" + tag + " ( "
+                        + " protid, modPeptide, charge, wt, iniProb, nspecs "
+                        + ") AS ( "
+                        + "SELECT pr.protid, pr.modPeptide, pr.charge, pr.wt, pr.iniProb, "
+                        + "  COUNT(DISTINCT px.specId) "
+                        + "FROM protXML pr, pepXML px "
+                        + "WHERE pr.tag = '" + tag + "' "
+                        + "AND pr.tag = px.tag "
+                        + "AND px.modPeptide = pr.modPeptide "
+                        + "AND px.charge = pr.charge "
+                        + "GROUP BY pr.protid, pr.modPeptide, pr.charge, pr.wt, pr.iniProb "
+                        + "ORDER BY pr.protid, pr.modPeptide, pr.charge "
+                        + ") WITH DATA ";
+                stmt.executeUpdate(query);
+
+                stmt.executeUpdate("CREATE INDEX pt2pep_" + tag + "_idx1 ON prot2peps_" + tag + "(protid)");
+                stmt.executeUpdate("CREATE INDEX pt2pep_" + tag + "_idx2 ON prot2peps_" + tag + "(modPeptide, charge)");
+            }
+
+            if (out != null) {
+                out.append("\n");
+            }
+            rs.close();
+        }
+    }
+
+    /**
+     * Function creates the protidSummary table.
+     *
+     * @param conn
+     * @param out
+     * @param pbh
+     * @throws java.sql.SQLException
+     * @throws java.io.IOException
+     */
+    public void makeProtidSummary(Connection conn, Appendable out, ProgressBarHandler pbh) throws SQLException, IOException {
+        if (out != null) {
+            out.append("\nCreating protidSummary table\n");
         }
 
-        Statement stmt = conn.createStatement();
-        Statement stmt2 = conn.createStatement();
-        Statement stmt3 = conn.createStatement();
+        Statement stmt2;
+        Statement stmt3;
         PreparedStatement prep, prep2, p1;
-        String query = null;
-        ResultSet rs = null;
-        ResultSet rs2 = null;
-        String msg = null;
-        int N = 0;
-        int iter = 0;
-
-        // we use these for queries further down
-        int gid, numXML;
-        String sib, protid;
-        double maxPw;
-        int numPepsTot, numPepsUniq, numSpecsTot, numSpecsUniq;
-        double maxIniProb, wt_maxIniProb, maxIniProbUniq;
-
-        msg = "  Collecting list of all proteins identified in " + this.combinedFile + "\n";
-        if (console != null) {
-            console.append(msg);
-        } else {
-            System.err.print(msg);
-        }
-
-        /*
-         * This function can take a really long time to run if there if a lot of data
-         * has been submitted by the user. For this reason we will use the progress monitor throughout
-         * this function call.
-         */
-        query = "CREATE MEMORY TABLE t1_ ("
-                + "  groupid INT, "
-                + "  siblingGroup VARCHAR(10), "
-                + "  protid VARCHAR(100), "
-                + "  numXML INT DEFAULT 0, "
-                + "  maxPw DECIMAL(8,6) "
-                + ")";
-        stmt.executeUpdate(query);
-
-        query = "INSERT INTO t1_ (groupid, siblingGroup, protid) VALUES ("
-                + "?, " // groupid
-                + "?, " // siblingGroup
-                + "? " // protid
-                + ")";
-        prep = conn.prepareStatement(query);
-
-        query = "SELECT groupid, siblingGroup, protid "
-                + "FROM combined "
-                + "WHERE wt > " + this.wtTH + " "
-                + "AND Pw > " + this.minCombinedFilePw + " "
-                + "GROUP BY groupid, siblingGroup, protid "
-                + "ORDER BY groupid, siblingGroup ";
-
-        rs = stmt.executeQuery(query);
-        while (rs.next()) {
-            prep.setInt(1, rs.getInt(1));
-            prep.setString(2, rs.getString(2));
-            prep.setString(3, rs.getString(3));
-            prep.addBatch();
-        }
-        conn.setAutoCommit(false);
-        prep.executeBatch();
-        conn.setAutoCommit(true);
-        prep.clearBatch();
-        prep.close();
-
-        stmt.executeUpdate("CREATE INDEX t1_idx1 ON t1_(protid)");
-        stmt.executeUpdate("CREATE INDEX t1_idx2 ON t1_(groupid, siblingGroup)");
-
-        // code to get initial starting values for progress monitor
-        query = "SELECT COUNT(*) FROM ( "
-                + "  SELECT groupid, siblingGroup, protid "
-                + "  FROM combined "
-                + "  WHERE wt > " + this.wtTH + " "
-                + "  AND Pw > " + this.minCombinedFilePw + " "
-                + "  GROUP BY groupid, siblingGroup, protid "
-                + ") ";
-        rs = stmt.executeQuery(query);
-        rs.next();
-        N = rs.getInt(1);
-        iter = 0;
-        if (console != null) {
-            console.monitorBoxInit(N, "Getting protein frequencies...");
-        }
-
-        msg = "  Counting protein frequencies across independent files\n";
-        if (console != null) {
-            console.append(msg);
-        } else {
-            System.err.print(msg);
-        }
-
-        query = "SELECT protid, COUNT(DISTINCT tag) AS f "
-                + "FROM protXML "
-                + "GROUP BY protid ";
-        rs = stmt.executeQuery(query);
-        iter = 0;
-        while (rs.next()) {
-            query = "UPDATE t1_ "
-                    + "  SET numXML = " + rs.getInt(2) + " "
-                    + "WHERE protid = '" + rs.getString(1) + "' ";
+        try (Statement stmt = conn.createStatement()) {
+            stmt2 = conn.createStatement();
+            stmt3 = conn.createStatement();
+            String query;
+            ResultSet rs, rs2;
+            String msg;
+            int N = 0;
+            int iter = 0;
+            int gid, numXML;
+            String sib, protid;
+            double maxPw;
+            int numPepsTot, numPepsUniq, numSpecsTot, numSpecsUniq;
+            double maxIniProb, wt_maxIniProb, maxIniProbUniq;
+            msg = "  Collecting list of all proteins identified in " + this.combinedFile + "\n";
+            if (out != null) {
+                out.append(msg);
+            }
+            // This function can take a really long time to run if there if a lot of data
+            // has been submitted by the user. For this reason we will use the progress monitor throughout
+            // this function call.
+            query = "CREATE MEMORY TABLE t1_ ("
+                    + "  groupid INT, "
+                    + "  siblingGroup VARCHAR(10), "
+                    + "  protid VARCHAR(100), "
+                    + "  numXML INT DEFAULT 0, "
+                    + "  maxPw DECIMAL(8,6) "
+                    + ")";
             stmt.executeUpdate(query);
-            iter++;
-            if (console != null) {
-                console.monitorBoxUpdate(iter);
-            } else {
-                Globals.cursorStatus(iter, "  Getting protein frequencies ");
+            query = "INSERT INTO t1_ (groupid, siblingGroup, protid) VALUES ("
+                    + "?, " // groupid
+                    + "?, " // siblingGroup
+                    + "? " // protid
+                    + ")";
+            prep = conn.prepareStatement(query);
+            query = "SELECT groupid, siblingGroup, protid "
+                    + "FROM combined "
+                    + "WHERE wt > " + this.wtTH + " "
+                    + "AND Pw > " + this.minCombinedFilePw + " "
+                    + "GROUP BY groupid, siblingGroup, protid "
+                    + "ORDER BY groupid, siblingGroup ";
+            rs = stmt.executeQuery(query);
+            while (rs.next()) {
+                prep.setInt(1, rs.getInt(1));
+                prep.setString(2, rs.getString(2));
+                prep.setString(3, rs.getString(3));
+                prep.addBatch();
             }
-        }
-        rs.close();
-        if (console != null) {
-            console.closeMonitorBox();
-        } else {
-            System.err.print("\n");
-        }
-
-        // this removes proteins only identified in the COMBINED file
-        query = "DELETE FROM t1_ WHERE numXML = 0";
-        stmt.executeUpdate(query);
-
-        msg = "  Recording best ProteinProphet scores for each protein\n";
-        if (console != null) {
-            console.append(msg);
-        } else {
-            System.err.print(msg);
-        }
-
-        query = "SELECT protid, MAX(Pw) as mPw "
-                + "FROM protXML "
-                + "GROUP BY protid ";
-        rs = stmt.executeQuery(query);
-
-        if (console != null) {
-            console.monitorBoxInit(N, "Collecting protein probabilities...");
-        }
-        iter = 0;
-        while (rs.next()) {
-            query = "UPDATE t1_ "
-                    + "  SET maxPw = " + rs.getDouble(2) + " "
-                    + "WHERE protid = '" + rs.getString(1) + "' ";
+            conn.setAutoCommit(false);
+            prep.executeBatch();
+            conn.setAutoCommit(true);
+            prep.clearBatch();
+            prep.close();
+            stmt.executeUpdate("CREATE INDEX t1_idx1 ON t1_(protid)");
+            stmt.executeUpdate("CREATE INDEX t1_idx2 ON t1_(groupid, siblingGroup)");
+            // code to get initial starting values for progress monitor
+            query = "SELECT COUNT(*) FROM ( "
+                    + "  SELECT groupid, siblingGroup, protid "
+                    + "  FROM combined "
+                    + "  WHERE wt > " + this.wtTH + " "
+                    + "  AND Pw > " + this.minCombinedFilePw + " "
+                    + "  GROUP BY groupid, siblingGroup, protid "
+                    + ") ";
+            rs = stmt.executeQuery(query);
+            rs.next();
+            N = rs.getInt(1);
+            iter = 0;
+            if (pbh != null) {
+                pbh.monitorBoxInit(N, "Getting protein frequencies...");
+            }
+            msg = "  Counting protein frequencies across independent files\n";
+            if (out != null) {
+                out.append(msg);
+            }
+            query = "SELECT protid, COUNT(DISTINCT tag) AS f "
+                    + "FROM protXML "
+                    + "GROUP BY protid ";
+            rs = stmt.executeQuery(query);
+            iter = 0;
+            while (rs.next()) {
+                query = "UPDATE t1_ "
+                        + "  SET numXML = " + rs.getInt(2) + " "
+                        + "WHERE protid = '" + rs.getString(1) + "' ";
+                stmt.executeUpdate(query);
+                iter++;
+                if (pbh != null) {
+                    pbh.monitorBoxUpdate(iter);
+                } else {
+                    Globals.cursorStatus(iter, "  Getting protein frequencies ");
+                }
+            }
+            rs.close();
+            if (pbh != null) {
+                pbh.closeMonitorBox();
+            }
+            if (out != null) {
+                out.append("\n");
+            }
+            // this removes proteins only identified in the COMBINED file
+            query = "DELETE FROM t1_ WHERE numXML = 0";
             stmt.executeUpdate(query);
-            iter++;
-            if (console != null) {
-                console.monitorBoxUpdate(iter);
+            msg = "  Recording best ProteinProphet scores for each protein\n";
+            if (out != null) {
+                out.append(msg);
+            }
+            query = "SELECT protid, MAX(Pw) as mPw "
+                    + "FROM protXML "
+                    + "GROUP BY protid ";
+            rs = stmt.executeQuery(query);
+            if (pbh != null) {
+                pbh.monitorBoxInit(N, "Collecting protein probabilities...");
+            }
+            iter = 0;
+            while (rs.next()) {
+                query = "UPDATE t1_ "
+                        + "  SET maxPw = " + rs.getDouble(2) + " "
+                        + "WHERE protid = '" + rs.getString(1) + "' ";
+                stmt.executeUpdate(query);
+                iter++;
+                if (pbh != null) {
+                    pbh.monitorBoxUpdate(iter);
+                } else {
+                    Globals.cursorStatus(iter, "  Collecting protein probabilities ");
+                }
+            }
+            rs.close();
+            if (pbh != null) {
+                pbh.closeMonitorBox();
             } else {
-                Globals.cursorStatus(iter, "  Collecting protein probabilities ");
+                System.err.print("\n");
             }
-        }
-        rs.close();
-        if (console != null) {
-            console.closeMonitorBox();
-        } else {
-            System.err.print("\n");
-        }
-
-        query = "CREATE MEMORY TABLE t2_ ("
-                + "  groupid INT, "
-                + "  siblingGroup VARCHAR(5), "
-                + "  numXML INT, "
-                + "  maxPw DECIMAL(8,6) "
-                + ")";
-        stmt.executeUpdate(query);
-
-        query = "INSERT INTO t2_ VALUES ("
-                + "?, " // groupid
-                + "?, " // siblingGroup
-                + "?, " // numXML
-                + "? " // maxPw
-                + ") ";
-        prep = conn.prepareStatement(query);
-
-        query = "SELECT groupid, siblingGroup, MAX(numXML), MAX(maxPw) "
-                + "FROM t1_ "
-                + "GROUP BY groupid, siblingGroup "
-                + "ORDER BY groupid, siblingGroup ";
-
-        rs = stmt.executeQuery(query);
-        if (console != null) {
-            console.monitorBoxInit(N, "Selecting candidate proteins...");
-        }
-        iter = 0;
-        while (rs.next()) {
-            prep.setInt(1, rs.getInt(1));
-            prep.setString(2, rs.getString(2));
-            prep.setInt(3, rs.getInt(3));
-            prep.setDouble(4, rs.getDouble(4));
-            prep.addBatch();
-            iter++;
-
-            if (console != null) {
-                console.monitorBoxUpdate(iter);
+            query = "CREATE MEMORY TABLE t2_ ("
+                    + "  groupid INT, "
+                    + "  siblingGroup VARCHAR(5), "
+                    + "  numXML INT, "
+                    + "  maxPw DECIMAL(8,6) "
+                    + ")";
+            stmt.executeUpdate(query);
+            query = "INSERT INTO t2_ VALUES ("
+                    + "?, " // groupid
+                    + "?, " // siblingGroup
+                    + "?, " // numXML
+                    + "? " // maxPw
+                    + ") ";
+            prep = conn.prepareStatement(query);
+            query = "SELECT groupid, siblingGroup, MAX(numXML), MAX(maxPw) "
+                    + "FROM t1_ "
+                    + "GROUP BY groupid, siblingGroup "
+                    + "ORDER BY groupid, siblingGroup ";
+            rs = stmt.executeQuery(query);
+            if (pbh != null) {
+                pbh.monitorBoxInit(N, "Selecting candidate proteins...");
             }
-        }
-        conn.setAutoCommit(false);
-        prep.executeBatch();
-        conn.setAutoCommit(true);
-        prep.clearBatch();
-        prep.close();
-        if (console != null) {
-            console.closeMonitorBox();
-        }
+            iter = 0;
+            while (rs.next()) {
+                prep.setInt(1, rs.getInt(1));
+                prep.setString(2, rs.getString(2));
+                prep.setInt(3, rs.getInt(3));
+                prep.setDouble(4, rs.getDouble(4));
+                prep.addBatch();
+                iter++;
 
-        stmt.executeUpdate("CREATE INDEX t2_idx1 ON t2_(groupid, siblingGroup)");
-
-        query = "CREATE MEMORY TABLE t3_ ("
-                + "  groupid INT, "
-                + "  siblingGroup VARCHAR(10), "
-                + "  protid VARCHAR(100), "
-                + "  numXML INT, "
-                + "  maxPw DECIMAL(8,6), "
-                + "  numPepsTot INT DEFAULT 0, "
-                + "  numPepsUniq INT DEFAULT 0, "
-                + "  numSpecsTot INT DEFAULT 0, "
-                + "  numSpecsUniq INT DEFAULT 0, "
-                + "  maxIniProb DECIMAL(8,6), "
-                + "  wt_maxIniProb DECIMAL(8,6), "
-                + "  maxIniProbUniq DECIMAL(8,6) "
-                + ")";
-        stmt.executeUpdate(query);
-
-        msg = "  Creating selection heuristics table (This could take a while)...";
-        if (console != null) {
-            console.append(msg + "\n");
-        }
-
-        // We break up the process of making t3_ into several loops to speed things up
-        query = "INSERT INTO t3_ (groupid, siblingGroup, protid) VALUES ("
-                + "?, " // groupid
-                + "?, " // siblingGroup
-                + "? " // protid
-                + ") ";
-        prep = conn.prepareStatement(query);
-
-        query = "SELECT groupid, siblingGroup, protid "
-                + "FROM t1_ "
-                + "GROUP BY groupid, siblingGroup, protid "
-                + "ORDER BY groupid, siblingGroup, protid ";
-        rs = stmt.executeQuery(query);
-
-        iter = 0;
-        if (console != null) {
-            console.monitorBoxInit((N + 2), "Building Heuristics...");
-        }
-        while (rs.next()) {
-            prep.setInt(1, rs.getInt(1));
-            prep.setString(2, rs.getString(2));
-            prep.setString(3, rs.getString(3));
-            prep.addBatch();
-            iter++;
-            if (console != null) {
-                console.monitorBoxUpdate(iter);
+                if (pbh != null) {
+                    pbh.monitorBoxUpdate(iter);
+                }
             }
-        }
-        conn.setAutoCommit(false);
-        prep.executeBatch();
-        conn.setAutoCommit(true);
-        prep.clearBatch();
-        prep.close();
-
-        stmt.executeUpdate("CREATE INDEX t3_idx1 ON t3_(groupid, siblingGroup)");
-        if (console != null) {
-            console.monitorBoxUpdate(iter++);
-        }
-        stmt.executeUpdate("CREATE INDEX t3_idx2 ON t3_(protid)");
-        if (console != null) {
-            console.monitorBoxUpdate(iter++);
-        }
-
-        if (console != null) {
-            console.closeMonitorBox();
-        }
-
-        // update counter 'N' value
-        rs = stmt.executeQuery("SELECT COUNT(*) FROM t2_");
-        rs.next();
-        N = rs.getInt(1);
-
-        // prep statement 1
-        query = "UPDATE t3_ "
-                + " SET numXML = ? "
-                + "WHERE groupid = ? "
-                + "AND siblingGroup = ?";
-        prep = conn.prepareStatement(query);
-
-        // prep statement 2
-        query = "UPDATE t3_ "
-                + " SET maxPw = ? "
-                + "WHERE groupid = ? "
-                + "AND siblingGroup = ? ";
-        prep2 = conn.prepareStatement(query);
-
-        rs = stmt.executeQuery("SELECT * FROM t2_ ORDER BY groupid, siblingGroup ");
-        iter = 0;
-        if (console != null) {
-            console.monitorBoxInit(N, "Building Heuristics (1/2)...");
-        }
-        while (rs.next()) {
-            gid = rs.getInt(1);
-            sib = rs.getString(2);
-            numXML = rs.getInt(3);
-            maxPw = rs.getDouble(4);
-
-            prep.setInt(1, numXML);
-            prep.setInt(2, gid);
-            prep.setString(3, sib);
-            prep.addBatch();
-
-            prep2.setDouble(1, maxPw);
-            prep2.setInt(2, gid);
-            prep2.setString(3, sib);
-            prep2.addBatch();
-
-            iter++;
-            if (console != null) {
-                console.monitorBoxUpdate(iter);
+            conn.setAutoCommit(false);
+            prep.executeBatch();
+            conn.setAutoCommit(true);
+            prep.clearBatch();
+            prep.close();
+            if (pbh != null) {
+                pbh.closeMonitorBox();
             }
-        }
-        conn.setAutoCommit(false);
-        prep.executeBatch();
-        conn.setAutoCommit(true);
-
-        conn.setAutoCommit(false);
-        prep2.executeBatch();
-        conn.setAutoCommit(true);
-
-        prep.clearBatch();
-        prep.close();
-        prep2.clearBatch();
-        prep2.close();
-        if (console != null) {
-            console.closeMonitorBox();
-        }
-
-        // update counter 'N' value
-        rs = stmt.executeQuery("SELECT COUNT(*) FROM t1_");
-        rs.next();
-        N = rs.getInt(1);
-
-        query = "UPDATE t3_ "
-                + "  SET numPepsTot = ?, "
-                + "      numPepsUniq = ?, "
-                + "      numSpecsTot = ?, "
-                + "      numSpecsUniq = ?, "
-                + "      maxIniProb = ?, "
-                + "      wt_maxIniProb = ?, "
-                + "      maxIniProbUniq = ? "
-                + "WHERE protid = ? ";
-        prep = conn.prepareStatement(query);
-
-        rs = stmt.executeQuery("SELECT protid, numXML, maxPw FROM t3_ WHERE numXML > 0 GROUP BY protid, numXML, maxPw ORDER BY protid");
-        if (console != null) {
-            console.monitorBoxInit(N, "Building Heuristics (2/2)...");
-        }
-        iter = 0; // used only for STDERR output
-        while (rs.next()) {
-            protid = rs.getString(1);
-			//numXML = rs.getInt(2);
-            //maxPw = rs.getDouble(3);
-
-            // number of peptides total
-            numPepsTot = this.retNumPeps(conn, this.combinedFile, protid, 0, this.iniProbTH);
-
-            // number of peptides unique
-            numPepsUniq = this.retNumPeps(conn, this.combinedFile, protid, this.wtTH, this.iniProbTH);
-
-            // number of spectra total
-            numSpecsTot = this.retNumSpectra(conn, this.combinedFile, protid, 0, this.iniProbTH);
-
-            // number of spectra unique
-            numSpecsUniq = this.retNumSpectra(conn, this.combinedFile, protid, this.wtTH, this.iniProbTH);
-
-            // get maxIniProb for this group
-            maxIniProb = this.retMaxIniProb(conn, this.combinedFile, protid, 0);
-
-            // get wt of maxIniProb for this group
-            wt_maxIniProb = this.retWTmaxIniProb(conn, this.combinedFile, protid, maxIniProb);
-
-            // get maxIniProb for this group
-            maxIniProbUniq = this.retMaxIniProb(conn, this.combinedFile, protid, this.wtTH);
-
-            prep.setInt(1, numPepsTot);
-            prep.setInt(2, numPepsUniq);
-            prep.setInt(3, numSpecsTot);
-            prep.setInt(4, numSpecsUniq);
-            prep.setDouble(5, maxIniProb);
-            prep.setDouble(6, wt_maxIniProb);
-            prep.setDouble(7, maxIniProbUniq);
-            prep.setString(8, protid);
-            prep.addBatch();
-
-            iter++;
-            if (console == null) {
-                Globals.cursorStatus(iter, msg);
-            } else {
-                console.monitorBoxUpdate(iter);
+            stmt.executeUpdate("CREATE INDEX t2_idx1 ON t2_(groupid, siblingGroup)");
+            query = "CREATE MEMORY TABLE t3_ ("
+                    + "  groupid INT, "
+                    + "  siblingGroup VARCHAR(10), "
+                    + "  protid VARCHAR(100), "
+                    + "  numXML INT, "
+                    + "  maxPw DECIMAL(8,6), "
+                    + "  numPepsTot INT DEFAULT 0, "
+                    + "  numPepsUniq INT DEFAULT 0, "
+                    + "  numSpecsTot INT DEFAULT 0, "
+                    + "  numSpecsUniq INT DEFAULT 0, "
+                    + "  maxIniProb DECIMAL(8,6), "
+                    + "  wt_maxIniProb DECIMAL(8,6), "
+                    + "  maxIniProbUniq DECIMAL(8,6) "
+                    + ")";
+            stmt.executeUpdate(query);
+            msg = "  Creating selection heuristics table (This could take a while)...";
+            if (out != null) {
+                out.append(msg + "\n");
             }
-        }
-        conn.setAutoCommit(false);
-        prep.executeBatch();
-        conn.setAutoCommit(true);
-        prep.clearBatch();
-        prep.close();
-        rs.close();
-        rs = null;
-        if (console != null) {
-            console.closeMonitorBox();
-        }
+            // We break up the process of making t3_ into several loops to speed things up
+            query = "INSERT INTO t3_ (groupid, siblingGroup, protid) VALUES ("
+                    + "?, " // groupid
+                    + "?, " // siblingGroup
+                    + "? " // protid
+                    + ") ";
+            prep = conn.prepareStatement(query);
+            query = "SELECT groupid, siblingGroup, protid "
+                    + "FROM t1_ "
+                    + "GROUP BY groupid, siblingGroup, protid "
+                    + "ORDER BY groupid, siblingGroup, protid ";
+            rs = stmt.executeQuery(query);
+            iter = 0;
+            if (pbh != null) {
+                pbh.monitorBoxInit((N + 2), "Building Heuristics...");
+            }
+            while (rs.next()) {
+                prep.setInt(1, rs.getInt(1));
+                prep.setString(2, rs.getString(2));
+                prep.setString(3, rs.getString(3));
+                prep.addBatch();
+                iter++;
+                if (pbh != null) {
+                    pbh.monitorBoxUpdate(iter);
+                }
+            }
+            conn.setAutoCommit(false);
+            prep.executeBatch();
+            conn.setAutoCommit(true);
+            prep.clearBatch();
+            prep.close();
+            stmt.executeUpdate("CREATE INDEX t3_idx1 ON t3_(groupid, siblingGroup)");
+            if (pbh != null) {
+                pbh.monitorBoxUpdate(iter++);
+            }
+            stmt.executeUpdate("CREATE INDEX t3_idx2 ON t3_(protid)");
+            if (pbh != null) {
+                pbh.monitorBoxUpdate(iter++);
+            }
+            if (pbh != null) {
+                pbh.closeMonitorBox();
+            }   // update counter 'N' value
+            rs = stmt.executeQuery("SELECT COUNT(*) FROM t2_");
+            rs.next();
+            N = rs.getInt(1);
+            // prep statement 1
+            query = "UPDATE t3_ "
+                    + " SET numXML = ? "
+                    + "WHERE groupid = ? "
+                    + "AND siblingGroup = ?";
+            prep = conn.prepareStatement(query);
+            // prep statement 2
+            query = "UPDATE t3_ "
+                    + " SET maxPw = ? "
+                    + "WHERE groupid = ? "
+                    + "AND siblingGroup = ? ";
+            prep2 = conn.prepareStatement(query);
+            rs = stmt.executeQuery("SELECT * FROM t2_ ORDER BY groupid, siblingGroup ");
+            iter = 0;
+            if (pbh != null) {
+                pbh.monitorBoxInit(N, "Building Heuristics (1/2)...");
+            }
+            while (rs.next()) {
+                gid = rs.getInt(1);
+                sib = rs.getString(2);
+                numXML = rs.getInt(3);
+                maxPw = rs.getDouble(4);
 
-        // clean up
-        stmt.executeUpdate("DROP INDEX t1_idx1");
-        stmt.executeUpdate("DROP INDEX t1_idx2");
-        stmt.executeUpdate("DROP TABLE t1_");
-        stmt.executeUpdate("DROP INDEX t2_idx1");
-        stmt.executeUpdate("DROP TABLE t2_");
+                prep.setInt(1, numXML);
+                prep.setInt(2, gid);
+                prep.setString(3, sib);
+                prep.addBatch();
 
-        stmt.executeUpdate("DROP TABLE IF EXISTS protidSummary");
+                prep2.setDouble(1, maxPw);
+                prep2.setInt(2, gid);
+                prep2.setString(3, sib);
+                prep2.addBatch();
 
-        query = "CREATE CACHED TABLE protidSummary ( "
-                + "  groupid INT, "
-                + "  siblingGroup VARCHAR(10), "
-                + "  repID VARCHAR(100), "
-                + "  numXML INT, "
-                + "  maxPw DECIMAL(8,6), "
-                + "  numPepsTot INT DEFAULT 0, "
-                + "  numPepsUniq INT DEFAULT 0, "
-                + "  numSpecsTot INT DEFAULT 0, "
-                + "  numSpecsUniq INT DEFAULT 0, "
-                + "  maxIniProb DECIMAL(8,6), "
-                + "  wt_maxIniProb DECIMAL(8,6), "
-                + "  maxIniProbUniq DECIMAL(8,6) "
-                + ")";
-        stmt.executeUpdate(query);
+                iter++;
+                if (pbh != null) {
+                    pbh.monitorBoxUpdate(iter);
+                }
+            }
+            conn.setAutoCommit(false);
+            prep.executeBatch();
+            conn.setAutoCommit(true);
+            conn.setAutoCommit(false);
+            prep2.executeBatch();
+            conn.setAutoCommit(true);
+            prep.clearBatch();
+            prep.close();
+            prep2.clearBatch();
+            prep2.close();
+            if (pbh != null) {
+                pbh.closeMonitorBox();
+            }
+            // update counter 'N' value
+            rs = stmt.executeQuery("SELECT COUNT(*) FROM t1_");
+            rs.next();
+            N = rs.getInt(1);
+            query = "UPDATE t3_ "
+                    + "  SET numPepsTot = ?, "
+                    + "      numPepsUniq = ?, "
+                    + "      numSpecsTot = ?, "
+                    + "      numSpecsUniq = ?, "
+                    + "      maxIniProb = ?, "
+                    + "      wt_maxIniProb = ?, "
+                    + "      maxIniProbUniq = ? "
+                    + "WHERE protid = ? ";
+            prep = conn.prepareStatement(query);
+            rs = stmt.executeQuery("SELECT protid, numXML, maxPw FROM t3_ WHERE numXML > 0 GROUP BY protid, numXML, maxPw ORDER BY protid");
+            if (pbh != null) {
+                pbh.monitorBoxInit(N, "Building Heuristics (2/2)...");
+            }
+            iter = 0; // used only for STDERR output
+            while (rs.next()) {
+                protid = rs.getString(1);
+                //numXML = rs.getInt(2);
+                //maxPw = rs.getDouble(3);
 
-        if (console != null) {
-            console.append("  Picking representative protids\n");
-        } else {
-            System.err.print("\n  Picking representative protids\n");
-        }
+                // number of peptides total
+                numPepsTot = this.retNumPeps(conn, this.combinedFile, protid, 0, this.iniProbTH);
 
-        query = "SELECT COUNT(*) "
-                + "FROM ( SELECT DISTINCT groupid, siblingGroup FROM t3_ ) ";
-        rs = stmt.executeQuery(query);
-        rs.next();
-        N = rs.getInt(1);
-        N += 2; // there are to indexes to be built further down for t3_
-        rs.close();
+                // number of peptides unique
+                numPepsUniq = this.retNumPeps(conn, this.combinedFile, protid, this.wtTH, this.iniProbTH);
 
-        query = "SELECT groupid, siblingGroup "
-                + "FROM t3_ "
-                + "GROUP BY groupid, siblingGroup "
-                + "ORDER BY groupid, siblingGroup ";
-        rs = stmt.executeQuery(query);
+                // number of spectra total
+                numSpecsTot = this.retNumSpectra(conn, this.combinedFile, protid, 0, this.iniProbTH);
 
-        msg = "  Loading protidSummary table...";
-        if (console != null) {
-            console.monitorBoxInit(N, msg);
-        }
+                // number of spectra unique
+                numSpecsUniq = this.retNumSpectra(conn, this.combinedFile, protid, this.wtTH, this.iniProbTH);
 
-        iter = 0;
-        while (rs.next()) {
-            gid = rs.getInt(1);
-            sib = rs.getString(2);
+                // get maxIniProb for this group
+                maxIniProb = this.retMaxIniProb(conn, this.combinedFile, protid, 0);
 
-            query = "SELECT protid, numXML, maxPw, numPepsTot, numPepsUniq, "
-                    + "  numSpecsTot, numSpecsUniq, maxIniProb, wt_maxIniProb, "
-                    + "  maxIniProbUniq "
+                // get wt of maxIniProb for this group
+                wt_maxIniProb = this.retWTmaxIniProb(conn, this.combinedFile, protid, maxIniProb);
+
+                // get maxIniProb for this group
+                maxIniProbUniq = this.retMaxIniProb(conn, this.combinedFile, protid, this.wtTH);
+
+                prep.setInt(1, numPepsTot);
+                prep.setInt(2, numPepsUniq);
+                prep.setInt(3, numSpecsTot);
+                prep.setInt(4, numSpecsUniq);
+                prep.setDouble(5, maxIniProb);
+                prep.setDouble(6, wt_maxIniProb);
+                prep.setDouble(7, maxIniProbUniq);
+                prep.setString(8, protid);
+                prep.addBatch();
+
+                iter++;
+                if (pbh == null) {
+                    Globals.cursorStatus(iter, msg);
+                } else {
+                    pbh.monitorBoxUpdate(iter);
+                }
+            }
+            conn.setAutoCommit(false);
+            prep.executeBatch();
+            conn.setAutoCommit(true);
+            prep.clearBatch();
+            prep.close();
+            rs.close();
+            rs = null;
+            if (pbh != null) {
+                pbh.closeMonitorBox();
+            }   // clean up
+            stmt.executeUpdate("DROP INDEX t1_idx1");
+            stmt.executeUpdate("DROP INDEX t1_idx2");
+            stmt.executeUpdate("DROP TABLE t1_");
+            stmt.executeUpdate("DROP INDEX t2_idx1");
+            stmt.executeUpdate("DROP TABLE t2_");
+            stmt.executeUpdate("DROP TABLE IF EXISTS protidSummary");
+            query = "CREATE CACHED TABLE protidSummary ( "
+                    + "  groupid INT, "
+                    + "  siblingGroup VARCHAR(10), "
+                    + "  repID VARCHAR(100), "
+                    + "  numXML INT, "
+                    + "  maxPw DECIMAL(8,6), "
+                    + "  numPepsTot INT DEFAULT 0, "
+                    + "  numPepsUniq INT DEFAULT 0, "
+                    + "  numSpecsTot INT DEFAULT 0, "
+                    + "  numSpecsUniq INT DEFAULT 0, "
+                    + "  maxIniProb DECIMAL(8,6), "
+                    + "  wt_maxIniProb DECIMAL(8,6), "
+                    + "  maxIniProbUniq DECIMAL(8,6) "
+                    + ")";
+            stmt.executeUpdate(query);
+            if (out != null) {
+                out.append("  Picking representative protids\n");
+            }
+            query = "SELECT COUNT(*) "
+                    + "FROM ( SELECT DISTINCT groupid, siblingGroup FROM t3_ ) ";
+            rs = stmt.executeQuery(query);
+            rs.next();
+            N = rs.getInt(1);
+            N += 2; // there are to indexes to be built further down for t3_
+            rs.close();
+            query = "SELECT groupid, siblingGroup "
                     + "FROM t3_ "
-                    + "WHERE groupid = " + gid + " "
-                    + "AND siblingGroup = '" + sib + "' "
-                    + "AND maxIniProb >= " + this.maxIniProbTH + " "
-                    + "GROUP BY protid, numXML, maxPw, numPepsTot, numPepsUniq, "
-                    + "  numSpecsTot, numSpecsUniq, maxIniProb, wt_maxIniProb, "
-                    + "  maxIniProbUniq "
-                    + "ORDER BY numXML DESC, maxPw DESC, maxIniProb DESC, "
-                    + "  maxIniProbUniq DESC, numPepsUniq DESC, numSpecsUniq DESC, protid ASC "
-                    + "LIMIT 1 ";
-            rs2 = stmt2.executeQuery(query);
-
-            while (rs2.next()) {
-                query = "INSERT INTO protidSummary VALUES ( "
-                        + gid + ", "
-                        + "'" + sib + "', "
-                        + "'" + rs2.getString(1) + "', " //repId
-                        + rs2.getInt(2) + ", " //numXML
-                        + rs2.getDouble(3) + ", " //maxPw
-                        + rs2.getInt(4) + ", " //numPepsTot
-                        + rs2.getInt(5) + ", " //numPepsUniq
-                        + rs2.getInt(6) + ", " //numSpecsTot
-                        + rs2.getInt(7) + ", " //numSpecsUniq
-                        + rs2.getDouble(8) + ", " //maxIniProb
-                        + rs2.getDouble(9) + ", " //wt_maxIniProb
-                        + rs2.getDouble(10) + " " //maxIniProbUniq
-                        + ")";
-                stmt3.executeUpdate(query);
+                    + "GROUP BY groupid, siblingGroup "
+                    + "ORDER BY groupid, siblingGroup ";
+            rs = stmt.executeQuery(query);
+            msg = "  Loading protidSummary table...";
+            if (pbh != null) {
+                pbh.monitorBoxInit(N, msg);
             }
-            rs2.close();
-            rs2 = null;
-            iter++;
+            iter = 0;
+            while (rs.next()) {
+                gid = rs.getInt(1);
+                sib = rs.getString(2);
 
-            if (console != null) {
-                console.monitorBoxUpdate(iter);
-            } else {
-                Globals.cursorStatus(iter, msg);
+                query = "SELECT protid, numXML, maxPw, numPepsTot, numPepsUniq, "
+                        + "  numSpecsTot, numSpecsUniq, maxIniProb, wt_maxIniProb, "
+                        + "  maxIniProbUniq "
+                        + "FROM t3_ "
+                        + "WHERE groupid = " + gid + " "
+                        + "AND siblingGroup = '" + sib + "' "
+                        + "AND maxIniProb >= " + this.maxIniProbTH + " "
+                        + "GROUP BY protid, numXML, maxPw, numPepsTot, numPepsUniq, "
+                        + "  numSpecsTot, numSpecsUniq, maxIniProb, wt_maxIniProb, "
+                        + "  maxIniProbUniq "
+                        + "ORDER BY numXML DESC, maxPw DESC, maxIniProb DESC, "
+                        + "  maxIniProbUniq DESC, numPepsUniq DESC, numSpecsUniq DESC, protid ASC "
+                        + "LIMIT 1 ";
+                rs2 = stmt2.executeQuery(query);
+
+                while (rs2.next()) {
+                    query = "INSERT INTO protidSummary VALUES ( "
+                            + gid + ", "
+                            + "'" + sib + "', "
+                            + "'" + rs2.getString(1) + "', " //repId
+                            + rs2.getInt(2) + ", " //numXML
+                            + rs2.getDouble(3) + ", " //maxPw
+                            + rs2.getInt(4) + ", " //numPepsTot
+                            + rs2.getInt(5) + ", " //numPepsUniq
+                            + rs2.getInt(6) + ", " //numSpecsTot
+                            + rs2.getInt(7) + ", " //numSpecsUniq
+                            + rs2.getDouble(8) + ", " //maxIniProb
+                            + rs2.getDouble(9) + ", " //wt_maxIniProb
+                            + rs2.getDouble(10) + " " //maxIniProbUniq
+                            + ")";
+                    stmt3.executeUpdate(query);
+                }
+                rs2.close();
+                rs2 = null;
+                iter++;
+
+                if (pbh != null) {
+                    pbh.monitorBoxUpdate(iter);
+                } else {
+                    Globals.cursorStatus(iter, msg);
+                }
             }
+            stmt.executeUpdate("CREATE INDEX ps_idx1 ON protidSummary(groupid, siblingGroup)");
+            if (pbh != null) {
+                pbh.monitorBoxUpdate(iter++);
+            }
+            stmt.executeUpdate("CREATE INDEX ps_idx2 ON protidSummary(repID)");
+            if (pbh != null) {
+                pbh.monitorBoxUpdate(iter++);
+            }
+            if (Globals.gene2protFile != null) {
+                stmt.executeUpdate("ALTER TABLE protidSummary ADD COLUMN geneID VARCHAR(100) BEFORE numXML;");
+            }   //clean up
+            stmt.executeUpdate("DROP INDEX t3_idx1");
+            stmt.executeUpdate("DROP INDEX t3_idx2");
+            stmt.executeUpdate("DROP TABLE t3_");
+            rs.close();
         }
-
-        stmt.executeUpdate("CREATE INDEX ps_idx1 ON protidSummary(groupid, siblingGroup)");
-        if (console != null) {
-            console.monitorBoxUpdate(iter++);
-        }
-        stmt.executeUpdate("CREATE INDEX ps_idx2 ON protidSummary(repID)");
-        if (console != null) {
-            console.monitorBoxUpdate(iter++);
-        }
-
-        if (Globals.gene2protFile != null) {
-            stmt.executeUpdate("ALTER TABLE protidSummary ADD COLUMN geneID VARCHAR(100) BEFORE numXML;");
-        }
-
-        //clean up
-        stmt.executeUpdate("DROP INDEX t3_idx1");
-        stmt.executeUpdate("DROP INDEX t3_idx2");
-        stmt.executeUpdate("DROP TABLE t3_");
-
-        rs.close();
-        stmt.close();
         stmt2.close();
         stmt3.close();
         prep.close();
         prep2.close();
-        if (console != null) {
-            console.closeMonitorBox();
+        if (pbh != null) {
+            pbh.closeMonitorBox();
         }
-        if (console != null) {
-            console.append("\n"); // makes for prettier stderr
-        } else {
-            System.err.print("\n");
+        if (out != null) {
+            out.append("\n"); // makes for prettier stderr
         }
     }
 
-    public int retNumPeps(Connection conn, String tag, String pid,
-            double wt, double iniProb) throws Exception {
-        String query = null;
-        Statement stmt = null;
-        ResultSet rs = null;
+    public int retNumPeps(Connection conn, String tag, String pid, double wt, double iniProb) throws SQLException {
+        String query;
+        Statement stmt;
+        ResultSet rs;
         int ret = 0;
 
         if (tag.equals(Globals.combinedFile)) {
@@ -1779,11 +1683,10 @@ public class HyperSQLObject {
         return ret;
     }
 
-    public double retMaxIniProb(Connection conn, String tag, String protid,
-            double wt) throws Exception {
-        String query = null;
-        Statement stmt = null;
-        ResultSet rs = null;
+    public double retMaxIniProb(Connection conn, String tag, String protid, double wt) throws SQLException {
+        String query;
+        Statement stmt;
+        ResultSet rs;
         double ret = 0;
 
         if (tag.equals(Globals.combinedFile)) {
@@ -1811,12 +1714,11 @@ public class HyperSQLObject {
     /*
      * Function returns the wt of the maxIniProb for a given groupid-siblingGroup
      */
-    private double retWTmaxIniProb(Connection conn, String tag,
-            String protid, double maxIniProb) throws Exception {
+    private double retWTmaxIniProb(Connection conn, String tag, String protid, double maxIniProb) throws SQLException {
         double ret = 0;
-        String query = null;
-        Statement stmt = null;
-        ResultSet rs = null;
+        String query;
+        Statement stmt;
+        ResultSet rs;
 
         if (tag.equals(Globals.combinedFile)) {
             tag = "combined";
@@ -1841,8 +1743,7 @@ public class HyperSQLObject {
     /*
      *  Function returns the number of spectra assigned to a given groupid-siblingGroup
      */
-    public int retNumSpectra(Connection conn, String tag, String protid,
-            double wt, double iniProb) throws Exception {
+    public int retNumSpectra(Connection conn, String tag, String protid, double wt, double iniProb) throws SQLException {
         int ret = 0;
         Statement stmt = conn.createStatement();
         ResultSet rs = null;
@@ -1880,7 +1781,7 @@ public class HyperSQLObject {
             }
             out.append("Mapping protein IDs to their Gene IDs\n\n");
         }
-        
+
         Statement stmt1 = conn.createStatement();
         Statement stmt2 = conn.createStatement();
         PreparedStatement prep = null;
@@ -1953,7 +1854,6 @@ public class HyperSQLObject {
 
                 prep.addBatch();
             }
-            
 
             conn.setAutoCommit(false);
             prep.executeBatch();
@@ -2475,7 +2375,7 @@ public class HyperSQLObject {
                 + "WHERE protid = ?";
         prep = conn.prepareStatement(query);
 
-		// check to see if there are any rows in protXML for the given 'tag'
+        // check to see if there are any rows in protXML for the given 'tag'
         // If the user provided a list of required AA mods you may not get any
         // results if the given AA's are not found in a certain file.
         query = "SELECT COUNT(*) FROM protXML where tag = '" + tag + "'";
@@ -2569,30 +2469,27 @@ public class HyperSQLObject {
     }
 
     /**
-     * **************
-     *
      * Function writes the final results to a file.
      *
+     * @param conn
+     * @param out
+     * @throws java.sql.SQLException
+     * @throws java.io.IOException
      */
-    public void defaultResults(Connection conn, AbacusTextArea console) throws Exception {
+    public void defaultResults(Connection conn, Appendable out) throws SQLException, IOException {
 
         String outputFileName = Globals.outputFilePath;
 
-        if (console != null) {
-            console.append("\nWriting results to: '" + outputFileName + "'\n");
-        } else {
-            System.err.print("\nWriting results to: '" + outputFileName + "'\n");
+        if (out != null) {
+            out.append("\nWriting results to: '" + outputFileName + "'\n");
         }
 
-        Statement stmt = null;
+        Statement stmt;
+        ResultSet rs;
+        ResultSetMetaData rsmd;
+        String query;
 
-        ResultSet rs = null;
-        ResultSetMetaData rsmd = null;
-        String query = null;
-
-        try {
-            BufferedWriter out = new BufferedWriter(new FileWriter(outputFileName));
-
+        try (BufferedWriter outBuf = new BufferedWriter(new FileWriter(outputFileName))) {
             stmt = conn.createStatement();
 
             query = "SELECT * FROM results ORDER BY ALL_id;";
@@ -2611,9 +2508,9 @@ public class HyperSQLObject {
             // print header line
             for (int i = 1; i < numColumns; i++) {
                 String colName = rsmd.getColumnName(i);
-                out.append(colName).append("\t");
+                outBuf.append(colName).append("\t");
             }
-            out.append(rsmd.getColumnName(numColumns)).append("\n");
+            outBuf.append(rsmd.getColumnName(numColumns)).append("\n");
 
             // print values
             while (rs.next()) {
@@ -2621,59 +2518,53 @@ public class HyperSQLObject {
                     int colType = rsmd.getColumnType(i);
                     switch (colType) {
                         case Types.INTEGER:
-                            out.append(Integer.toString(rs.getInt(i)));
+                            outBuf.append(Integer.toString(rs.getInt(i)));
                             break;
                         case Types.VARCHAR:
-                            out.append(rs.getString(i));
+                            outBuf.append(rs.getString(i));
                             break;
                         default:
                             double d1 = rs.getDouble(i);
-                            out.append(Double.toString(Globals.roundDbl(d1, 4)));
+                            outBuf.append(Double.toString(Globals.roundDbl(d1, 4)));
                             break;
                     }
                     if (i != numColumns) {
-                        out.append("\t");
+                        outBuf.append("\t");
                     } else {
-                        out.append("\n");
+                        outBuf.append("\n");
                     }
                 }
             }
-            out.close();
-
-        } catch (IOException e) {
-            // do nothing
         }
     }
 
     /**
-     * ************
+     * Function generates output file formatted for submission to QSpec.
      *
-     * Function generates output file formatted for submission to QSpec
-     *
+     * @param conn
+     * @param out
+     * @throws java.sql.SQLException
+     * @throws java.io.IOException
      */
-    public void formatQspecOutput(Connection conn, AbacusTextArea console) throws Exception {
+    public void formatQspecOutput(Connection conn, Appendable out) throws SQLException, IOException {
         Statement stmt = conn.createStatement();
-        ResultSet rs = null;
-        ResultSetMetaData rsmd = null;
+        ResultSet rs;
+        ResultSetMetaData rsmd;
         String query = null;
 
         String outputFileName = Globals.outputFilePath;
-        if (console != null) {
-            console.append("\nWriting spectral counts for QSpec to file:\n\t'" + outputFileName + "'\n");
-        } else {
-            System.err.print("\nWriting spectral counts for QSpec to file:\n\t'" + outputFileName + "'\n");
+        if (out != null) {
+            out.append("\nWriting spectral counts for QSpec to file:\n\t'" + outputFileName + "'\n");
         }
 
-        try {
-            BufferedWriter out = new BufferedWriter(new FileWriter(outputFileName));
-
+        try (BufferedWriter outBuf = new BufferedWriter(new FileWriter(outputFileName))) {
             if (Globals.outputFormat == Globals.protQspecFormat) {
                 query = "SELECT * FROM results ORDER BY ALL_id";
                 if (Globals.makeVerboseOutput) {
                     query = "SELECT * FROM v_results ORDER BY ALL_id";
                 }
-            } else if (Globals.outputFormat == Globals.geneQspecFormat) // assume user wants gene-centric output
-            {
+            } else if (Globals.outputFormat == Globals.geneQspecFormat) {
+                // assume user wants gene-centric output
                 query = "SELECT * FROM geneResults ORDER BY geneid ";
             }
 
@@ -2681,7 +2572,7 @@ public class HyperSQLObject {
             rsmd = rs.getMetaData();
             int numColumns = rsmd.getColumnCount();
 
-			// get column names and write them to file.
+            // get column names and write them to file.
             // we only want the nspecsAdj columns
             Map<Integer, String> colHdrs = new LinkedHashMap<>();
             String c = null;
@@ -2715,15 +2606,15 @@ public class HyperSQLObject {
             for (Iterator<Integer> it = colHdrs.keySet().iterator(); it.hasNext();) {
                 int k = it.next();
                 String v = colHdrs.get(k);
-                out.append(v);
+                outBuf.append(v);
                 if (it.hasNext()) {
-                    out.append("\t");
+                    outBuf.append("\t");
                 }
                 if (k > maxColNum) {
                     maxColNum = k;
                 }
             }
-            out.append("\n");
+            outBuf.append("\n");
 
             // now write the data
             while (rs.next()) {
@@ -2732,24 +2623,22 @@ public class HyperSQLObject {
                         int colType = rsmd.getColumnType(i);
                         switch (colType) {
                             case Types.INTEGER:
-                                out.append(Integer.toString(rs.getInt(i)));
+                                outBuf.append(Integer.toString(rs.getInt(i)));
                                 break;
                             case Types.VARCHAR:
-                                out.append(rs.getString(i));
+                                outBuf.append(rs.getString(i));
                                 break;
                         }
                         if (i != maxColNum) {
-                            out.append("\t");
+                            outBuf.append("\t");
                         } else {
-                            out.append("\n");
+                            outBuf.append("\n");
                         }
                     }
                 }
             }
-            out.close();
-        } catch (IOException e) {
-            // do nothing
         }
+
     }
 
     /**
@@ -2774,7 +2663,7 @@ public class HyperSQLObject {
         String query = null;
         int numCols = 0;
 
-		// first construct the field names for the individual experiments
+        // first construct the field names for the individual experiments
         // using the data in printE Set
         if (Globals.printE.size() > 0) {
             exptSet = new HashSet<>();
@@ -2834,7 +2723,7 @@ public class HyperSQLObject {
             return;
         }
 
-		// Now construct final query
+        // Now construct final query
         // need to order the data in 'selectCols' from high to low column numbers
         String queryBody = "";
         SortedSet<Integer> mapKeys = new TreeSet<>();
@@ -3069,212 +2958,198 @@ public class HyperSQLObject {
     }
 
     /**
-     * ****************
+     * Function generates spectral count data in ln(NSAF) format.
      *
-     * Function generates spectral count data in ln(NSAF) format
-     *
+     * @param conn
+     * @param out
+     * @throws java.sql.SQLException
      */
-    public void getNSAF_values_prot(Connection conn, AbacusTextArea console) throws SQLException {
-        Statement stmt = conn.createStatement();
-        Statement stmt2 = conn.createStatement();
-        Statement stmt3 = conn.createStatement();
+    public void getNSAF_values_prot(Connection conn, Appendable out) throws SQLException, IOException {
+        Statement stmt2;
+        Statement stmt3;
+        try (Statement stmt = conn.createStatement()) {
+            stmt2 = conn.createStatement();
+            stmt3 = conn.createStatement();
+            String query = null;
+            String msg = null;
+            ResultSet rs = null;
+            ResultSet rs2 = null;
+            stmt.executeUpdate("DROP TABLE IF EXISTS nsaf_p1");
+            stmt.executeUpdate("DROP TABLE IF EXISTS nsaf");
+            msg = "\nCreating NSAF values table (protein-centric)\n";
+            if (out != null) {
+                out.append(msg);
+            }
 
-        String query = null;
-        String msg = null;
-        ResultSet rs = null;
-        ResultSet rs2 = null;
-
-        stmt.executeUpdate("DROP TABLE IF EXISTS nsaf_p1");
-        stmt.executeUpdate("DROP TABLE IF EXISTS nsaf");
-
-        msg = "\nCreating NSAF values table (protein-centric)\n";
-        if (console != null) {
-            console.append(msg);
-        } else {
-            System.err.print(msg);
-        }
-
-        // initial table
-        query = "CREATE CACHED TABLE nsaf_p1 ("
-                + "  protid "
-                + ") AS ( "
-                + "SELECT protid "
-                + "FROM results "
-                + "GROUP BY protid "
-                + "ORDER BY protid ASC "
-                + ")WITH DATA";
-        stmt.executeUpdate(query);
-        stmt.executeUpdate("CREATE INDEX nsaf_p1_idx1 ON nsaf_p1(protid)");
-
-        // final NSAF table
-        query = "CREATE CACHED TABLE nsaf ("
-                + "  protid "
-                + ") AS ( "
-                + "SELECT protid "
-                + "FROM results "
-                + "GROUP BY protid "
-                + "ORDER BY protid ASC "
-                + ")WITH DATA";
-        stmt.executeUpdate(query);
-        stmt.executeUpdate("CREATE INDEX nsaf_idx1 ON nsaf(protid)");
-
-        /*
-         * All NSAF values are multiplied by a factor to raise their values.
-         * This is done because of a rounding error problem inherent to HSQLDB.
-         * I can't find the cause of the bug, but by multiplying the values by this
-         * factor I can eliminate it.
-         * Our factor is computed as 10^N where N = # of digits in representing
-         * number of proteins reported + 1
-         * example: if 377 proteins are reported then N = 3+1, 377 consists of 3 digits
-         */
-        rs = stmt.executeQuery("SELECT COUNT(protid) FROM results WHERE isFwd = 1");
-        rs.next();
-        String numProts = Integer.toString(rs.getInt(1));
-        int factor = numProts.length() + 1;
-        double NSAF_FACTOR = Math.pow(10, factor); // we multiply all NSAF values by this
-        Globals.NSAF_FACTOR = NSAF_FACTOR;
-        rs.close();
-
-        msg = "  NSAF_FACTOR = 10^" + factor + " = " + NSAF_FACTOR + "\n";
-        if (console != null) {
-            console.append(msg);
-        } else {
-            System.err.print(msg);
-        }
-
-        // now you need the add columns for spectral counts
-        rs = stmt.executeQuery("SELECT DISTINCT tag FROM srcFileTags WHERE fileType = 'prot' ORDER BY tag ASC");
-
-        while (rs.next()) {
-            String tag = rs.getString(1);
-
-            stmt2.executeUpdate("ALTER TABLE nsaf_p1 ADD COLUMN " + tag + "_specsTot DOUBLE DEFAULT 0");
-            stmt2.executeUpdate("ALTER TABLE nsaf_p1 ADD COLUMN " + tag + "_specsUniq DOUBLE DEFAULT 0");
-            stmt2.executeUpdate("ALTER TABLE nsaf_p1 ADD COLUMN " + tag + "_specsAdj DOUBLE DEFAULT 0");
-
-            // also add columns to results table
-            stmt2.executeUpdate("ALTER TABLE nsaf ADD COLUMN " + tag + "_totNSAF DOUBLE DEFAULT 0");
-            stmt2.executeUpdate("ALTER TABLE nsaf ADD COLUMN " + tag + "_uniqNSAF DOUBLE DEFAULT 0");
-            stmt2.executeUpdate("ALTER TABLE nsaf ADD COLUMN " + tag + "_adjNSAF DOUBLE DEFAULT 0");
-
-            // get spectral counts and protein lengths
-            query = "SELECT protid, protLen, "
-                    + "  " + tag + "_numSpecsTot,  "
-                    + "  " + tag + "_numSpecsUniq, "
-                    + "  " + tag + "_numSpecsAdj "
+            // initial table
+            query = "CREATE CACHED TABLE nsaf_p1 ("
+                    + "  protid "
+                    + ") AS ( "
+                    + "SELECT protid "
                     + "FROM results "
-                    + "ORDER BY protid ";
-
-            rs2 = stmt2.executeQuery(query);
-
-            // assign spectral-count/length to nsaf_p1 table
-            while (rs2.next()) {
-                String protid = rs2.getString(1);
-                double protLen = rs2.getDouble(2);
-
-                double tot = rs2.getDouble(3) / protLen;
-                double uniq = rs2.getDouble(4) / protLen;
-                double adj = rs2.getDouble(5) / protLen;
-
-                query = "UPDATE nsaf_p1 "
-                        + "  SET " + tag + "_specsTot = " + tot + ", "
-                        + "      " + tag + "_specsUniq = " + uniq + ", "
-                        + "      " + tag + "_specsAdj = " + adj + " "
-                        + "WHERE protid = '" + protid + "' ";
-
-                stmt3.executeUpdate(query);
+                    + "GROUP BY protid "
+                    + "ORDER BY protid ASC "
+                    + ")WITH DATA";
+            stmt.executeUpdate(query);
+            stmt.executeUpdate("CREATE INDEX nsaf_p1_idx1 ON nsaf_p1(protid)");
+            // final NSAF table
+            query = "CREATE CACHED TABLE nsaf ("
+                    + "  protid "
+                    + ") AS ( "
+                    + "SELECT protid "
+                    + "FROM results "
+                    + "GROUP BY protid "
+                    + "ORDER BY protid ASC "
+                    + ")WITH DATA";
+            stmt.executeUpdate(query);
+            stmt.executeUpdate("CREATE INDEX nsaf_idx1 ON nsaf(protid)");
+            /*
+             * All NSAF values are multiplied by a factor to raise their values.
+             * This is done because of a rounding error problem inherent to HSQLDB.
+             * I can't find the cause of the bug, but by multiplying the values by this
+             * factor I can eliminate it.
+             * Our factor is computed as 10^N where N = # of digits in representing
+             * number of proteins reported + 1
+             * example: if 377 proteins are reported then N = 3+1, 377 consists of 3 digits
+             */
+            rs = stmt.executeQuery("SELECT COUNT(protid) FROM results WHERE isFwd = 1");
+            rs.next();
+            String numProts = Integer.toString(rs.getInt(1));
+            int factor = numProts.length() + 1;
+            double NSAF_FACTOR = Math.pow(10, factor); // we multiply all NSAF values by this
+            Globals.NSAF_FACTOR = NSAF_FACTOR;
+            rs.close();
+            msg = "  NSAF_FACTOR = 10^" + factor + " = " + NSAF_FACTOR + "\n";
+            if (out != null) {
+                out.append(msg);
             }
-            rs2.close();
 
-            // now add up columns of current tag
-            query = "SELECT SUM(" + tag + "_specsTot), "
-                    + "       SUM(" + tag + "_specsUniq), "
-                    + "       SUM(" + tag + "_specsAdj) "
-                    + "FROM nsaf_p1 ";
-            rs2 = stmt2.executeQuery(query);
-            rs2.next();
+            // now you need the add columns for spectral counts
+            rs = stmt.executeQuery("SELECT DISTINCT tag FROM srcFileTags WHERE fileType = 'prot' ORDER BY tag ASC");
+            while (rs.next()) {
+                String tag = rs.getString(1);
 
-            double totSum = rs2.getDouble(1);
-            double uniqSum = rs2.getDouble(2);
-            double adjSum = rs2.getDouble(3);
+                stmt2.executeUpdate("ALTER TABLE nsaf_p1 ADD COLUMN " + tag + "_specsTot DOUBLE DEFAULT 0");
+                stmt2.executeUpdate("ALTER TABLE nsaf_p1 ADD COLUMN " + tag + "_specsUniq DOUBLE DEFAULT 0");
+                stmt2.executeUpdate("ALTER TABLE nsaf_p1 ADD COLUMN " + tag + "_specsAdj DOUBLE DEFAULT 0");
 
-            rs2.close();
+                // also add columns to results table
+                stmt2.executeUpdate("ALTER TABLE nsaf ADD COLUMN " + tag + "_totNSAF DOUBLE DEFAULT 0");
+                stmt2.executeUpdate("ALTER TABLE nsaf ADD COLUMN " + tag + "_uniqNSAF DOUBLE DEFAULT 0");
+                stmt2.executeUpdate("ALTER TABLE nsaf ADD COLUMN " + tag + "_adjNSAF DOUBLE DEFAULT 0");
 
-            query = "SELECT protid, "
-                    + "  " + tag + "_specsTot, "
-                    + "  " + tag + "_specsUniq, "
-                    + "  " + tag + "_specsAdj "
-                    + "FROM nsaf_p1 "
-                    + "GROUP BY protid, "
-                    + "  " + tag + "_specsTot, "
-                    + "  " + tag + "_specsUniq, "
-                    + "  " + tag + "_specsAdj "
-                    + "ORDER BY protid ASC ";
+                // get spectral counts and protein lengths
+                query = "SELECT protid, protLen, "
+                        + "  " + tag + "_numSpecsTot,  "
+                        + "  " + tag + "_numSpecsUniq, "
+                        + "  " + tag + "_numSpecsAdj "
+                        + "FROM results "
+                        + "ORDER BY protid ";
 
-            rs2 = stmt2.executeQuery(query);
+                rs2 = stmt2.executeQuery(query);
 
-            while (rs2.next()) {
-                String protid = rs2.getString(1);
+                // assign spectral-count/length to nsaf_p1 table
+                while (rs2.next()) {
+                    String protid = rs2.getString(1);
+                    double protLen = rs2.getDouble(2);
 
-                double x_t = rs2.getDouble(2);
-                double x_u = rs2.getDouble(3);
-                double x_a = rs2.getDouble(4);
+                    double tot = rs2.getDouble(3) / protLen;
+                    double uniq = rs2.getDouble(4) / protLen;
+                    double adj = rs2.getDouble(5) / protLen;
 
-                double nsaf_t = (x_t / totSum) * NSAF_FACTOR;
-                double nsaf_u = (x_u / uniqSum) * NSAF_FACTOR;
-                double nsaf_a = (x_a / adjSum) * NSAF_FACTOR;
+                    query = "UPDATE nsaf_p1 "
+                            + "  SET " + tag + "_specsTot = " + tot + ", "
+                            + "      " + tag + "_specsUniq = " + uniq + ", "
+                            + "      " + tag + "_specsAdj = " + adj + " "
+                            + "WHERE protid = '" + protid + "' ";
 
-                query = "UPDATE nsaf "
-                        + "  SET " + tag + "_totNSAF = " + nsaf_t + ", "
-                        + " " + tag + "_uniqNSAF = " + nsaf_u + ","
-                        + " " + tag + "_adjNSAF = " + nsaf_a + " "
-                        + " WHERE protid = '" + protid + "' ";
+                    stmt3.executeUpdate(query);
+                }
+                rs2.close();
 
-                stmt3.executeUpdate(query);
+                // now add up columns of current tag
+                query = "SELECT SUM(" + tag + "_specsTot), "
+                        + "       SUM(" + tag + "_specsUniq), "
+                        + "       SUM(" + tag + "_specsAdj) "
+                        + "FROM nsaf_p1 ";
+                rs2 = stmt2.executeQuery(query);
+                rs2.next();
+
+                double totSum = rs2.getDouble(1);
+                double uniqSum = rs2.getDouble(2);
+                double adjSum = rs2.getDouble(3);
+
+                rs2.close();
+
+                query = "SELECT protid, "
+                        + "  " + tag + "_specsTot, "
+                        + "  " + tag + "_specsUniq, "
+                        + "  " + tag + "_specsAdj "
+                        + "FROM nsaf_p1 "
+                        + "GROUP BY protid, "
+                        + "  " + tag + "_specsTot, "
+                        + "  " + tag + "_specsUniq, "
+                        + "  " + tag + "_specsAdj "
+                        + "ORDER BY protid ASC ";
+
+                rs2 = stmt2.executeQuery(query);
+
+                while (rs2.next()) {
+                    String protid = rs2.getString(1);
+
+                    double x_t = rs2.getDouble(2);
+                    double x_u = rs2.getDouble(3);
+                    double x_a = rs2.getDouble(4);
+
+                    double nsaf_t = (x_t / totSum) * NSAF_FACTOR;
+                    double nsaf_u = (x_u / uniqSum) * NSAF_FACTOR;
+                    double nsaf_a = (x_a / adjSum) * NSAF_FACTOR;
+
+                    query = "UPDATE nsaf "
+                            + "  SET " + tag + "_totNSAF = " + nsaf_t + ", "
+                            + " " + tag + "_uniqNSAF = " + nsaf_u + ","
+                            + " " + tag + "_adjNSAF = " + nsaf_a + " "
+                            + " WHERE protid = '" + protid + "' ";
+
+                    stmt3.executeUpdate(query);
+                }
+                rs2.close();
+
             }
-            rs2.close();
-
+            rs.close();
+            stmt.executeUpdate("DROP INDEX nsaf_p1_idx1");
+            stmt.executeUpdate("DROP TABLE nsaf_p1");
         }
-        rs.close();
-
-        stmt.executeUpdate("DROP INDEX nsaf_p1_idx1");
-        stmt.executeUpdate("DROP TABLE nsaf_p1");
-
-        stmt.close();
         stmt2.close();
         stmt3.close();
 
         /*
          * Now we need to add NSAF values to results table
          */
-        reformat_results(conn, console);
+        reformat_results(conn, out);
     }
 
     /**
-     * **********
-     *
      * Function to reformats the results table to include NSAF values
      *
      * @param conn
-     *
+     * @param out
+     * @throws java.sql.SQLException
+     * @throws java.io.IOException
      */
-    public void reformat_results(Connection conn, AbacusTextArea console) throws SQLException {
+    public void reformat_results(Connection conn, Appendable out) throws SQLException, IOException {
 
         String msg = "\nAdding NSAF values to results table.\n";
-        if (console != null) {
-            console.append(msg);
-        } else {
-            System.err.print(msg);
+        if (out != null) {
+            out.append(msg);
         }
 
+        ResultSet rs1;
+        String query;
         Statement stmt = conn.createStatement();
 
-        ResultSet rs1 = null;
-        ResultSetMetaData rsmd = null;
-        String query = null;
-
         // Capture all of the srcFileTags in order
-        String[] tags = null;
+        String[] tags;
         int N = 0;
         rs1 = stmt.executeQuery("SELECT COUNT(DISTINCT tag) FROM srcFileTags WHERE fileType = 'prot'");
         rs1.next();
