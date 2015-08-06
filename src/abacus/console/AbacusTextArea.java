@@ -198,16 +198,21 @@ public class AbacusTextArea extends javax.swing.JFrame implements Appendable, Pr
 
     // switches from a progress bar to a "shaking bar"
     @Override
-    public void changeBarType(String displayType) {
+    public void changeBarType(ProgressBarHandler.PROGRESS_TYPE displayType) {
         curStatusValue = pBar.getValue();
 
-        if (displayType.equals("shaker")) {
-            pBar.setStringPainted(false);
-            pBar.setIndeterminate(true);
-        } else {
-            pBar.setStringPainted(true);
-            pBar.setIndeterminate(false);
-            pBar.setValue(curStatusValue);
+        switch (displayType) {
+            case SHAKER:
+                pBar.setStringPainted(false);
+                pBar.setIndeterminate(true);
+                break;
+            case PROGRESS:
+                pBar.setStringPainted(true);
+                pBar.setIndeterminate(false);
+                pBar.setValue(curStatusValue);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown progres bar type");
         }
     }
 
@@ -219,10 +224,18 @@ public class AbacusTextArea extends javax.swing.JFrame implements Appendable, Pr
 
     // Function to change the console window clickable close status
     @Override
-    public void changeCloseStatus(String act) {
-        if (act.equals("allowClose")) {
-            this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+    public void changeCloseStatus(ProgressBarHandler.WND_CLOSE_STATUS status) {
+        switch (status) {
+            case ALLOW_CLOSE:
+                this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+                break;
+            case NOT_ALLOWED:
+                this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown window close status provided");
         }
+        
     }
 
     @Override

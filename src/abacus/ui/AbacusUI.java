@@ -15,6 +15,8 @@ import abacus.Globals;
 import abacus.HyperSQLObject;
 import abacus.HyperSQLObjectGene;
 import abacus.console.AbacusTextArea;
+import abacus.console.ProgressBarHandler;
+import java.awt.Component;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -2810,12 +2812,12 @@ public class AbacusUI extends javax.swing.JFrame {
 
                 if (!Globals.byPeptide) {
                     if (pmasc.load_protXML(conn, console, alerter, AbacusUI.this)) {
-                        console.changeCloseStatus("allowClose");
+                        console.changeCloseStatus(ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
                         return;
                     }
                 }
                 if (pmasc.load_pepXML(conn, console, alerter, AbacusUI.this)) {
-                    console.changeCloseStatus("allowClose");
+                    console.changeCloseStatus(ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
                     return;
                 }
 
@@ -2827,168 +2829,191 @@ public class AbacusUI extends javax.swing.JFrame {
 
             console.updateProgress(1);
 
+
+            if (process(start_time, conn, console, console, alerter, AbacusUI.this)) {
+                return;
+            }
+
+            // clean up
+            pmasc = null;
+            System.gc();
+        }
+
+        private void updateProgress(ProgressBarHandler pbh, int N) {
+            if (pbh != null) {
+                pbh.updateProgress(N);
+            }
+        }
+
+        private void updateProgressType(ProgressBarHandler pbh, ProgressBarHandler.PROGRESS_TYPE type) {
+            if (pbh != null) {
+                pbh.changeBarType(type);
+            }
+        }
+
+        private void updateProgressCloseStatus (ProgressBarHandler pbh, ProgressBarHandler.WND_CLOSE_STATUS status) {
+            if (pbh != null) {
+                pbh.changeCloseStatus(status);
+            }
+        }
+
+        private void updateOutput(Appendable out, CharSequence seq) {
+            if (out != null) {
+                try {
+                    out.append(seq);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+
+        private void updateAlerter(UIAlerter alerter, Component comp)  {
+            if (alerter != null) {
+                alerter.alert(comp);
+            }
+        }
+
+        /**
+         * The main part of the program doing the calculations.
+         * @param startTime use {@code System.nanoTime()} if you don't have a better idea
+         * @param out a printable stream, can be null
+         * @param pbh if you have a progress bar, use this for updates, can be null
+         * @param alerter will pop up a message for the user, can be null
+         * @param comp can be null, the parent to use for alerter
+         * @return
+         */
+        public boolean process(long startTime, Connection conn, Appendable out, ProgressBarHandler pbh, UIAlerter alerter, Component comp) {
+            long elapsed_time;
+            String timeStr;
+            HyperSQLObject forProteins = null;
+            HyperSQLObjectGene forGenes = null;
             // now the work begins
             try {
-
-                if (Globals.byPeptide) { // user wants peptide-level results
+                if (Globals.byPeptide) {
+                    // user wants peptide-level results
                     forProteins = new HyperSQLObject();
                     forProteins.initialize();
                     forProteins.makeSrcFileTable(conn, console);
 
                     forProteins.correctPepXMLTags(conn);
-                    console.updateProgress(1);
+                    updateProgress(pbh, 1);
 
                     forProteins.peptideLevelResults(conn, console);
-                    console.updateProgress(20);
-                } else if (Globals.byGene) { // user wants gene-centric output
+                    updateProgress(pbh, 20);
+                } else if (Globals.byGene) {
+                    // user wants gene-centric output
 
                     forGenes = new HyperSQLObjectGene();
                     forGenes.initialize();
-
                     //forGenes.makeProtLenTable(conn, console); //deprecated function
                     forGenes.makeSrcFileTable(conn, console);
-                    console.updateProgress(1);
-
+                    updateProgress(pbh, 1);
                     forGenes.correctPepXMLTags(conn);
-
                     if (forGenes.makeGeneTable(conn, console)) {
                         alerter.alert(AbacusUI.this);
-                        console.changeCloseStatus("allowClose");
-                        return;
+                        console.changeCloseStatus(ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
+                        return true;
                     }
-                    console.updateProgress(1);
-
+                    updateProgress(pbh, 1);
                     forGenes.makeCombinedTable(conn, console);
-                    console.updateProgress(1);
-
+                    updateProgress(pbh, 1);
                     forGenes.makeProtXMLTable(conn, console);
-                    console.updateProgress(1);
-
+                    updateProgress(pbh, 1);
                     System.gc(); // need more RAM
-
                     forGenes.makeGeneCombined(conn, console);
-                    console.updateProgress(1);
-
+                    updateProgress(pbh, 1);
                     forGenes.makeGeneXML(conn, console);
-                    console.updateProgress(1);
-
+                    updateProgress(pbh, 1);
                     forGenes.adjustGenePeptideWT(conn, console);
-                    console.updateProgress(1);
-
+                    updateProgress(pbh, 1);
                     forGenes.makeTempGene2pepTable(conn);
-
                     System.gc(); // System clean up
-
-                    console.changeBarType("shaker");
+                    updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.SHAKER);
                     forGenes.makeGeneidSummary(conn, console);
-                    console.changeBarType("progress");
-                    console.updateProgress(1);
-
+                    updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.PROGRESS);
+                    updateProgress(pbh, 1);
                     forGenes.makeGeneResults(conn, console);
-                    console.updateProgress(1);
-
-                    console.changeBarType("shaker");
+                    updateProgress(pbh, 1);
+                    updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.SHAKER);
                     forGenes.makeGenePepUsageTable(conn, console);
-                    console.changeBarType("progress");
-                    console.updateProgress(1);
-
+                    updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.PROGRESS);
+                    updateProgress(pbh, 1);
                     System.gc(); // System clean up
-
-                    console.changeBarType("shaker");
+                    updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.SHAKER);
                     forGenes.appendIndividualExpts_GC(conn, console);
-                    console.changeBarType("progress");
-                    console.append("\n");
-
+                    updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.PROGRESS);
+                    updateOutput(out, "\n");
                     if (Globals.doNSAF) {
                         forGenes.getNSAF_values_gene(conn, console);
-                        console.append("\n");
+                        updateOutput(out, "\n");
                     }
-
-                    console.updateProgress(1);
-
+                    updateProgress(pbh, 1);
                     if (Globals.genesHaveDescriptions) { // append gene descriptions
                         forGenes.appendGeneDescriptions(conn);
-                        console.updateProgress(1);
+                        updateProgress(pbh, 1);
                     } else {
-                        console.updateProgress(2);
+                        updateProgress(pbh, 2);
                     }
-
                     // choose output format
                     if (Globals.outputFormat == Globals.geneQspecFormat) {
                         forGenes.formatQspecOutput(conn, console);
                     } else {
                         forGenes.defaultResults(conn, console);
                     }
-
-                    console.updateProgress(1);
-                } else { // default protein-centric output
+                    updateProgress(pbh, 1);
+                } else {
+                    // default protein-centric output
                     forProteins = new HyperSQLObject();
                     forProteins.initialize();
-
                     //forProteins.makeProtLenTable(conn, console); // deprecated function
                     forProteins.makeSrcFileTable(conn, console);
-                    console.updateProgress(1);
-
+                    updateProgress(pbh, 1);
                     forProteins.correctPepXMLTags(conn);
                     forProteins.makeCombinedTable(conn, console);
-                    console.updateProgress(1);
-
+                    updateProgress(pbh, 1);
                     forProteins.makeProtXMLTable(conn, console);
-                    console.updateProgress(1);
-
+                    updateProgress(pbh, 1);
                     System.gc(); // need more RAM
-
                     forProteins.makeTempProt2PepTable(conn, console);
-
                     System.gc(); // System clean up
-
                     //console.changeBarType("shaker");
                     forProteins.makeProtidSummary(conn, console);
                     //console.changeBarType("progress");
-                    console.updateProgress(1);
-
+                    updateProgress(pbh, 1);
                     if (Globals.gene2protFile != null) {
                         forProteins.makeGeneTable(conn, console);
                         forProteins.appendGeneIDs(conn, console);
-                        console.append("\n");
+                        updateOutput(out, "\n");
 
                     }
-
                     if (forProteins.makeResultsTable(conn, console)) {
                         alerter.alert(AbacusUI.this);
-                        console.append("\nError creating results table.\n");
-                        console.changeCloseStatus("allowClose");
-                        return;
+                        updateOutput(out, "\nError creating results table.\n");
+                        updateProgressCloseStatus(pbh, ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
+                        return true;
                     }
-                    console.updateProgress(1);
-
+                    updateProgress(pbh, 1);
                     forProteins.addProteinLengths(conn, console, 0);
-                    console.updateProgress(1);
-
+                    updateProgress(pbh, 1);
                     // these functions deal with adjusting spectral counts
                     forProteins.makeWT9XgroupsTable(conn);
                     forProteins.makePepUsageTable(conn, console);
-                    console.updateProgress(1);
-
+                    updateProgress(pbh, 1);
                     // add individual experiment data to results table
                     forProteins.appendIndividualExpts(conn, console);
-                    console.updateProgress(1);
-
-				// reduce the number of columns in the results table
+                    updateProgress(pbh, 1);
+                    // reduce the number of columns in the results table
                     // by merging the groupid and siblingGroup fields
                     forProteins.mergeIDfields(conn);
-
                     if (Globals.doNSAF) {
                         forProteins.getNSAF_values_prot(conn, console);
-                        console.changeCloseStatus("allowClose");
-                        console.append("\n");
+                        updateProgressCloseStatus(pbh, ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
+                        updateOutput(out, "\n");
                     }
-
                     if (Globals.makeVerboseOutput) {
                         forProteins.addExtraProteins(conn, console);
                         forProteins.addProteinLengths(conn, console, 1);
                     }
-
                     // choose output format
                     switch (Globals.outputFormat) {
                         case Globals.protQspecFormat:
@@ -3000,14 +3025,13 @@ public class AbacusUI extends javax.swing.JFrame {
                         default:
                             forProteins.defaultResults(conn, console);
                     }
-                    console.updateProgress(1);
+                    updateProgress(pbh, 1);
                 }
-
                 // user has elected to keep database, remove unnecessary tables.
                 if (Globals.keepDB) {
-                    if (Globals.byGene) {
+                    if (Globals.byGene && forGenes != null) {
                         forGenes.cleanUp(conn);
-                    } else {
+                    } else if (forProteins != null) {
                         forProteins.cleanUp(conn);
                     }
                 } else { // left over files that should be removed
@@ -3017,32 +3041,28 @@ public class AbacusUI extends javax.swing.JFrame {
                         f.delete();
                     }
                 }
-
-                console.changeCloseStatus("allowClose");
-
-                elapsed_time = System.currentTimeMillis() - start_time;
+                updateProgressCloseStatus(pbh, ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
+                elapsed_time = System.currentTimeMillis() - startTime;
                 timeStr = Globals.formatTime(elapsed_time);
-                console.append("\n\nTotal runtime (hh:mm:ss): " + timeStr + "\n");
-
-                console.append("\nYou may now close this window\n\n");
-            } catch (Exception ex) {
-                Logger.getLogger(WorkerThread.class.getName()).log(Level.SEVERE, null, ex);
+                updateOutput(out, "\n\nTotal runtime (hh:mm:ss): " + timeStr + "\n");
+                updateOutput(out, "\nYou may now close this window\n\n");
+            }catch (Exception ex) {
+                throw new RuntimeException("Somethign awful happened during main processing step", ex);
             } finally {
                 try {
                     // Whatever happens, shutdown the HSQLDB connection nicely
-                    conn.createStatement().execute("SHUTDOWN");
-                    conn.close();
-                    conn = null;
+                    if (conn != null) {
+                        conn.createStatement().execute("SHUTDOWN");
+                        conn.close();
+                    }
 
                 } catch (Exception e) {
-                    console.append(e.toString());
-                    console.changeCloseStatus("allowClose");
+                    updateOutput(out, e.toString());
+                    updateProgressCloseStatus(pbh, ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
+                    
                 }
             }
-
-            // clean up
-            pmasc = null;
-            System.gc();
+            return false;
         }
 
     }

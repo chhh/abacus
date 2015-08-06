@@ -11,24 +11,54 @@ package abacus.console;
  */
 public interface ProgressBarHandler {
 
-    // switches from a progress bar to a "shaking bar"
-    void changeBarType(String displayType);
+    public static enum PROGRESS_TYPE {
+        SHAKER, PROGRESS;
+    }
 
-    // Function to change the console window clickable close status
-    void changeCloseStatus(String act);
+    public static enum WND_CLOSE_STATUS {
+        NOT_ALLOWED, ALLOW_CLOSE;
+    }
 
-    // function to close the progressMontior window
+    /**
+     * switches from a progress bar to a "shaking bar".
+     * @param displayType
+     */
+    void changeBarType(PROGRESS_TYPE displayType);
+
+    /**
+     * Function to change the console window clickable close status.
+     * @param status
+     */
+    void changeCloseStatus(ProgressBarHandler.WND_CLOSE_STATUS status);
+
+    /**
+     * Function to close the progressMontior window.
+     */
     void closeMonitorBox();
 
-    // function to initialize a progress monitor object
+    /**
+     * Function to initialize a progress monitor object.
+     * @param maxValue
+     * @param message
+     */
     void monitorBoxInit(int maxValue, String message);
 
-    // function to update the progress monitor's counter
+    /**
+     * Function to update the progress monitor's counter.
+     * @param newValue
+     */
     void monitorBoxUpdate(int newValue);
 
-    // Function sets the text of the progress bar
+    /**
+     * Function sets the text of the progress bar
+     * @param iter
+     */
     void setProgressBarString(int iter);
 
+    /**
+     * Update the progress bar with some done work.
+     * @param newValue 
+     */
     void updateProgress(int newValue);
 
 }
