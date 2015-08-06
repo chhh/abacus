@@ -2822,7 +2822,8 @@ public class AbacusUI extends javax.swing.JFrame {
                 }
 
             } catch (IOException ex) {
-                Logger.getLogger(WorkerThread.class.getName()).log(Level.SEVERE, null, ex);
+                //Logger.getLogger(WorkerThread.class.getName()).log(Level.SEVERE, null, ex);
+                ex.printStackTrace();
             }
 
             System.gc(); // System clean up
@@ -2981,49 +2982,49 @@ public class AbacusUI extends javax.swing.JFrame {
                     //console.changeBarType("progress");
                     updateProgress(pbh, 1);
                     if (Globals.gene2protFile != null) {
-                        forProteins.makeGeneTable(conn, console);
-                        forProteins.appendGeneIDs(conn, console);
+                        forProteins.makeGeneTable(conn, out);
+                        forProteins.appendGeneIDs(conn, out);
                         updateOutput(out, "\n");
 
                     }
-                    if (forProteins.makeResultsTable(conn, console)) {
+                    if (forProteins.makeResultsTable(conn, out)) {
                         updateAlerter(alerter, comp);
                         updateOutput(out, "\nError creating results table.\n");
                         updateProgressCloseStatus(pbh, ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
                         return true;
                     }
                     updateProgress(pbh, 1);
-                    forProteins.addProteinLengths(conn, console, 0);
+                    forProteins.addProteinLengths(conn, 0, out, pbh);
                     updateProgress(pbh, 1);
                     // these functions deal with adjusting spectral counts
                     forProteins.makeWT9XgroupsTable(conn);
-                    forProteins.makePepUsageTable(conn, console);
+                    forProteins.makePepUsageTable(conn, out, pbh);
                     updateProgress(pbh, 1);
                     // add individual experiment data to results table
-                    forProteins.appendIndividualExpts(conn, console);
+                    forProteins.appendIndividualExpts(conn, out);
                     updateProgress(pbh, 1);
                     // reduce the number of columns in the results table
                     // by merging the groupid and siblingGroup fields
                     forProteins.mergeIDfields(conn);
                     if (Globals.doNSAF) {
-                        forProteins.getNSAF_values_prot(conn, console);
+                        forProteins.getNSAF_values_prot(conn, out);
                         updateProgressCloseStatus(pbh, ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
                         updateOutput(out, "\n");
                     }
                     if (Globals.makeVerboseOutput) {
-                        forProteins.addExtraProteins(conn, console);
-                        forProteins.addProteinLengths(conn, console, 1);
+                        forProteins.addExtraProteins(conn, out);
+                        forProteins.addProteinLengths(conn, 1, out, pbh);
                     }
                     // choose output format
                     switch (Globals.outputFormat) {
                         case Globals.protQspecFormat:
-                            forProteins.formatQspecOutput(conn, console);
+                            forProteins.formatQspecOutput(conn, out);
                             break;
                         case Globals.customOutput:
-                            forProteins.customOutput(conn, console);
+                            forProteins.customOutput(conn, out);
                             break;
                         default:
-                            forProteins.defaultResults(conn, console);
+                            forProteins.defaultResults(conn, out);
                     }
                     updateProgress(pbh, 1);
                 }
@@ -3055,7 +3056,6 @@ public class AbacusUI extends javax.swing.JFrame {
                         conn.createStatement().execute("SHUTDOWN");
                         conn.close();
                     }
-
                 } catch (Exception e) {
                     updateOutput(out, e.toString());
                     updateProgressCloseStatus(pbh, ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);

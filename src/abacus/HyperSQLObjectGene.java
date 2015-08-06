@@ -10,12 +10,8 @@ import java.sql.Statement;
 import java.text.DecimalFormat;
 
 /**
- * ****************
- *
  * Used to run gene-centric queries.
- *
  * @author dfermin
- *
  */
 public class HyperSQLObjectGene extends HyperSQLObject {
 
@@ -1296,7 +1292,7 @@ public class HyperSQLObjectGene extends HyperSQLObject {
         /*
          * Now we need to add NSAF values to results table
          */
-        reformat_results(conn, console);
+        reformat_results(conn, out);
     }
 
 } // end hyperSQLObject_gene Class
