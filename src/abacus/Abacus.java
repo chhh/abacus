@@ -133,7 +133,7 @@ public class Abacus {
                 forProteins = new HyperSQLObject();
                 forProteins.initialize();
 
-                forProteins.makeSrcFileTable(conn, null);
+                forProteins.makeSrcFileTable(conn, null, null);
                 //forProteins.makeProtLenTable(conn, null); //deprecated function
                 forProteins.correctPepXMLTags(conn);
 
@@ -147,7 +147,7 @@ public class Abacus {
                 forProteins.makeProtidSummary(conn, null);
 
                 if (Globals.gene2protFile != null) {
-                    forProteins.makeGeneTable(conn, null);
+                    if (forProteins.makeGeneTable(conn, null)) return;
                     forProteins.appendGeneIDs(conn, null);
                     System.err.print("\n");
                 }

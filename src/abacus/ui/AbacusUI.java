@@ -2893,12 +2893,12 @@ public class AbacusUI extends javax.swing.JFrame {
                     // user wants peptide-level results
                     forProteins = new HyperSQLObject();
                     forProteins.initialize();
-                    forProteins.makeSrcFileTable(conn, console);
+                    forProteins.makeSrcFileTable(conn, pbh, out);
 
                     forProteins.correctPepXMLTags(conn);
                     updateProgress(pbh, 1);
 
-                    forProteins.peptideLevelResults(conn, console);
+                    forProteins.peptideLevelResults(conn, out);
                     updateProgress(pbh, 20);
                 } else if (Globals.byGene) {
                     // user wants gene-centric output
@@ -2906,12 +2906,12 @@ public class AbacusUI extends javax.swing.JFrame {
                     forGenes = new HyperSQLObjectGene();
                     forGenes.initialize();
                     //forGenes.makeProtLenTable(conn, console); //deprecated function
-                    forGenes.makeSrcFileTable(conn, console);
+                    forGenes.makeSrcFileTable(conn, pbh, out);
                     updateProgress(pbh, 1);
                     forGenes.correctPepXMLTags(conn);
                     if (forGenes.makeGeneTable(conn, console)) {
-                        alerter.alert(AbacusUI.this);
-                        console.changeCloseStatus(ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
+                        updateAlerter(alerter, comp);
+                        updateProgressCloseStatus(pbh, ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
                         return true;
                     }
                     updateProgress(pbh, 1);
@@ -2966,7 +2966,7 @@ public class AbacusUI extends javax.swing.JFrame {
                     forProteins = new HyperSQLObject();
                     forProteins.initialize();
                     //forProteins.makeProtLenTable(conn, console); // deprecated function
-                    forProteins.makeSrcFileTable(conn, console);
+                    forProteins.makeSrcFileTable(conn, pbh, out);
                     updateProgress(pbh, 1);
                     forProteins.correctPepXMLTags(conn);
                     forProteins.makeCombinedTable(conn, console);
@@ -2987,7 +2987,7 @@ public class AbacusUI extends javax.swing.JFrame {
 
                     }
                     if (forProteins.makeResultsTable(conn, console)) {
-                        alerter.alert(AbacusUI.this);
+                        updateAlerter(alerter, comp);
                         updateOutput(out, "\nError creating results table.\n");
                         updateProgressCloseStatus(pbh, ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
                         return true;
