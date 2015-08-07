@@ -25,8 +25,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
@@ -779,66 +777,63 @@ public class HyperSQLObject {
      */
     public void recalculateLocalPw(Connection conn, String tag) throws SQLException {
 
-        String query = null;
-        Statement stmt = conn.createStatement();
-        PreparedStatement prep = null;
-        ResultSet rs1 = null;
+        String query;
+        try (Statement stmt = conn.createStatement()) {
 
-        query = "CREATE MEMORY TABLE x_ ("
-                + "  groupid, Pw, maxLocalPw "
-                + ") AS ( "
-                + "SELECT groupid, Pw, MAX(localPw) "
-                + "FROM protXML "
-                + "WHERE tag = '" + tag + "' "
-                + "GROUP BY groupid, Pw "
-                + ") WITH DATA ";
+            query = "CREATE MEMORY TABLE x_ ("
+                    + "  groupid, Pw, maxLocalPw "
+                    + ") AS ( "
+                    + "SELECT groupid, Pw, MAX(localPw) "
+                    + "FROM protXML "
+                    + "WHERE tag = '" + tag + "' "
+                    + "GROUP BY groupid, Pw "
+                    + ") WITH DATA ";
 
-        stmt.executeUpdate("DROP TABLE IF EXISTS x_");
-        stmt.executeUpdate(query);
+            stmt.executeUpdate("DROP TABLE IF EXISTS x_");
+            stmt.executeUpdate(query);
 
-        // create index
-        stmt.executeUpdate("CREATE INDEX x_idx1 ON x_ (groupid)");
+            // create index
+            stmt.executeUpdate("CREATE INDEX x_idx1 ON x_ (groupid)");
 
-        query = "UPDATE protXML "
-                + "  SET localPw = Pw "
-                + "WHERE tag = '" + tag + "' "
-                + "AND groupid = ? ";
-        prep = conn.prepareStatement(query);
+            query = "UPDATE protXML "
+                    + "  SET localPw = Pw "
+                    + "WHERE tag = '" + tag + "' "
+                    + "AND groupid = ? ";
+            PreparedStatement prep = conn.prepareStatement(query);
 
-        query = "SELECT COUNT(DISTINCT groupid) "
-                + "FROM x_ "
-                + "WHERE Pw > 0 "
-                + "AND maxLocalPw = 0 ";
-        rs1 = stmt.executeQuery(query);
-
-        rs1.next();
-        int N = rs1.getInt(1);
-
-        if (N > 0) {
-            // fix protein groups that have a Pw > 0 and a localPw = 0
-            query = "SELECT DISTINCT groupid "
+            query = "SELECT COUNT(DISTINCT groupid) "
                     + "FROM x_ "
                     + "WHERE Pw > 0 "
                     + "AND maxLocalPw = 0 ";
-            rs1 = stmt.executeQuery(query);
+            ResultSet rs1 = stmt.executeQuery(query);
 
-            while (rs1.next()) {
-                int gid = rs1.getInt(1);
-                prep.setInt(1, gid);
-                prep.addBatch();
+            rs1.next();
+            int N = rs1.getInt(1);
+
+            if (N > 0) {
+                // fix protein groups that have a Pw > 0 and a localPw = 0
+                query = "SELECT DISTINCT groupid "
+                        + "FROM x_ "
+                        + "WHERE Pw > 0 "
+                        + "AND maxLocalPw = 0 ";
+                rs1 = stmt.executeQuery(query);
+
+                while (rs1.next()) {
+                    int gid = rs1.getInt(1);
+                    prep.setInt(1, gid);
+                    prep.addBatch();
+                }
+
+                conn.setAutoCommit(false);
+                prep.executeBatch();
+                conn.setAutoCommit(true);
+                prep.clearBatch();
+                prep.close();
             }
 
-            conn.setAutoCommit(false);
-            prep.executeBatch();
-            conn.setAutoCommit(true);
-            prep.clearBatch();
-            prep.close();
+            stmt.executeUpdate("DROP INDEX x_idx1");
+            stmt.executeUpdate("DROP TABLE x_");
         }
-
-        stmt.executeUpdate("DROP INDEX x_idx1");
-        stmt.executeUpdate("DROP TABLE x_");
-
-        stmt.close();
     }
 
     /**
@@ -857,145 +852,85 @@ public class HyperSQLObject {
             out.append("\n  Recalculating peptide weights for " + tag);
         }
 
-        Statement stmt = null;
-        Statement stmt2 = null;
-        PreparedStatement prep = null;
-        ResultSet rs1 = null;
-        ResultSet rs2 = null;
-        String query = null;
+        String query;
 
         try {
-            stmt = conn.createStatement();
-        } catch (SQLException ex) {
-            Logger.getLogger(HyperSQLObject.class.getName()).log(Level.SEVERE, null, ex);
-        }
+            try (Statement stmt = conn.createStatement()) {
 
-        if (tag.equals("combined")) {
-            query = "CREATE CACHED TABLE wt_ ("
-                    + "  groupid, modPeptide "
-                    + ") AS ( "
-                    + "  SELECT groupid, modPeptide "
-                    + "  FROM combined "
-                    + "  GROUP BY groupid, modPeptide "
-                    + "  ORDER BY groupid "
-                    + ") WITH DATA ";
-        } else {
-            query = "CREATE CACHED TABLE wt_ ("
-                    + "  groupid, modPeptide "
-                    + ") AS ( "
-                    + "  SELECT groupid, modPeptide "
-                    + "  FROM protXML "
-                    + "  WHERE tag = '" + tag + "' "
-                    + "  GROUP BY groupid, modPeptide "
-                    + "  ORDER BY groupid "
-                    + ") WITH DATA ";
-        }
+                if (tag.equals("combined")) {
+                    query = "CREATE CACHED TABLE wt_ ("
+                            + "  groupid, modPeptide "
+                            + ") AS ( "
+                            + "  SELECT groupid, modPeptide "
+                            + "  FROM combined "
+                            + "  GROUP BY groupid, modPeptide "
+                            + "  ORDER BY groupid "
+                            + ") WITH DATA ";
+                } else {
+                    query = "CREATE CACHED TABLE wt_ ("
+                            + "  groupid, modPeptide "
+                            + ") AS ( "
+                            + "  SELECT groupid, modPeptide "
+                            + "  FROM protXML "
+                            + "  WHERE tag = '" + tag + "' "
+                            + "  GROUP BY groupid, modPeptide "
+                            + "  ORDER BY groupid "
+                            + ") WITH DATA ";
+                }
 
-        try {
-            stmt.executeUpdate("DROP TABLE IF EXISTS wt_");
-            stmt.executeUpdate(query);
+                stmt.executeUpdate("DROP TABLE IF EXISTS wt_");
+                stmt.executeUpdate(query);
 
-            // create index
-            stmt.executeUpdate("CREATE INDEX wt_idx1 ON wt_ (groupid)");
-            stmt.executeUpdate("CREATE INDEX wt_idx2 ON wt_ (modPeptide)");
-        } catch (SQLException e) {
-            if (out != null) {
-                out.append("\n" + e.toString());
+                // create index
+                stmt.executeUpdate("CREATE INDEX wt_idx1 ON wt_ (groupid)");
+                stmt.executeUpdate("CREATE INDEX wt_idx2 ON wt_ (modPeptide)");
+
+                // generate the prepared statements
+                if (tag.equals("combined")) {
+                    query = "UPDATE combined SET wt = ? WHERE modPeptide = ?;";
+                } else {
+                    query = "UPDATE protXML "
+                            + "  SET wt = ? "
+                            + "WHERE tag = '" + tag + "' "
+                            + "AND modPeptide = ?;";
+                }
+
+                try (PreparedStatement prep = conn.prepareStatement(query);
+                        ResultSet rs1 = stmt.executeQuery("SELECT DISTINCT modPeptide FROM wt_")) {
+                    String modPep, tmp_str;
+                    double newWT = 0;
+                    double count = 0;
+                    double tmp = 0;
+                    try (Statement stmt2 = conn.createStatement()) {
+                        while (rs1.next()) {
+                            modPep = rs1.getString(1);
+                            query = "SELECT COUNT(DISTINCT groupid) "
+                                    + "FROM wt_ "
+                                    + "WHERE modPeptide = '" + modPep + "' ";
+                            try (ResultSet rs2 = stmt2.executeQuery(query)) {
+                                rs2.next();
+
+                                count = (double) rs2.getInt(1);
+                                tmp = 1 / count;
+
+                                // code to round newWT value to 3 decimal places
+                                tmp_str = String.format("%.3g%n", tmp);
+                                newWT = Double.parseDouble(tmp_str);
+
+                                prep.setDouble(1, newWT);
+                                prep.setString(2, modPep);
+                                prep.addBatch();
+                            }
+                        }
+                    }
+                    conn.setAutoCommit(false);
+                    prep.executeBatch();
+                    conn.setAutoCommit(true);
+                    stmt.executeUpdate("DROP TABLE IF EXISTS wt_;");
+                    stmt.executeUpdate("DROP INDEX IF EXISTS wt_idx1;");
+                    stmt.executeUpdate("DROP INDEX IF EXISTS wt_idx2;");
+                }
             }
-        }
-
-        // generate the prepared statements
-        if (tag.equals("combined")) {
-            query = "UPDATE combined SET wt = ? WHERE modPeptide = ?;";
-        } else {
-            query = "UPDATE protXML "
-                    + "  SET wt = ? "
-                    + "WHERE tag = '" + tag + "' "
-                    + "AND modPeptide = ?;";
-        }
-
-        try {
-            prep = conn.prepareStatement(query);
-        } catch (SQLException e) {
-            if (out != null) {
-                out.append("\n" + e.toString());
-            }
-        }
-
-        try {
-            rs1 = stmt.executeQuery("SELECT DISTINCT modPeptide FROM wt_");
-        } catch (SQLException e) {
-            if (out != null) {
-                out.append("\n" + e.toString());
-            }
-        }
-
-        String modPep = null;
-        double newWT = 0;
-        double count = 0;
-        double tmp = 0;
-        String tmp_str = null;
-
-        try {
-            stmt2 = conn.createStatement();
-        } catch (SQLException e) {
-            if (out != null) {
-                out.append("\n" + e.toString());
-            }
-        }
-
-        try {
-            while (rs1.next()) {
-                modPep = rs1.getString(1);
-                query = "SELECT COUNT(DISTINCT groupid) "
-                        + "FROM wt_ "
-                        + "WHERE modPeptide = '" + modPep + "' ";
-                rs2 = stmt2.executeQuery(query);
-                rs2.next();
-
-                count = (double) rs2.getInt(1);
-                tmp = 1 / count;
-
-                // code to round newWT value to 3 decimal places
-                tmp_str = String.format("%.3g%n", tmp);
-                newWT = Double.parseDouble(tmp_str);
-
-                prep.setDouble(1, newWT);
-                prep.setString(2, modPep);
-                prep.addBatch();
-            }
-        } catch (SQLException e) {
-            if (out != null) {
-                out.append("\n" + e.toString());
-            }
-        }
-
-        try {
-            conn.setAutoCommit(false);
-            prep.executeBatch();
-            conn.setAutoCommit(true);
-        } catch (SQLException e) {
-            if (out != null) {
-                out.append("\n###" + e.toString());
-            }
-        }
-
-        try {
-            stmt2.close();
-            stmt2 = null;
-
-            stmt.executeUpdate("DROP TABLE IF EXISTS wt_;");
-            stmt.executeUpdate("DROP INDEX IF EXISTS wt_idx1;");
-            stmt.executeUpdate("DROP INDEX IF EXISTS wt_idx2;");
-            stmt.close();
-            stmt = null;
-
-            rs1.close();
-            rs1 = null;
-            rs2.close();
-            rs2 = null;
-            prep.close();
-            prep = null;
 
         } catch (SQLException e) {
             if (out != null) {
@@ -1015,7 +950,6 @@ public class HyperSQLObject {
      */
     public void makeTempProt2PepTable(Connection conn, Appendable out, ProgressBarHandler pbh) throws SQLException, IOException {
         try (Statement stmt = conn.createStatement()) {
-            ResultSet rs, rs2 = null;
             PreparedStatement prep;
             String query;
             String msg;
@@ -1035,7 +969,7 @@ public class HyperSQLObject {
                     + ")";
             stmt.executeUpdate(query);
 
-            rs = stmt.executeQuery("SELECT COUNT(*) FROM combined");
+            ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM combined");
             rs.next();
             N = rs.getInt(1);
 
@@ -1106,14 +1040,11 @@ public class HyperSQLObject {
                 out.append("\n");
             }
 
-            /*
-             * Now process the individual experimental files.
-             * To make things faster, we will make one table per record in srcFileTags
-             */
+            // Now process the individual experimental files.
+            // To make things faster, we will make one table per record in srcFileTags
             rs = stmt.executeQuery("SELECT COUNT(DISTINCT tag) FROM srcFileTags WHERE fileType = 'prot'");
             rs.next();
             int numTags = rs.getInt(1);
-            rs.close();
 
             rs = stmt.executeQuery("SELECT DISTINCT tag FROM srcFileTags WHERE fileType = 'prot'");
 
@@ -1146,11 +1077,11 @@ public class HyperSQLObject {
                 stmt.executeUpdate("CREATE INDEX pt2pep_" + tag + "_idx1 ON prot2peps_" + tag + "(protid)");
                 stmt.executeUpdate("CREATE INDEX pt2pep_" + tag + "_idx2 ON prot2peps_" + tag + "(modPeptide, charge)");
             }
+            rs.close();
 
             if (out != null) {
                 out.append("\n");
             }
-            rs.close();
         }
     }
 
@@ -1709,58 +1640,49 @@ public class HyperSQLObject {
         return ret;
     }
 
-
-    /*
-     * Function returns the wt of the maxIniProb for a given groupid-siblingGroup
+    /**
+     * Function returns the wt of the maxIniProb for a given
+     * groupid-siblingGroup.
      */
     private double retWTmaxIniProb(Connection conn, String tag, String protid, double maxIniProb) throws SQLException {
-        double ret = 0;
-        String query;
-        Statement stmt;
-        ResultSet rs;
 
         if (tag.equals(Globals.combinedFile)) {
             tag = "combined";
         }
 
-        query = "SELECT MAX(wt) "
+        String query = "SELECT MAX(wt) "
                 + "FROM prot2peps_" + tag + " "
                 + "WHERE protid = '" + protid + "' "
                 + "AND iniProb = " + maxIniProb + " ";
 
-        stmt = conn.createStatement();
-        rs = stmt.executeQuery(query);
-        rs.next();
-        ret = rs.getDouble(1);
-
-        stmt.close();
-        rs.close();
-
-        return ret;
+        try (Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(query);) {
+            rs.next();
+            double result = rs.getDouble(1);
+            return result;
+        }
     }
 
     /*
      *  Function returns the number of spectra assigned to a given groupid-siblingGroup
      */
     public int retNumSpectra(Connection conn, String tag, String protid, double wt, double iniProb) throws SQLException {
-        int ret = 0;
-        Statement stmt = conn.createStatement();
-        ResultSet rs = null;
-        String query = null;
-
         if (tag.equals(Globals.combinedFile)) {
             tag = "combined";
         }
 
-        query = "SELECT SUM(nspecs) "
-                + "FROM prot2peps_" + tag + " "
-                + "WHERE protid = '" + protid + "' "
-                + "AND wt >= " + wt + " ";
-        rs = stmt.executeQuery(query);
-        rs.next();
-        ret = rs.getInt(1);
+        try (Statement stmt = conn.createStatement()) {
 
-        return ret;
+            String query = "SELECT SUM(nspecs) "
+                    + "FROM prot2peps_" + tag + " "
+                    + "WHERE protid = '" + protid + "' "
+                    + "AND wt >= " + wt + " ";
+            try (ResultSet rs = stmt.executeQuery(query)) {
+                rs.next();
+                int result = rs.getInt(1);
+                return result;
+            }
+        }
     }
 
     /**
@@ -1781,107 +1703,94 @@ public class HyperSQLObject {
             out.append("Mapping protein IDs to their Gene IDs\n\n");
         }
 
-        Statement stmt1 = conn.createStatement();
-        Statement stmt2 = conn.createStatement();
-        PreparedStatement prep = null;
-        String query = null;
-
-        stmt1.executeUpdate("DROP TABLE IF EXISTS gene2prot");
-
-        query = "CREATE CACHED TABLE gene2prot("
-                + "  geneid VARCHAR(250),"
-                + "  protid VARCHAR(250),"
-                + "  geneDefline VARCHAR(1000) DEFAULT 'No Gene Description' "
-                + ")";
-        stmt1.executeUpdate(query);
-        stmt1.executeUpdate("CREATE INDEX p2g_idx1 ON gene2prot(protid);");
-        stmt1.executeUpdate("CREATE INDEX p2g_idx2 ON gene2prot(geneid);");
-
-        query = "INSERT INTO gene2prot VALUES("
-                + "?, " //geneid
-                + "?," //protid
-                + "?)"; //gene description
-        prep = conn.prepareStatement(query);
-
-        //open the user's file for reading
-        File mapFile = new File(Globals.gene2protFile);
-        if (!mapFile.exists()) {
-            if (out != null) {
-                out.append("\n\nERROR loading gene2prot map file\n"
-                        + "The file '" + Globals.gene2protFile + "' doesn't exist!\n\n");
+        try (Statement stmt1 = conn.createStatement(); Statement stmt2 = conn.createStatement()) {
+            PreparedStatement prep;
+            stmt1.executeUpdate("DROP TABLE IF EXISTS gene2prot");
+            String query = "CREATE CACHED TABLE gene2prot("
+                    + "  geneid VARCHAR(250),"
+                    + "  protid VARCHAR(250),"
+                    + "  geneDefline VARCHAR(1000) DEFAULT 'No Gene Description' "
+                    + ")";
+            stmt1.executeUpdate(query);
+            stmt1.executeUpdate("CREATE INDEX p2g_idx1 ON gene2prot(protid);");
+            stmt1.executeUpdate("CREATE INDEX p2g_idx2 ON gene2prot(geneid);");
+            query = "INSERT INTO gene2prot VALUES("
+                    + "?, " //geneid
+                    + "?," //protid
+                    + "?)"; //gene description
+            prep = conn.prepareStatement(query);
+            //open the user's file for reading
+            File mapFile = new File(Globals.gene2protFile);
+            if (!mapFile.exists()) {
+                if (out != null) {
+                    out.append("\n\nERROR loading gene2prot map file\n"
+                            + "The file '" + Globals.gene2protFile + "' doesn't exist!\n\n");
+                }
+                return true;
             }
-            return true;
-        }
-
-        BufferedReader input = null;
-        try {
-            input = new BufferedReader(new FileReader(mapFile));
-            String line = null;
-            String ary[] = null;
-            while ((line = input.readLine()) != null) {
-                if (line.startsWith("#")) {
-                    continue;
-                }
-                if (line.matches("^[^\\w]*")) {
-                    continue; // blank line
-                }
-                ary = line.split("\\t"); //ary[0] == geneid, ary[1] == protid, ary[2] == defline
-
-                if (ary.length > 1) {
-                    if (!ary[0].isEmpty()) {
-                        prep.setString(1, ary[0]);
+            try (BufferedReader input = new BufferedReader(new FileReader(mapFile))) {
+                String line = null;
+                String ary[] = null;
+                while ((line = input.readLine()) != null) {
+                    if (line.startsWith("#")) {
+                        continue;
                     }
-                    if (!ary[1].isEmpty()) {
-                        prep.setString(2, ary[1]);
+                    if (line.matches("^[^\\w]*")) {
+                        continue; // blank line
                     }
-                }
+                    ary = line.split("\\t"); //ary[0] == geneid, ary[1] == protid, ary[2] == defline
 
-                if (ary.length == 3) {
-                    Globals.genesHaveDescriptions = true;
+                    if (ary.length > 1) {
+                        if (!ary[0].isEmpty()) {
+                            prep.setString(1, ary[0]);
+                        }
+                        if (!ary[1].isEmpty()) {
+                            prep.setString(2, ary[1]);
+                        }
+                    }
 
-                    String defline = null;
-                    if (ary[2].length() > 1000) {
-                        defline = Globals.replaceAll(ary[2].substring(0, 990), '#', '_');
+                    if (ary.length == 3) {
+                        Globals.genesHaveDescriptions = true;
+
+                        String defline;
+                        if (ary[2].length() > 1000) {
+                            defline = Globals.replaceAll(ary[2].substring(0, 990), '#', '_');
+                        } else {
+                            defline = ary[2];
+                        }
+
+                        prep.setString(3, defline);
                     } else {
-                        defline = ary[2];
+                        prep.setString(3, "No Gene Description");
                     }
 
-                    prep.setString(3, defline);
-                } else {
-                    prep.setString(3, "No Gene Description");
+                    prep.addBatch();
                 }
 
-                prep.addBatch();
-            }
+                conn.setAutoCommit(false);
+                prep.executeBatch();
+                conn.setAutoCommit(true);
 
-            conn.setAutoCommit(false);
-            prep.executeBatch();
-            conn.setAutoCommit(true);
+            } catch (IOException | SQLException e) {
+                String err = "Error parsing '" + Globals.gene2protFile + "'\n"
+                        + e.toString() + "\n\n";
 
-        } catch (IOException | SQLException e) {
-            String err = "Error parsing '" + Globals.gene2protFile + "'\n"
-                    + e.toString() + "\n\n";
-
-            if (out != null) {
-                out.append(err);
+                if (out != null) {
+                    out.append(err);
+                }
+                return true;
             }
-            return true;
-        } finally {
-            if (input != null) {
-                input.close();
-            }
+            prep.close();
         }
-
-        prep.close();
-        stmt1.close();
-        stmt2.close();
+        
 
         return false;
     }
 
     /**
-     * Function adds gene IDs to the protidSummary table. This function is only called
-     * if the gene2prot table exists in the SQLite database.
+     * Function adds gene IDs to the protidSummary table. This function is only
+     * called if the gene2prot table exists in the SQLite database.
+     *
      * @param conn
      * @param out
      * @throws IOException
@@ -1892,7 +1801,7 @@ public class HyperSQLObject {
             out.append("  Appending gene IDs to protidSummary table\n");
         }
         try (Statement stmt = conn.createStatement()) {
-             String query = "UPDATE protidSummary ps "
+            String query = "UPDATE protidSummary ps "
                     + "  SET geneID = ( "
                     + "    SELECT gn.geneid "
                     + "    FROM gene2prot gn "
@@ -1904,6 +1813,7 @@ public class HyperSQLObject {
 
     /**
      * Function creates the final results table.
+     *
      * @param conn
      * @param out
      * @return
@@ -1918,7 +1828,7 @@ public class HyperSQLObject {
         try (Statement stmt = conn.createStatement()) {
             stmt.executeUpdate("DROP TABLE IF EXISTS results");
             String query = "CREATE CACHED TABLE results ( protid, ";
-            
+
             if (Globals.gene2protFile != null) {
                 query += "geneid, ";
             }
@@ -1998,8 +1908,9 @@ public class HyperSQLObject {
     }
 
     /**
-     * Function parses the contents of the GLOBALS.protLen hash map and uses
-     * it to populate the protLen field of the results table.
+     * Function parses the contents of the GLOBALS.protLen hash map and uses it
+     * to populate the protLen field of the results table.
+     *
      * @param conn
      * @param dataType
      * @param out
@@ -2077,8 +1988,9 @@ public class HyperSQLObject {
                 conn.setAutoCommit(false);
                 prep.executeBatch();
                 conn.setAutoCommit(true);
-                if (rs2 != null)
+                if (rs2 != null) {
                     rs2.close();
+                }
 
                 // looks better on STDERR
                 if (out != null) {
@@ -2086,8 +1998,9 @@ public class HyperSQLObject {
                 }
             }
         }
-        if (prep != null)
+        if (prep != null) {
             prep.close();
+        }
 
     }
 
@@ -2128,7 +2041,9 @@ public class HyperSQLObject {
     }
 
     /**
-     * Function called within adjSpectralCounts function. Creates the pepUsage_table.
+     * Function called within adjSpectralCounts function. Creates the
+     * pepUsage_table.
+     *
      * @param conn
      * @param out
      * @param pbh
@@ -2269,6 +2184,7 @@ public class HyperSQLObject {
      * Function appends the statistics for the repID reported in the results
      * from among all of the independent experiment files (ie: files in protXML
      * table).
+     *
      * @param conn
      * @param out
      * @throws java.sql.SQLException
@@ -2297,7 +2213,8 @@ public class HyperSQLObject {
     }
 
     /**
-     * Function adds empty columns to results table based upon 'tag' information.
+     * Function adds empty columns to results table based upon 'tag'
+     * information.
      */
     private void appendColumns(Connection conn, String tag) throws SQLException {
         try (Statement stmt = conn.createStatement()) {
@@ -2370,10 +2287,12 @@ public class HyperSQLObject {
                 prep.executeBatch();
                 conn.setAutoCommit(true);
             }
-            if (rs != null)
+            if (rs != null) {
                 rs.close();
-            if (prep != null)
+            }
+            if (prep != null) {
                 prep.close();
+            }
         }
     }
 
@@ -2397,7 +2316,7 @@ public class HyperSQLObject {
                     + "ORDER BY tag "
                     + ") WITH DATA ";
             stmt.executeUpdate(query);
-            
+
             stmt.executeUpdate("CREATE INDEX asp_idx2 ON adjSpecs_(protid)");
 
             query = "UPDATE results "
@@ -2847,8 +2766,6 @@ public class HyperSQLObject {
     }
 
     /**
-     * ***********
-     *
      * The pepXML file names may not be identical to the protXML file names eg:
      * protXML name = interact.bas.prot.xml pepXML names =
      * interact.bas_1.pep.xml interact.bas_2.pep.xml etc...
@@ -2861,29 +2778,26 @@ public class HyperSQLObject {
      *
      */
     public void correctPepXMLTags(Connection conn) throws SQLException {
-        Statement stmt = conn.createStatement();
-        String query = null;
+        try (Statement stmt = conn.createStatement()) {
 
-        stmt.executeUpdate("ALTER TABLE pepXML ADD COLUMN tag VARCHAR(250)");
+            stmt.executeUpdate("ALTER TABLE pepXML ADD COLUMN tag VARCHAR(250)");
 
-        query = "UPDATE pepXML px "
-                + "  SET tag = ( "
-                + "    SELECT sf.tag "
-                + "    FROM srcFileTags sf "
-                + "    WHERE sf.fileType = 'pep' "
-                + "    AND sf.srcFile = px.srcFile "
-                + ")";
-        stmt.executeUpdate(query);
+            String query = "UPDATE pepXML px "
+                    + "  SET tag = ( "
+                    + "    SELECT sf.tag "
+                    + "    FROM srcFileTags sf "
+                    + "    WHERE sf.fileType = 'pep' "
+                    + "    AND sf.srcFile = px.srcFile "
+                    + ")";
+            stmt.executeUpdate(query);
 
-        stmt.executeUpdate("CREATE INDEX pepxml_idx1 ON pepXML(specId)");
-        stmt.executeUpdate("CREATE INDEX pepxml_idx2 ON pepXML(modPeptide)");
-        stmt.executeUpdate("CREATE INDEX pepxml_idx3 ON pepXML(tag, modPeptide, charge)");
-        stmt.executeUpdate("CREATE INDEX pepxml_idx4 ON pepXML(tag, specId)");
-        stmt.executeUpdate("CREATE INDEX pepxml_idx5 ON pepXML(tag, modPeptide)");
-        stmt.executeUpdate("CREATE INDEX pepxml_idx6 ON pepXML(modPeptide, charge)");
-
-        stmt.close();
-        stmt = null;
+            stmt.executeUpdate("CREATE INDEX pepxml_idx1 ON pepXML(specId)");
+            stmt.executeUpdate("CREATE INDEX pepxml_idx2 ON pepXML(modPeptide)");
+            stmt.executeUpdate("CREATE INDEX pepxml_idx3 ON pepXML(tag, modPeptide, charge)");
+            stmt.executeUpdate("CREATE INDEX pepxml_idx4 ON pepXML(tag, specId)");
+            stmt.executeUpdate("CREATE INDEX pepxml_idx5 ON pepXML(tag, modPeptide)");
+            stmt.executeUpdate("CREATE INDEX pepxml_idx6 ON pepXML(modPeptide, charge)");
+        }
     }
 
     /**
@@ -2892,17 +2806,14 @@ public class HyperSQLObject {
      * @param conn
      * @param out
      * @throws java.sql.SQLException
+     * @throws java.io.IOException
      */
     public void getNSAF_values_prot(Connection conn, Appendable out) throws SQLException, IOException {
-        Statement stmt2;
-        Statement stmt3;
+
         try (Statement stmt = conn.createStatement()) {
-            stmt2 = conn.createStatement();
-            stmt3 = conn.createStatement();
-            String query = null;
-            String msg = null;
-            ResultSet rs = null;
-            ResultSet rs2 = null;
+            String query, msg;
+            ResultSet rs, rs2;
+
             stmt.executeUpdate("DROP TABLE IF EXISTS nsaf_p1");
             stmt.executeUpdate("DROP TABLE IF EXISTS nsaf");
             msg = "\nCreating NSAF values table (protein-centric)\n";
@@ -2955,106 +2866,106 @@ public class HyperSQLObject {
 
             // now you need the add columns for spectral counts
             rs = stmt.executeQuery("SELECT DISTINCT tag FROM srcFileTags WHERE fileType = 'prot' ORDER BY tag ASC");
-            while (rs.next()) {
-                String tag = rs.getString(1);
 
-                stmt2.executeUpdate("ALTER TABLE nsaf_p1 ADD COLUMN " + tag + "_specsTot DOUBLE DEFAULT 0");
-                stmt2.executeUpdate("ALTER TABLE nsaf_p1 ADD COLUMN " + tag + "_specsUniq DOUBLE DEFAULT 0");
-                stmt2.executeUpdate("ALTER TABLE nsaf_p1 ADD COLUMN " + tag + "_specsAdj DOUBLE DEFAULT 0");
+            try (Statement stmt2 = conn.createStatement()) {
+                try (Statement stmt3 = conn.createStatement()) {
+                    while (rs.next()) {
+                        String tag = rs.getString(1);
 
-                // also add columns to results table
-                stmt2.executeUpdate("ALTER TABLE nsaf ADD COLUMN " + tag + "_totNSAF DOUBLE DEFAULT 0");
-                stmt2.executeUpdate("ALTER TABLE nsaf ADD COLUMN " + tag + "_uniqNSAF DOUBLE DEFAULT 0");
-                stmt2.executeUpdate("ALTER TABLE nsaf ADD COLUMN " + tag + "_adjNSAF DOUBLE DEFAULT 0");
+                        stmt2.executeUpdate("ALTER TABLE nsaf_p1 ADD COLUMN " + tag + "_specsTot DOUBLE DEFAULT 0");
+                        stmt2.executeUpdate("ALTER TABLE nsaf_p1 ADD COLUMN " + tag + "_specsUniq DOUBLE DEFAULT 0");
+                        stmt2.executeUpdate("ALTER TABLE nsaf_p1 ADD COLUMN " + tag + "_specsAdj DOUBLE DEFAULT 0");
 
-                // get spectral counts and protein lengths
-                query = "SELECT protid, protLen, "
-                        + "  " + tag + "_numSpecsTot,  "
-                        + "  " + tag + "_numSpecsUniq, "
-                        + "  " + tag + "_numSpecsAdj "
-                        + "FROM results "
-                        + "ORDER BY protid ";
+                        // also add columns to results table
+                        stmt2.executeUpdate("ALTER TABLE nsaf ADD COLUMN " + tag + "_totNSAF DOUBLE DEFAULT 0");
+                        stmt2.executeUpdate("ALTER TABLE nsaf ADD COLUMN " + tag + "_uniqNSAF DOUBLE DEFAULT 0");
+                        stmt2.executeUpdate("ALTER TABLE nsaf ADD COLUMN " + tag + "_adjNSAF DOUBLE DEFAULT 0");
 
-                rs2 = stmt2.executeQuery(query);
+                        // get spectral counts and protein lengths
+                        query = "SELECT protid, protLen, "
+                                + "  " + tag + "_numSpecsTot,  "
+                                + "  " + tag + "_numSpecsUniq, "
+                                + "  " + tag + "_numSpecsAdj "
+                                + "FROM results "
+                                + "ORDER BY protid ";
 
-                // assign spectral-count/length to nsaf_p1 table
-                while (rs2.next()) {
-                    String protid = rs2.getString(1);
-                    double protLen = rs2.getDouble(2);
+                        rs2 = stmt2.executeQuery(query);
 
-                    double tot = rs2.getDouble(3) / protLen;
-                    double uniq = rs2.getDouble(4) / protLen;
-                    double adj = rs2.getDouble(5) / protLen;
+                        // assign spectral-count/length to nsaf_p1 table
+                        while (rs2.next()) {
+                            String protid = rs2.getString(1);
+                            double protLen = rs2.getDouble(2);
 
-                    query = "UPDATE nsaf_p1 "
-                            + "  SET " + tag + "_specsTot = " + tot + ", "
-                            + "      " + tag + "_specsUniq = " + uniq + ", "
-                            + "      " + tag + "_specsAdj = " + adj + " "
-                            + "WHERE protid = '" + protid + "' ";
+                            double tot = rs2.getDouble(3) / protLen;
+                            double uniq = rs2.getDouble(4) / protLen;
+                            double adj = rs2.getDouble(5) / protLen;
 
-                    stmt3.executeUpdate(query);
+                            query = "UPDATE nsaf_p1 "
+                                    + "  SET " + tag + "_specsTot = " + tot + ", "
+                                    + "      " + tag + "_specsUniq = " + uniq + ", "
+                                    + "      " + tag + "_specsAdj = " + adj + " "
+                                    + "WHERE protid = '" + protid + "' ";
+
+                            stmt3.executeUpdate(query);
+                        }
+                        rs2.close();
+
+                        // now add up columns of current tag
+                        query = "SELECT SUM(" + tag + "_specsTot), "
+                                + "       SUM(" + tag + "_specsUniq), "
+                                + "       SUM(" + tag + "_specsAdj) "
+                                + "FROM nsaf_p1 ";
+                        rs2 = stmt2.executeQuery(query);
+                        rs2.next();
+
+                        double totSum = rs2.getDouble(1);
+                        double uniqSum = rs2.getDouble(2);
+                        double adjSum = rs2.getDouble(3);
+
+                        rs2.close();
+
+                        query = "SELECT protid, "
+                                + "  " + tag + "_specsTot, "
+                                + "  " + tag + "_specsUniq, "
+                                + "  " + tag + "_specsAdj "
+                                + "FROM nsaf_p1 "
+                                + "GROUP BY protid, "
+                                + "  " + tag + "_specsTot, "
+                                + "  " + tag + "_specsUniq, "
+                                + "  " + tag + "_specsAdj "
+                                + "ORDER BY protid ASC ";
+
+                        rs2 = stmt2.executeQuery(query);
+
+                        while (rs2.next()) {
+                            String protid = rs2.getString(1);
+
+                            double x_t = rs2.getDouble(2);
+                            double x_u = rs2.getDouble(3);
+                            double x_a = rs2.getDouble(4);
+
+                            double nsaf_t = (x_t / totSum) * NSAF_FACTOR;
+                            double nsaf_u = (x_u / uniqSum) * NSAF_FACTOR;
+                            double nsaf_a = (x_a / adjSum) * NSAF_FACTOR;
+
+                            query = "UPDATE nsaf "
+                                    + "  SET " + tag + "_totNSAF = " + nsaf_t + ", "
+                                    + " " + tag + "_uniqNSAF = " + nsaf_u + ","
+                                    + " " + tag + "_adjNSAF = " + nsaf_a + " "
+                                    + " WHERE protid = '" + protid + "' ";
+
+                            stmt3.executeUpdate(query);
+                        }
+                        rs2.close();
+                    }
                 }
-                rs2.close();
-
-                // now add up columns of current tag
-                query = "SELECT SUM(" + tag + "_specsTot), "
-                        + "       SUM(" + tag + "_specsUniq), "
-                        + "       SUM(" + tag + "_specsAdj) "
-                        + "FROM nsaf_p1 ";
-                rs2 = stmt2.executeQuery(query);
-                rs2.next();
-
-                double totSum = rs2.getDouble(1);
-                double uniqSum = rs2.getDouble(2);
-                double adjSum = rs2.getDouble(3);
-
-                rs2.close();
-
-                query = "SELECT protid, "
-                        + "  " + tag + "_specsTot, "
-                        + "  " + tag + "_specsUniq, "
-                        + "  " + tag + "_specsAdj "
-                        + "FROM nsaf_p1 "
-                        + "GROUP BY protid, "
-                        + "  " + tag + "_specsTot, "
-                        + "  " + tag + "_specsUniq, "
-                        + "  " + tag + "_specsAdj "
-                        + "ORDER BY protid ASC ";
-
-                rs2 = stmt2.executeQuery(query);
-
-                while (rs2.next()) {
-                    String protid = rs2.getString(1);
-
-                    double x_t = rs2.getDouble(2);
-                    double x_u = rs2.getDouble(3);
-                    double x_a = rs2.getDouble(4);
-
-                    double nsaf_t = (x_t / totSum) * NSAF_FACTOR;
-                    double nsaf_u = (x_u / uniqSum) * NSAF_FACTOR;
-                    double nsaf_a = (x_a / adjSum) * NSAF_FACTOR;
-
-                    query = "UPDATE nsaf "
-                            + "  SET " + tag + "_totNSAF = " + nsaf_t + ", "
-                            + " " + tag + "_uniqNSAF = " + nsaf_u + ","
-                            + " " + tag + "_adjNSAF = " + nsaf_a + " "
-                            + " WHERE protid = '" + protid + "' ";
-
-                    stmt3.executeUpdate(query);
-                }
-                rs2.close();
-
             }
             rs.close();
             stmt.executeUpdate("DROP INDEX nsaf_p1_idx1");
             stmt.executeUpdate("DROP TABLE nsaf_p1");
         }
-        stmt2.close();
-        stmt3.close();
 
-        /*
-         * Now we need to add NSAF values to results table
-         */
+        // Now we need to add NSAF values to results table
         reformat_results(conn, out);
     }
 
@@ -3254,6 +3165,7 @@ public class HyperSQLObject {
     /**
      * Function returns the gene id for the given protein id from the gene2prot
      * table.
+     *
      * @param conn
      * @param protid
      * @return
@@ -3281,6 +3193,7 @@ public class HyperSQLObject {
 
     /**
      * Function returns the length of the given protein ID.
+     *
      * @param protid
      * @return
      */
@@ -3302,6 +3215,7 @@ public class HyperSQLObject {
      * Function appends all protein IDs associated with a COMBINED file group-id
      * to the final results table. The lines repeat and the only difference
      * between them is the repProtId field.
+     *
      * @param conn
      * @param out
      * @throws java.sql.SQLException

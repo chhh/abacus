@@ -933,7 +933,6 @@ public class Globals {
     }
 
     /**
-     * *****************
      * Function searches the srcDir for the given pepXML file name. If it can't
      * find it. The function then searches for a pepXML file with the same name
      * as the protXML file. If that fails, the function returns false.

@@ -2,13 +2,14 @@ package abacus;
 
 import abacus.console.ProgressBarHandler;
 import abacus.ui.UIAlerter;
+import abacus.xml.PepXML;
+import abacus.xml.ProtXML;
+import abacus.xml.XMLUtils;
 import java.awt.Component;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.channels.FileChannel;
@@ -18,7 +19,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -541,369 +541,8 @@ public class Abacus {
 
     }
 
-    public static boolean parseXMLDocument(String xmlFile, String dataType, PreparedStatement prep, int fileNumber, Appendable console) throws IOException {
-        XMLInputFactory inputFactory = XMLInputFactory.newInstance();
 
-        InputStream input = null;
 
-        try {
-            String file_path = "";
-            file_path = Globals.srcDir + Globals.fileSepChar + xmlFile;
-
-            input = new FileInputStream(new File(file_path));
-
-        } catch (FileNotFoundException e) {
-            if (console != null) {
-                console.append("\nException getting input XML file.\n");
-            } else {
-                e.printStackTrace();
-            }
-        }
-
-        XMLStreamReader xmlStreamReader = null;
-        try {
-            xmlStreamReader = inputFactory.createXMLStreamReader(input);
-        } catch (XMLStreamException e) {
-            if (console != null) {
-                console.append("\nException getting xmlStreamReader object.\n");
-            } else {
-                e.printStackTrace();
-            }
-        }
-
-        // Based on dataType, call the appropriate function
-        boolean status = true;
-        if (dataType.equals("pepXML")) {
-            status = parsePepXML(xmlStreamReader, xmlFile, prep, fileNumber, console);
-            if (status) {
-                return status; // if this returns true, there is a problem in the pepXML file
-            }
-        }
-        if (dataType.equals("protXML")) {
-            status = parseProtXML(xmlStreamReader, xmlFile, prep, fileNumber, console);
-            if (status) {
-                return status; // if this returns true, there is a problem in the protXML file
-            }
-        }
-
-        try {
-            if (xmlStreamReader != null) {
-                xmlStreamReader.close();
-            }
-        } catch (XMLStreamException e) {
-            if (console != null) {
-                console.append(e.toString());
-            }
-            e.printStackTrace();
-        }
-
-        return false;
-    }
-
-    /**
-     * Function parses protXML files
-     *
-     * @param xmlStreamReader
-     * @param xmlFile
-     * @param prep
-     * @param fileNumber
-     * @param console
-     * @return
-     * @throws java.io.IOException
-     */
-    public static boolean parseProtXML(XMLStreamReader xmlStreamReader, String xmlFile, PreparedStatement prep, int fileNumber, Appendable console) throws IOException {
-        ProtXML curGroup = null;   // current protein group
-        String curProtid_ = null;   // need this to get protein description
-        String curPep_ = null;   // need this to annotate any AA modifications
-        String err = null; // text printed to screen or console
-        boolean is_iprophet_data = false; // use this to identify i-prophet files
-
-        err = "Parsing protXML [ " + (fileNumber + 1) + " of " + Globals.protXmlFiles.size() + " ]:  " + xmlFile + "\n";
-        if (console != null) {
-            console.append(err);
-        } else {
-            System.err.print(err);
-        }
-
-        try {
-            while (xmlStreamReader.hasNext()) {
-                int event = xmlStreamReader.next();
-
-                if (event == XMLStreamConstants.START_ELEMENT) { // beginning of new element
-                    String elementName = xmlStreamReader.getLocalName();
-
-                    /*
-                     * This code determines if the current protXML file represents an i-prophet
-                     * output file.
-                     */
-                    switch (elementName) {
-                        case "proteinprophet_details":
-                            for (int i = 0; i < xmlStreamReader.getAttributeCount(); i++) {
-                                String n = xmlStreamReader.getAttributeLocalName(i);
-                                String v = xmlStreamReader.getAttributeValue(i);
-                                if (n.equals("run_options")) {
-                                    if (v.contains("IPROPHET")) {
-                                        is_iprophet_data = true;
-                                    }
-                                    break;
-                                }
-                            }
-                            break;
-
-                        case "protein_summary_header":
-                            // This code identifies the pepXML files used for this protXML file
-                            // This information is used to map between these files.
-                            if (Globals.parseProtXML_header(xmlStreamReader, xmlFile)) {
-                                err = "\nERROR:\n"
-                                        + "The pepXML files used to create '" + xmlFile + "' could not be found.\n"
-                                        + "The pepXML file names must match whatever is in the protXML file header.\n"
-                                        + "I have to quit now.\n\n";
-
-                                if (console != null) {
-                                    console.append(err);
-                                    return true;
-                                } else {
-                                    System.err.print(err);
-                                    System.exit(-1);
-                                }
-                            }
-                            break;
-
-                        case "protein_group":  // beginning of new protein group
-                            curGroup = new ProtXML(xmlFile, is_iprophet_data);
-                            curGroup.parse_protGroup_line(xmlStreamReader);
-                            break;
-
-                        case "protein":
-                            curProtid_ = curGroup.parse_protein_line(xmlStreamReader);
-                            break;
-
-                        case "annotation":
-                            for (int i = 0; i < xmlStreamReader.getAttributeCount(); i++) {
-                                String n = xmlStreamReader.getAttributeLocalName(i);
-                                String v = xmlStreamReader.getAttributeValue(i);
-                                if (n.equals("protein_description")) {
-                                    curGroup.setProtId(v, curProtid_);
-                                    curProtid_ = null;
-                                    break;
-                                }
-                                v = null;
-                                n = null;
-                            }
-                            break;
-
-                        case "indistinguishable_protein":
-                            curProtid_ = curGroup.parse_protein_line(xmlStreamReader);
-                            break;
-
-                        case "peptide":
-                            // beginning of peptide record
-                            curPep_ = curGroup.parse_peptide_line(xmlStreamReader);
-                            break;
-
-                        case "modification_info":
-// N-terminal modifcation
-                            curGroup.record_AA_mod_protXML(xmlStreamReader, curPep_);
-                            break;
-                        case "mod_aminoacid_mass":
-                            curGroup.record_AA_mod_protXML(xmlStreamReader, curPep_);
-                            break;
-                    }
-
-                } else if (event == XMLStreamReader.END_ELEMENT) { // end of a record
-                    String elementName = xmlStreamReader.getLocalName();
-
-                    switch (elementName) {
-                        case "peptide":
-                            curGroup.annotate_modPeptide_protXML(curPep_);
-                            curPep_ = null;
-                            break;
-
-                        case "protein":  // end of current protein
-                            curGroup.classify_group();
-                            try {
-                                curGroup.write_to_db(prep);
-                            } catch (Exception e) {
-                                if (console != null) {
-                                    console.append(e.toString());
-                                    return true;
-                                } else {
-                                    e.printStackTrace();
-                                    System.exit(-1);
-                                }
-
-                            }
-                            curGroup.clear_variables();
-                            curProtid_ = null;
-                            break;
-
-                        case "protein_group":  // end of protein group
-                            curGroup.classify_group();
-                            try {
-                                if (xmlFile.contains(Globals.combinedFile)) {
-                                    if (curGroup.getPw() >= Globals.minCombinedFilePw) {
-                                        curGroup.write_to_db(prep);
-                                    }
-                                } else {
-                                    if (curGroup.getPw() >= Globals.minPw) {
-                                        curGroup.write_to_db(prep);
-                                    }
-                                }
-                            } catch (Exception e) {
-                                if (console != null) {
-                                    console.append(e.toString());
-                                    return true;
-                                } else {
-                                    e.printStackTrace();
-                                    System.exit(-1);
-                                }
-                            }
-
-                            curGroup.clear_variables();
-                            curGroup = null;
-                            curProtid_ = null;
-                            break;
-                    }
-                }
-            }
-
-            if (curGroup != null) { // record last group entry
-                curGroup.classify_group();
-                if (xmlFile.contains(Globals.combinedFile)) {
-                    if (curGroup.getPw() >= Globals.minCombinedFilePw) {
-                        curGroup.write_to_db(prep);
-                    }
-                } else {
-                    if (curGroup.getPw() >= Globals.minPw) {
-                        curGroup.write_to_db(prep);
-                    }
-                }
-                curGroup.clear_variables();
-                curGroup = null;
-                curProtid_ = null;
-            }
-
-        } catch (XMLStreamException e) {
-            if (console != null) {
-                String msg = "Error parsing " + xmlFile + ": " + e.toString();
-                console.append(msg);
-                return true;
-            } else {
-                e.printStackTrace();
-                System.exit(-1);
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Function written to parse pepXML files.
-     *
-     * @param xmlStreamReader
-     * @param xmlFile
-     * @param prep
-     * @param fileNumber
-     * @param out
-     * @return
-     * @throws IOException
-     */
-    public static boolean parsePepXML(XMLStreamReader xmlStreamReader, String xmlFile, PreparedStatement prep, int fileNumber, Appendable out) throws IOException {
-
-        PepXML curPSM = null;  // current peptide-to-spectrum match
-        String err; // holds string for stderr or console
-        boolean is_iprophet_data = false; // true means the file is an i-prophet file
-
-        err = "Parsing pepXML [ " + (fileNumber + 1) + " of " + Globals.pepXmlFiles.size() + " ]: " + xmlFile + "\n";
-
-        if (out != null) {
-            out.append(err);
-        } else {
-            System.err.print(err);
-        }
-
-        try {
-            while (xmlStreamReader.hasNext()) {
-                int event = xmlStreamReader.next();
-
-                if (event == XMLStreamConstants.START_ELEMENT) { //beginning of new element
-                    String elementName = xmlStreamReader.getLocalName();
-
-                    // determine if this file is an i-prophet file
-                    if (elementName.equals("analysis_summary")) {
-                        for (int i = 0; i < xmlStreamReader.getAttributeCount(); i++) {
-                            String n = xmlStreamReader.getAttributeLocalName(i);
-                            String v = xmlStreamReader.getAttributeValue(i);
-                            if (n.equals("analysis")) {
-                                if (v.equals("interprophet")) {
-                                    is_iprophet_data = true;
-                                }
-                                break;
-                            }
-                        }
-                    }
-
-                    if (elementName.equals("peptideprophet_summary")) {
-                        xmlStreamReader.next();
-                    } else if (elementName.equals("spectrum_query")) { // new peptide record starts
-                        curPSM = new PepXML(xmlFile, is_iprophet_data);
-                        curPSM.parse_pepXML_line(xmlStreamReader);
-                    }
-
-                    if (elementName.equals("search_hit")) {
-                        curPSM.parse_pepXML_line(xmlStreamReader);
-                    }
-
-                    if (elementName.equals("modification_info")) {
-                        curPSM.record_AA_mod(xmlStreamReader);
-                    }
-
-                    if (elementName.equals("mod_aminoacid_mass")) {
-                        curPSM.record_AA_mod(xmlStreamReader);
-                    }
-
-                    if (elementName.equals("search_score")) {
-                        curPSM.parse_search_score_line(xmlStreamReader);
-                    }
-
-                    if (elementName.equals("peptideprophet_result")) {
-                        curPSM.record_iniProb(xmlStreamReader);
-                    }
-
-                    // If the user provided iProphet input, we wil take the iProphet probability
-                    // and use that instead of the PeptideProphet probability
-                    if (elementName.equals("interprophet_result")) {
-                        curPSM.record_iniProb(xmlStreamReader);
-                    }
-                } else if (event == XMLStreamConstants.END_ELEMENT) { // end of element
-                    String elementName = xmlStreamReader.getLocalName();
-
-                    if (elementName.equals("spectrum_query")) { // end of peptide record
-                        curPSM.annotate_modPeptide();
-
-                        try {
-                            if (curPSM.getIniProb() >= Globals.iniProbTH) {
-                                curPSM.write_to_db(prep);
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            System.exit(-1);
-                        }
-                        curPSM = null;
-                    }
-                }
-            }
-        } catch (XMLStreamException | NullPointerException e) {
-            if (out != null) {
-                out.append("\nDied parsing " + xmlFile + "\n");
-                out.append("This error means there is a problem with the formatting of your pepXML file.\n");
-                out.append("Exiting now... sorry\n");
-                return true;
-            }
-            e.printStackTrace();
-        }
-        return false;
-    }
 
     /**
      * Function iterates through the protXML files and loads them into SQLite
@@ -970,7 +609,7 @@ public class Abacus {
             // We will now iterate through the protXML files loading the relevant content
             for (int i = 0; i < Globals.protXmlFiles.size(); i++) {
                 Globals.proceedWithQuery = false;
-                status = parseXMLDocument(Globals.protXmlFiles.get(i), "protXML", prep, i, out);
+                status = XMLUtils.parseXMLDocument(Globals.srcDir, Globals.protXmlFiles.get(i), "protXML", prep, i, out);
                 if (status) {
                     return status; // a return of 'true' means something went wrong
                 }
@@ -1065,7 +704,7 @@ public class Abacus {
             // We will now iterate through the pepXML files loading the relevant content
             for (int i = 0; i < Globals.pepXmlFiles.size(); i++) {
                 Globals.proceedWithQuery = false;
-                status = parseXMLDocument(Globals.pepXmlFiles.get(i), "pepXML", prep, i, out);
+                status = XMLUtils.parseXMLDocument(Globals.srcDir, Globals.pepXmlFiles.get(i), "pepXML", prep, i, out);
                 if (status) {
                     return status; // a return of 'true' means something went wrong
                 }

@@ -1,5 +1,6 @@
-package abacus;
+package abacus.xml;
 
+import abacus.Globals;
 import java.sql.PreparedStatement;
 import java.util.HashMap;
 import java.util.Iterator;

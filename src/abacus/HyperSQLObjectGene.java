@@ -22,6 +22,7 @@ public class HyperSQLObjectGene extends HyperSQLObject {
      * @param conn
      * @param out
      * @throws java.io.IOException
+     * @throws java.sql.SQLException
      */
     public void makeGeneCombined(Connection conn, Appendable out) throws IOException, SQLException {
 
@@ -329,8 +330,8 @@ public class HyperSQLObjectGene extends HyperSQLObject {
             Statement stmt4 = conn.createStatement();
             Statement stmt5 = conn.createStatement();
             PreparedStatement prep = null;
-            String query = null;
-            ResultSet rs, rs2, rs3, rs4 = null;
+            String query;
+            ResultSet rs, rs2, rs3, rs4;
             int N = 0, ctr = 1;
 
             if (out != null) {
@@ -391,17 +392,17 @@ public class HyperSQLObjectGene extends HyperSQLObject {
 
                 }
 
-//			query = "UPDATE geneXML "
-//				  + "  SET geneXML.wt = ( "
-//				  + "    SELECT gpwt_" + tag + ".wt "
-//				  + "    FROM gpwt_" + tag + " "
-//				  + "    JOIN geneXML ON gpwt_" + tag + ".modPeptide = geneXML.modPeptide "
-//				  + ") ";
-//			System.err.println("\n"+query+"\n");
-//			stmt2.executeUpdate(query);
-                //stmt2.executeUpdate("DROP INDEX IF EXISTS gpwt_" + tag + "_idx1");
-                //stmt2.executeUpdate("DROP TABLE IF EXISTS gpwt_" + tag + " ");
-                //stmt2.executeUpdate("UPDATE geneXML SET wt = 0 WHERE wt IS NULL");
+//                query = "UPDATE geneXML "
+//                        + "  SET geneXML.wt = ( "
+//                        + "    SELECT gpwt_" + tag + ".wt "
+//                        + "    FROM gpwt_" + tag + " "
+//                        + "    JOIN geneXML ON gpwt_" + tag + ".modPeptide = geneXML.modPeptide "
+//                        + ") ";
+//                System.err.println("\n" + query + "\n");
+//                stmt2.executeUpdate(query);
+//                stmt2.executeUpdate("DROP INDEX IF EXISTS gpwt_" + tag + "_idx1");
+//                stmt2.executeUpdate("DROP TABLE IF EXISTS gpwt_" + tag + " ");
+//                stmt2.executeUpdate("UPDATE geneXML SET wt = 0 WHERE wt IS NULL");
                 if (pbh != null) {
                     pbh.monitorBoxUpdate(ctr);
                 }
@@ -507,23 +508,24 @@ public class HyperSQLObjectGene extends HyperSQLObject {
             }
         }
         stmt2.close();
-        stmt2 = null;
     }
 
     /**
-     * ***********
-     *
-     * Function returns the number of peptides assigned to a given geneid
-     *
+     * Function returns the number of peptides assigned to a given geneid.
+     * @param geneid
+     * @param sft
+     * @param conn
+     * @param wt
+     * @return
+     * @throws java.sql.SQLException
      */
     public int getNumPeps_GC(String geneid, String sft, Connection conn, double wt) throws SQLException {
         Statement stmt = conn.createStatement();
 
-        ResultSet rs = null;
-        String query = null;
+        ResultSet rs;
+        String query;
         int retVal = 0;
-
-        String tag = null;
+        String tag;
 
         if (sft.equals(Globals.combinedFile)) {
             tag = "COMBINED";
@@ -547,38 +549,30 @@ public class HyperSQLObjectGene extends HyperSQLObject {
     }
 
     /**
-     * *************
-     *
-     * Function returns the number of spectra assigned to a given geneid
-     *
+     * Function returns the number of spectra assigned to a given geneid.
+     * @param geneid
+     * @param sft
+     * @param conn
+     * @param wt
+     * @return
+     * @throws java.sql.SQLException
      */
     public int getNumSpecs_GC(String geneid, String sft, Connection conn, double wt) throws SQLException {
 
-        Statement stmt = conn.createStatement();
-
-        ResultSet rs = null;
-        String query = null;
         int retVal = 0;
+        try (Statement stmt = conn.createStatement()) {
+            String tag = sft.equals(Globals.combinedFile) ? "COMBINED" : sft;
 
-        String tag = null;
-
-        if (sft.equals(Globals.combinedFile)) {
-            tag = "COMBINED";
-        } else {
-            tag = sft;
+            String query = "SELECT SUM(nspec) "
+                    + "FROM g2pep_ "
+                    + "WHERE tag = '" + tag + "' "
+                    + "AND geneid = '" + geneid + "' "
+                    + "AND wt >= " + wt + " ";
+            try (ResultSet rs = stmt.executeQuery(query)) {
+                rs.next();
+                retVal = rs.getInt(1);
+            }
         }
-
-        query = "SELECT SUM(nspec) "
-                + "FROM g2pep_ "
-                + "WHERE tag = '" + tag + "' "
-                + "AND geneid = '" + geneid + "' "
-                + "AND wt >= " + wt + " ";
-        rs = stmt.executeQuery(query);
-        rs.next();
-        retVal = rs.getInt(1);
-
-        stmt.close();
-        stmt = null;
 
         return retVal;
     }
@@ -589,6 +583,7 @@ public class HyperSQLObjectGene extends HyperSQLObject {
      * @param conn
      * @param out
      * @throws java.sql.SQLException
+     * @throws java.io.IOException
      */
     public void makeGeneResults(Connection conn, Appendable out) throws SQLException, IOException {
 

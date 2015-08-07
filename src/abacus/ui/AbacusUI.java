@@ -10,17 +10,11 @@
  */
 package abacus.ui;
 
-import abacus.Abacus;
 import abacus.Globals;
-import abacus.HyperSQLObject;
-import abacus.HyperSQLObjectGene;
-import abacus.console.AbacusTextArea;
-import abacus.console.ProgressBarHandler;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.sql.Connection;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -37,7 +31,7 @@ public class AbacusUI extends javax.swing.JFrame {
     // file and folder chooser for this program
     final JFileChooser fc = new JFileChooser();
 
-    WorkerThread t;
+    UIWorkerThread t;
 
     /**
      * Creates new form ui
@@ -1720,7 +1714,7 @@ public class AbacusUI extends javax.swing.JFrame {
 
             RunButton.setEnabled(false); // can't run again until it's over
 
-            t = new WorkerThread();
+            t = new UIWorkerThread(this);
             t.start();
         }
 
@@ -2757,87 +2751,5 @@ public class AbacusUI extends javax.swing.JFrame {
         Expt_numSpecsAdjCB.setSelected(false);
     }
 
-    /**
-     * This class extends the Thread class so all the magic can happen here.
-     */
-    class WorkerThread extends Thread {
-
-        AbacusTextArea console;
-        Abacus pmasc;
-        AbacusUIAlerter alerter = new AbacusUIAlerter();
-
-        File dir = null;
-        Connection conn = null;
-        HyperSQLObject forProteins = null;
-        HyperSQLObjectGene forGenes = null;
-        String db = "jdbc:hsqldb";
-
-        String err; // used for error messages
-
-        // This method is called when the thread runs
-        @Override
-        public void run() {
-            long startTime = System.currentTimeMillis();
-
-            pmasc = new Abacus();
-            console = new AbacusTextArea();
-            console.setVisible(true);
-            console.append(pmasc.printHeader());
-            console.append(Globals.printParameters());
-
-            dir = new File(Globals.srcDir);
-
-            // checking inputs and cleaning
-            try {
-                pmasc.cleanup(console);
-                pmasc.record_XML_files(dir); // record only the protXML and pepXML files
-                if (!pmasc.checkPepXmlFiles(console, alerter, console)) {
-                    return;
-                }
-                if (!pmasc.checkProtXmlFiles(console, alerter, console)) {
-                    return;
-                }
-                if (!pmasc.checkFastaFile(console, alerter, console)) {
-                    return;
-                }
-
-                db = pmasc.checkJdbcInMemDb(db, console);
-                conn = pmasc.createDbConnection(db, console, alerter, AbacusUI.this);
-                if (conn == null) {
-                    return;
-                }
-
-                if (!Globals.byPeptide) {
-                    if (pmasc.load_protXML(conn, console, alerter, AbacusUI.this)) {
-                        console.changeCloseStatus(ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
-                        return;
-                    }
-                }
-                if (pmasc.load_pepXML(conn, console, alerter, AbacusUI.this)) {
-                    console.changeCloseStatus(ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
-                    return;
-                }
-
-            } catch (IOException ex) {
-                //Logger.getLogger(WorkerThread.class.getName()).log(Level.SEVERE, null, ex);
-                ex.printStackTrace();
-            }
-
-            System.gc(); // System clean up
-            console.updateProgress(1);
-
-            // the main processing function
-            if (pmasc.process(startTime, conn, console, console, alerter, AbacusUI.this)) {
-                return;
-            }
-
-            // clean up
-            pmasc = null;
-            System.gc();
-        }
-
-        
-
-    }
 
 }
