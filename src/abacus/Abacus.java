@@ -27,6 +27,8 @@ public class Abacus {
 
     public void main(String[] args) throws IOException {
 
+        long startTime = System.currentTimeMillis();
+
         File dir = null;
         Connection conn = null;
         String db = "jdbc:hsqldb";
@@ -88,7 +90,6 @@ public class Abacus {
 
 
         // the main processing function
-        long startTime = System.nanoTime();
         Appendable out = System.err;
         if (process(startTime, conn, out, null, null, null)) {
             return;
@@ -381,27 +382,30 @@ public class Abacus {
     /**
      * Check the provided FASTA file for proper contents.
      *
-     * @param err error stream for textual output
+     * @param out stream for textual output
      * @param alerter something that alerts the user visually
      * @param comp parent component of the alerter
      * @return true if check was passed
      * @throws IOException
      */
-    public boolean checkFastaFile(Appendable err, UIAlerter alerter, Component comp) throws IOException {
+    public boolean checkFastaFile(Appendable out, UIAlerter alerter, Component comp) throws IOException {
         boolean result = true;
         if (!Globals.byPeptide) {
 
             if (Globals.fastaFile == null || Globals.fastaFile.isEmpty()) {
-                if (err != null) {
-                    err.append("No fasta file was given so protein lengths will not be reported\n\n");
+                if (out != null) {
+                    out.append("No fasta file was given so protein lengths will not be reported\n\n");
                 }
             } else {
-                if (err != null) {
-                    err.append("Retrieving protein lengths from\n'" + Globals.fastaFile + "'\n");
+                if (out != null) {
+                    out.append("Retrieving protein lengths from\n'" + Globals.fastaFile + "'\n");
                 }
-                result = Globals.parseFasta(err, null, null);
-                if (err != null) {
-                    err.append("\n");
+                if (Globals.parseFasta(out, null, null)) {
+                    out.append("Error parsing fasta file.\n");
+                    result = false;
+                }
+                if (out != null) {
+                    out.append("\nDone\n");
                 }
             }
         }

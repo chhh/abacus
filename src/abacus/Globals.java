@@ -18,8 +18,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.xml.stream.XMLStreamReader;
@@ -197,7 +195,7 @@ public class Globals {
             try {
                 output.append(e.getMessage());
             } catch (IOException ex) {
-                Logger.getLogger(Globals.class.getName()).log(Level.SEVERE, null, ex);
+                e.printStackTrace();
             }
             e.printStackTrace();
         }

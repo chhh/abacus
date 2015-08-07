@@ -2777,9 +2777,7 @@ public class AbacusUI extends javax.swing.JFrame {
         // This method is called when the thread runs
         @Override
         public void run() {
-            String timeStr = null;
-            long start_time = System.currentTimeMillis();
-            long elapsed_time = 0;
+            long startTime = System.currentTimeMillis();
 
             pmasc = new Abacus();
             console = new AbacusTextArea();
@@ -2829,7 +2827,7 @@ public class AbacusUI extends javax.swing.JFrame {
             console.updateProgress(1);
 
             // the main processing function
-            if (pmasc.process(start_time, conn, console, console, alerter, AbacusUI.this)) {
+            if (pmasc.process(startTime, conn, console, console, alerter, AbacusUI.this)) {
                 return;
             }
 
