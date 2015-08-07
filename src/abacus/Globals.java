@@ -18,6 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.xml.stream.XMLStreamReader;
@@ -1073,37 +1074,13 @@ public class Globals {
 
 	// Function returns a string reporting how long a given step in the program
     // took to run
-    public static String formatTime(long elapsed_time) {
-        String ret = null;
-
-        double seconds = Math.floor((elapsed_time / 1000));
-        double minutes = Math.floor((elapsed_time / (60 * 1000)));
-        double hours = Math.floor((elapsed_time / (60 * 60 * 1000)));
-
-        if (seconds > 60) {
-            double x = Math.floor((seconds / 60));
-            minutes += x;
-            x = seconds % 60;
-            seconds = x;
-        }
-
-        int hh = (int) hours;
-        int mm = (int) minutes;
-        int ss = (int) seconds;
-
-        ret = Integer.toString(hh) + ":";
-
-        if (mm < 10) {
-            ret += "0";
-        }
-        ret += Integer.toString(mm) + ":";
-
-        if (ss < 10) {
-            ret += "0";
-        }
-        ret += Integer.toString(mm);
-
-        return ret;
+    public static String formatTime(long millis) {
+        return String.format("%02d:%02d:%02d",
+                TimeUnit.MILLISECONDS.toHours(millis),
+                TimeUnit.MILLISECONDS.toMinutes(millis)
+                - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)), // The change is in this line
+                TimeUnit.MILLISECONDS.toSeconds(millis)
+                - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)));
     }
 
     /**

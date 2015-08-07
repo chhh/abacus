@@ -5,8 +5,9 @@
  */
 package abacus.xml;
 
-import abacus.Abacus;
 import abacus.Globals;
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -36,8 +37,7 @@ public class XMLUtils {
      * @throws IOException
      */
     public static boolean parseXMLDocument(String srcDir, String xmlFile, String dataType, PreparedStatement prep, int fileNumber, Appendable out) throws IOException {
-        XMLInputFactory inputFactory = XMLInputFactory.newInstance();
-        InputStream input = null;
+        
         Path path = Paths.get(srcDir, xmlFile).toAbsolutePath();
         if (Files.notExists(path)) {
             if (out != null) {
@@ -45,20 +45,29 @@ public class XMLUtils {
             }
             return true;
         }
-        XMLStreamReader xmlStreamReader = null;
+
+        XMLStreamReader reader = null;
+        InputStream is = null;
         try {
-            xmlStreamReader = inputFactory.createXMLStreamReader(input);
+
+            XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+            InputStream fileInputStream = new FileInputStream(path.toFile());
+            BufferedInputStream bis = new BufferedInputStream(fileInputStream);
+            reader = inputFactory.createXMLStreamReader(bis);
+            
             switch (dataType) {
                 case "pepXML":
-                    if (parsePepXML(xmlStreamReader, xmlFile, prep, fileNumber, out)) {
+                    if (parsePepXML(reader, xmlFile, prep, fileNumber, out)) {
                         return true; // if this returns true, there is a problem in the pepXML file
                     }
                     break;
+
                 case "protXML":
-                    if (parsePepXML(xmlStreamReader, xmlFile, prep, fileNumber, out)) {
+                    if (parseProtXML(reader, xmlFile, prep, fileNumber, out)) {
                         return true; // if this returns true, there is a problem in the protXML file
                     }
                     break;
+                    
                 default:
                     throw new IllegalArgumentException("dataType can only be 'papXML' or 'protXML'");
             }
@@ -69,12 +78,15 @@ public class XMLUtils {
                 e.printStackTrace();
             }
         } finally {
-            if (xmlStreamReader != null) {
+            if (reader != null) {
                 try {
-                    xmlStreamReader.close();
+                    reader.close();
                 } catch (XMLStreamException ex) {
                     ex.printStackTrace();
                 }
+            }
+            if (is != null) {
+                is.close();
             }
         }
         return false;

@@ -2,8 +2,6 @@ package abacus;
 
 import abacus.console.ProgressBarHandler;
 import abacus.ui.UIAlerter;
-import abacus.xml.PepXML;
-import abacus.xml.ProtXML;
 import abacus.xml.XMLUtils;
 import java.awt.Component;
 import java.io.File;
@@ -19,9 +17,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
 
 public class Abacus {
 
@@ -136,6 +131,7 @@ public class Abacus {
      *
      * @param startTime use {@code System.nanoTime()} if you don't have a better
      * idea
+     * @param conn
      * @param out a printable stream, can be null
      * @param pbh if you have a progress bar, use this for updates, can be null
      * @param alerter will pop up a message for the user, can be null
@@ -143,8 +139,7 @@ public class Abacus {
      * @return
      */
     public boolean process(long startTime, Connection conn, Appendable out, ProgressBarHandler pbh, UIAlerter alerter, Component comp) {
-        long elapsed_time;
-        String timeStr;
+        
         HyperSQLObject forProteins = null;
         HyperSQLObjectGene forGenes = null;
         // now the work begins
@@ -302,8 +297,8 @@ public class Abacus {
                 }
             }
             updateProgressCloseStatus(pbh, ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
-            elapsed_time = System.currentTimeMillis() - startTime;
-            timeStr = Globals.formatTime(elapsed_time);
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            String timeStr = Globals.formatTime(elapsedTime);
             updateOutput(out, "\n\nTotal runtime (hh:mm:ss): " + timeStr + "\n");
             updateOutput(out, "\nYou may now close this window\n\n");
         } catch (Exception ex) {
