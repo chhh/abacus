@@ -668,34 +668,57 @@ public class HyperSQLObject {
             pbh.monitorBoxInit(N, "Indexing protXML...");
         }
         iter = 0;
+
+        iter++;
         if (out != null) {
-            out.append(String.format("  Creating index %d\n", iter + 1));
+            out.append(String.format("  Indexing and updating tables (%d operations)\n", N));
+            out.append(String.format("  Operation %d\n", iter));
         }
         stmt.executeUpdate("CREATE INDEX protXML_idx1 ON protXML(tag)");
         if (pbh != null) {
-            pbh.monitorBoxUpdate(iter++);
+            pbh.monitorBoxUpdate(iter);
         }
 
+        iter++;
+        if (out != null) {
+            out.append(String.format("  Operation %d\n", iter));
+        }
         stmt.executeUpdate("CREATE INDEX protXML_idx2 ON protXML(groupid, siblingGroup)");
         if (pbh != null) {
-            pbh.monitorBoxUpdate(iter++);
+            pbh.monitorBoxUpdate(iter);
         }
 
+        iter++;
+        if (out != null) {
+            out.append(String.format("  Operation %d\n", iter));
+        }
         stmt.executeUpdate("CREATE INDEX protXML_idx3 ON protXML(modPeptide, charge)");
         if (pbh != null) {
-            pbh.monitorBoxUpdate(iter++);
+            pbh.monitorBoxUpdate(iter);
         }
 
+        iter++;
+        if (out != null) {
+            out.append(String.format("  Operation %d\n", iter));
+        }
         stmt.executeUpdate("CREATE INDEX protXML_idx4 ON protXML(protid)");
         if (pbh != null) {
-            pbh.monitorBoxUpdate(iter++);
+            pbh.monitorBoxUpdate(iter);
         }
 
+        iter++;
+        if (out != null) {
+            out.append(String.format("  Operation %d\n", iter));
+        }
         stmt.executeUpdate("CREATE INDEX protXML_idx5 ON protXML(srcFile)");
         if (pbh != null) {
-            pbh.monitorBoxUpdate(iter++);
+            pbh.monitorBoxUpdate(iter);
         }
 
+        iter++;
+        if (out != null) {
+            out.append(String.format("  Operation %d\n", iter));
+        }
         query = "SELECT srcFile, tag "
                 + "FROM srcFileTags "
                 + "WHERE fileType = 'prot' "
@@ -710,22 +733,34 @@ public class HyperSQLObject {
         }
 
         if (pbh != null) {
-            pbh.monitorBoxUpdate(iter++);
+            pbh.monitorBoxUpdate(iter);
         }
 
+        iter++;
+        if (out != null) {
+            out.append(String.format("  Operation %d\n", iter));
+        }
         stmt.executeUpdate("DROP INDEX IF EXISTS protXML_idx9");
         if (pbh != null) {
-            pbh.monitorBoxUpdate(iter++);
+            pbh.monitorBoxUpdate(iter);
         }
 
+        iter++;
+        if (out != null) {
+            out.append(String.format("  Operation %d\n", iter));
+        }
         stmt.executeUpdate("ALTER TABLE protXML DROP COLUMN srcFile");
         if (pbh != null) {
-            pbh.monitorBoxUpdate(iter++);
+            pbh.monitorBoxUpdate(iter);
         }
 
+        iter++;
+        if (out != null) {
+            out.append(String.format("  Operation %d\n", iter));
+        }
         stmt.executeUpdate("CREATE INDEX protXML_idx6 ON protXML(tag)");
         if (pbh != null) {
-            pbh.monitorBoxUpdate(iter++);
+            pbh.monitorBoxUpdate(iter);
         }
 
         stmt.executeUpdate("DROP TABLE IF EXISTS RAWprotXML");
@@ -1036,7 +1071,7 @@ public class HyperSQLObject {
 
             msg = "  Mapping peptides to proteins (combined) ";
             if (out != null) {
-                out.append(msg + "\n");
+                out.append(msg);
             }
             if (pbh != null) {
                 pbh.monitorBoxInit((N + 2), "Combined file peptides...");
@@ -1067,13 +1102,13 @@ public class HyperSQLObject {
                 if (pbh != null) {
                     pbh.monitorBoxUpdate(iter);
                 } else {
-                    Globals.cursorStatus(iter, msg);
+                    Globals.cursorStatus(iter, 100, msg);
                 }
             }
             if (pbh != null) {
                 pbh.monitorBoxUpdate(iter);
             } else {
-                Globals.cursorStatusDone(iter, msg + "\n");
+                Globals.cursorStatusDone(iter, msg);
             }
 
             // there were no rows in the resultset
