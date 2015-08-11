@@ -816,7 +816,7 @@ public class Globals {
      * @param msg
      */
     public static void cursorStatus(int i, String msg) {
-        String anim = "|/-\\";
+        final String anim = "|/-\\";
         int r = i % anim.length();
 
         String data = "\r" + msg + "  [ " + anim.charAt(r) + " " + i + " Working... ]";
@@ -824,28 +824,12 @@ public class Globals {
     }
 
     /**
-     * Function to strip '#' character from strings. We need to do this because
-     * the replaceAll() function of Strings doesn't seem to work
-     *
-     * @param src
-     * @param badChar
-     * @param goodChar
-     * @return
+     * Just prints done in the end.
+     * @param msg
      */
-    public static String replaceAll(String src, char badChar, char goodChar) {
-        String ret;
-        StringBuilder sb = new StringBuilder();
-
-        for (int i = 0; i < src.length(); i++) {
-            if (src.charAt(i) == badChar) {
-                sb.append(goodChar);
-            } else {
-                sb.append(src.charAt(i));
-            }
-        }
-
-        ret = sb.toString();
-        return ret;
+    public static void cursorStatusDone(String msg) {
+        String data = "\r" + msg + "  [ Done ]";
+        System.err.print(data);
     }
 
     /**
@@ -878,9 +862,11 @@ public class Globals {
                 // problems.
                 if (origTag.matches("^\\d.*")) {
                     tmp = "x" + origTag;
-                    tag = Globals.replaceAll(tmp, '-', '_');
+                    //tag = Globals.replaceAll(tmp, '-', '_');
+                    tag = tmp.replace('-', '_');
                 } else {
-                    tag = Globals.replaceAll(origTag, '-', '_');
+                    //tag = Globals.replaceAll(origTag, '-', '_');
+                    tag = origTag.replace('-', '_');
                 }
 
             } else {
@@ -888,7 +874,9 @@ public class Globals {
                 // so we make one up based upon the given file name.
                 // take the name of the file up to the first dot character
                 int dotIdx = protXMLfile.indexOf('.');
-                tag = Globals.replaceAll(protXMLfile.substring(0, dotIdx), '-', '_');
+                String filename = protXMLfile.substring(0, dotIdx);
+                //tag = Globals.replaceAll(filename, '-', '_');
+                tag = filename.replace('-', '_');
                 origTag = tag;
             }
             protTagHash.put(protXMLfile, tag);

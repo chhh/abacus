@@ -1,6 +1,9 @@
 package abacus;
 
 import abacus.console.ProgressBarHandler;
+import abacus.debug.DbgUtils;
+import org.hsqldb.util.DatabaseManagerSwing;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -45,10 +48,7 @@ public class HyperSQLObject {
     public HyperSQLObject() {
     }
 
-    ; // default constructor
-
-
-	public void initialize() {
+    public void initialize() {
         if (!Globals.byPeptide) {
             combinedFile = Globals.combinedFile;
             decoyTag = Globals.decoyTag;
@@ -75,6 +75,9 @@ public class HyperSQLObject {
             Globals.recordPepXMLtags();
         }
 
+        if (out != null) {
+            out.append("  Creating schema structure\n");
+        }
         stmt.executeUpdate("DROP TABLE IF EXISTS srcFileTags");
 
         query = "CREATE TABLE srcFileTags ("
@@ -95,13 +98,21 @@ public class HyperSQLObject {
             // first load protXML files
             iter = Globals.protTagHash.entrySet().iterator();
             ctr = 1;
+
+            if (out != null) {
+                out.append("  Inserting protein tags\n");
+            }
+
+            final String type = "prot";
+            StringBuilder sb = new StringBuilder(1024);
             while (iter.hasNext()) {
                 Map.Entry<String, String> pairs = iter.next();
                 String srcFile = pairs.getKey();
                 String t = pairs.getValue();
 
-                String tag = Globals.replaceAll(Globals.replaceAll(pairs.getValue(), '.', '_'), '-', '_');
-                String type = "prot";
+                //String tag = Globals.replaceAll(Globals.replaceAll(pairs.getValue(), '.', '_'), '-', '_');
+                String tag = pairs.getValue().replace('.', '_').replace('-', '_');
+
 
                 if (Character.isDigit(tag.charAt(0))) {
                     String tmp = "x" + tag;
@@ -109,11 +120,19 @@ public class HyperSQLObject {
                     tmp = null;
                 }
 
-                query = "INSERT INTO srcFileTags VALUES( "
-                        + " '" + srcFile.toUpperCase() + "', "
-                        + " '" + tag.toUpperCase() + "', "
-                        + " '" + type + "' "
-                        + "); ";
+                sb.setLength(0);
+                sb.append("INSERT INTO srcFileTags VALUES( ")
+                        .append(" '").append(srcFile.toUpperCase()).append("', ")
+                        .append(" '").append(tag.toUpperCase()).append("', ")
+                        .append(" '").append(type).append("' ")
+                        .append("); ");
+
+//                query = "INSERT INTO srcFileTags VALUES( "
+//                        + " '" + srcFile.toUpperCase() + "', "
+//                        + " '" + tag.toUpperCase() + "', "
+//                        + " '" + type + "' "
+//                        + "); ";
+                query = sb.toString();
                 stmt.executeUpdate(query);
                 ctr++;
                 if (pbh != null) {
@@ -127,24 +146,35 @@ public class HyperSQLObject {
         }
 
         // now load pepXML files
+        if (out != null) {
+            out.append("  Inserting peptide tags\n");
+        }
         iter = Globals.pepTagHash.entrySet().iterator();
+        StringBuilder sb = new StringBuilder(1024);
+        final String type = "pep";
         while (iter.hasNext()) {
             Map.Entry<String, String> pairs = iter.next();
             String srcFile = pairs.getKey();
-            String tag = Globals.replaceAll(Globals.replaceAll(pairs.getValue(), '.', '_'), '-', '_');
-            String type = "pep";
+            //String tag = Globals.replaceAll(Globals.replaceAll(pairs.getValue(), '.', '_'), '-', '_');
+            String tag = pairs.getValue().replace('.', '_').replace('-', '_');
 
             if (Character.isDigit(tag.charAt(0))) {
                 String tmp = "x" + tag;
                 tag = tmp;
-                tmp = null;
             }
 
-            query = "INSERT INTO srcFileTags VALUES( "
-                    + " '" + srcFile.toUpperCase() + "', "
-                    + " '" + tag.toUpperCase() + "', "
-                    + " '" + type + "' "
-                    + "); ";
+            sb.setLength(0);
+            sb.append("INSERT INTO srcFileTags VALUES( ")
+                    .append(" '").append(srcFile.toUpperCase()).append("', ")
+                    .append(" '").append(tag.toUpperCase()).append("', ")
+                    .append(" '").append(type).append("' ")
+                    .append("); ");
+//            query = "INSERT INTO srcFileTags VALUES( "
+//                    + " '" + srcFile.toUpperCase() + "', "
+//                    + " '" + tag.toUpperCase() + "', "
+//                    + " '" + type + "' "
+//                    + "); ";
+            query = sb.toString();
             stmt.executeUpdate(query);
             ctr++;
             if (pbh != null) {
@@ -152,16 +182,25 @@ public class HyperSQLObject {
             }
         }
 
+        if (out != null) {
+            out.append("\tCreating index 1\n");
+        }
         stmt.executeUpdate("CREATE INDEX sf_idx1 ON srcFileTags(srcFile)");
         if (pbh != null) {
             pbh.monitorBoxUpdate(ctr++);
         }
 
+        if (out != null) {
+            out.append("\tCreating index 2\n");
+        }
         stmt.executeUpdate("CREATE INDEX sf_idx2 ON srcFileTags(tag)");
         if (pbh != null) {
             pbh.monitorBoxUpdate(ctr++);
         }
 
+        if (out != null) {
+            out.append("\tCreating index 3\n");
+        }
         stmt.executeUpdate("CREATE INDEX sf_idx3 ON srcFileTags(fileType)");
         if (pbh != null) {
             pbh.monitorBoxUpdate(ctr++);
@@ -177,8 +216,6 @@ public class HyperSQLObject {
         stmt.close();
         if (out != null) {
             out.append("\n"); // for pretty output
-        } else {
-            System.err.print("\n");
         }
     }
 
@@ -197,138 +234,139 @@ public class HyperSQLObject {
             out.append("Creating combined table from '" + Globals.combinedFile + "'\n");
         }
 
-        Statement stmt = conn.createStatement();
-        String query = null;
-        ResultSet rs = null;
-        PreparedStatement prep = null;
+        try (Statement stmt = conn.createStatement()) {
+            String query = null;
+            ResultSet rs = null;
+            PreparedStatement prep = null;
 
-        stmt.executeUpdate("DROP TABLE IF EXISTS combined");
+            stmt.executeUpdate("DROP TABLE IF EXISTS combined");
 
-        query = "CREATE CACHED TABLE combined ("
-                + "  groupid INT, "
-                + "  siblingGroup VARCHAR(5), "
-                + "  Pw DECIMAL(8,6), "
-                + "  localPw DECIMAL(8,6), "
-                + "  protId VARCHAR(250), "
-                + "  protLen INT DEFAULT 0, "
-                + "  isFwd INT, "
-                + "  modPeptide VARCHAR(250), "
-                + "  charge INT, "
-                + "  iniProb DECIMAL(8,6), "
-                + "  wt DECIMAL(8,6), "
-                + "  defline VARCHAR(1000) "
-                + ")";
-        stmt.executeUpdate(query);
+            query = "CREATE CACHED TABLE combined ("
+                    + "  groupid INT, "
+                    + "  siblingGroup VARCHAR(5), "
+                    + "  Pw DECIMAL(8,6), "
+                    + "  localPw DECIMAL(8,6), "
+                    + "  protId VARCHAR(250), "
+                    + "  protLen INT DEFAULT 0, "
+                    + "  isFwd INT, "
+                    + "  modPeptide VARCHAR(250), "
+                    + "  charge INT, "
+                    + "  iniProb DECIMAL(8,6), "
+                    + "  wt DECIMAL(8,6), "
+                    + "  defline VARCHAR(1000) "
+                    + ")";
+            stmt.executeUpdate(query);
 
-        query = "INSERT INTO combined VALUES ("
-                + "?, " // groupid
-                + "?, " // siblingGroup
-                + "?, " // Pw
-                + "?, " // localPw
-                + "?, " // protId
-                + "?, " // protLen
-                + "?, " // isFwd
-                + "?, " // modPeptide
-                + "?, " // charge
-                + "?, " // iniProb
-                + "?, " // wt
-                + "? " //defline
-                + ");";
-        prep = conn.prepareStatement(query);
+            query = "INSERT INTO combined VALUES ("
+                    + "?, " // groupid
+                    + "?, " // siblingGroup
+                    + "?, " // Pw
+                    + "?, " // localPw
+                    + "?, " // protId
+                    + "?, " // protLen
+                    + "?, " // isFwd
+                    + "?, " // modPeptide
+                    + "?, " // charge
+                    + "?, " // iniProb
+                    + "?, " // wt
+                    + "? " //defline
+                    + ");";
+            prep = conn.prepareStatement(query);
 
-        // this code is used for the progress monitor
-        query = "SELECT COUNT(*) FROM RAWprotXML "
-                + "WHERE srcFile = '" + this.combinedFile.toUpperCase() + "' "
-                + "AND Pw >= " + this.minPw + " "
-                + "AND iniProb >= " + this.iniProbTH + " ";
-        rs = stmt.executeQuery(query);
-        rs.next();
-        int N = rs.getInt(1);
+            // this code is used for the progress monitor
+            query = "SELECT COUNT(*) FROM RAWprotXML "
+                    + "WHERE srcFile = '" + this.combinedFile.toUpperCase() + "' "
+                    + "AND Pw >= " + this.minPw + " "
+                    + "AND iniProb >= " + this.iniProbTH + " ";
+            rs = stmt.executeQuery(query);
+            rs.next();
+            int N = rs.getInt(1);
 
-        if (N == 0) { // this means there was no data in the RAWprotXML table for the COMBINED file
-            String err = "\nERROR:\n"
-                    + "Nothing in your COMBINED file met your input parameters.\n"
-                    + "Please adjust your Abacus parameters and try again.\n"
-                    + "Now quiting....\n";
-            if (pbh != null) {
-                JFrame frame = new JFrame();
-                JOptionPane.showMessageDialog(frame, err);
-            }
-            if (out != null) {
-                out.append(err);
-            }
-            System.exit(-1);
-        }
-
-        if (pbh != null) {
-            pbh.monitorBoxInit(N, "COMBINED table");
-        }
-
-        query = "SELECT groupid, siblingGroup, Pw, localPw, protId, isFwd,"
-                + "  modPeptide, charge, iniProb, wt, defline "
-                + "FROM RAWprotXML "
-                + "WHERE srcFile = '" + this.combinedFile.toUpperCase() + "' "
-                + "AND Pw >= " + this.minCombinedFilePw + " "
-                + "AND iniProb >= " + this.iniProbTH + " "
-                + "GROUP BY groupid, siblingGroup, Pw, localPw, protId, isFwd, "
-                + " modPeptide, charge, iniProb, wt, defline "
-                + "ORDER BY groupid, siblingGroup ";
-        rs = stmt.executeQuery(query);
-        int iter = 1;
-        while (rs.next()) {
-            prep.setInt(1, rs.getInt(1)); // groupid
-            prep.setString(2, rs.getString(2)); // siblingGroup
-            prep.setDouble(3, rs.getDouble(3)); // Pw
-            prep.setDouble(4, rs.getDouble(4)); // localPw
-            prep.setString(5, rs.getString(5));  //protid
-
-            String protid = rs.getString(5);
-            int len = 0;
-            if (Globals.fastaFile == null || Globals.fastaFile.isEmpty()) {
-                len = 0;
-            } else {
-                if (Globals.protLen.containsKey(protid)) {
-                    len = Globals.protLen.get(protid);
+            if (N == 0) { // this means there was no data in the RAWprotXML table for the COMBINED file
+                String err = "\nERROR:\n"
+                        + "Nothing in your COMBINED file met your input parameters.\n"
+                        + "Please adjust your Abacus parameters and try again.\n"
+                        + "Now quiting....\n";
+                if (pbh != null) {
+                    JFrame frame = new JFrame();
+                    JOptionPane.showMessageDialog(frame, err);
                 }
+                if (out != null) {
+                    out.append(err);
+                }
+                System.exit(-1);
             }
 
-            prep.setInt(6, len);
-
-            prep.setInt(7, rs.getInt(6)); // isFwd
-            prep.setString(8, rs.getString(7)); // modPeptide
-            prep.setInt(9, rs.getInt(8)); // charge
-            prep.setDouble(10, rs.getDouble(9)); // iniProb
-            prep.setDouble(11, rs.getDouble(10)); // wt
-            prep.setString(12, rs.getString(11)); // defline
-
-            prep.addBatch();
             if (pbh != null) {
-                pbh.monitorBoxUpdate(iter);
+                pbh.monitorBoxInit(N, "COMBINED table");
             }
-            iter++;
+
+            query = "SELECT groupid, siblingGroup, Pw, localPw, protId, isFwd,"
+                    + "  modPeptide, charge, iniProb, wt, defline "
+                    + "FROM RAWprotXML "
+                    + "WHERE srcFile = '" + this.combinedFile.toUpperCase() + "' "
+                    + "AND Pw >= " + this.minCombinedFilePw + " "
+                    + "AND iniProb >= " + this.iniProbTH + " "
+                    + "GROUP BY groupid, siblingGroup, Pw, localPw, protId, isFwd, "
+                    + " modPeptide, charge, iniProb, wt, defline "
+                    + "ORDER BY groupid, siblingGroup ";
+            rs = stmt.executeQuery(query);
+            int iter = 1;
+            while (rs.next()) {
+                prep.setInt(1, rs.getInt(1)); // groupid
+                prep.setString(2, rs.getString(2)); // siblingGroup
+                prep.setDouble(3, rs.getDouble(3)); // Pw
+                prep.setDouble(4, rs.getDouble(4)); // localPw
+                prep.setString(5, rs.getString(5));  //protid
+
+                String protid = rs.getString(5);
+                int len = 0;
+                if (Globals.fastaFile == null || Globals.fastaFile.isEmpty()) {
+                    len = 0;
+                } else {
+                    if (Globals.protLen.containsKey(protid)) {
+                        len = Globals.protLen.get(protid);
+                    }
+                }
+
+                prep.setInt(6, len);
+
+                prep.setInt(7, rs.getInt(6)); // isFwd
+                prep.setString(8, rs.getString(7)); // modPeptide
+                prep.setInt(9, rs.getInt(8)); // charge
+                prep.setDouble(10, rs.getDouble(9)); // iniProb
+                prep.setDouble(11, rs.getDouble(10)); // wt
+                prep.setString(12, rs.getString(11)); // defline
+
+                prep.addBatch();
+                if (pbh != null) {
+                    pbh.monitorBoxUpdate(iter);
+                }
+                iter++;
+            }
+            conn.setAutoCommit(false);
+            prep.executeBatch();
+            conn.setAutoCommit(true);
+            prep.clearBatch();
+            prep.close();
+            if (pbh != null) {
+                pbh.closeMonitorBox();
+            }
+
+            stmt.executeUpdate("CREATE INDEX com_idx1 ON combined(groupid, siblingGroup)");
+            stmt.executeUpdate("CREATE INDEX com_idx2 ON combined(protid)");
+            stmt.executeUpdate("CREATE INDEX com_idx3 ON combined(modPeptide, charge)");
+            stmt.executeUpdate("CREATE INDEX com_idx4 ON combined(modPeptide)");
+
+            query = "DELETE FROM RAWprotXML WHERE srcFile = '" + this.combinedFile + "'";
+            stmt.executeUpdate(query);
+
+            // clean up combined file cases where maxLocalPw
+            this.curate_on_maxLocalPw(Globals.combinedFile, conn, out);
+            this.recalculatePeptideWts(conn, "combined", out);
+
+            stmt.close();
         }
-        conn.setAutoCommit(false);
-        prep.executeBatch();
-        conn.setAutoCommit(true);
-        prep.clearBatch();
-        prep.close();
-        if (pbh != null) {
-            pbh.closeMonitorBox();
-        }
-
-        stmt.executeUpdate("CREATE INDEX com_idx1 ON combined(groupid, siblingGroup)");
-        stmt.executeUpdate("CREATE INDEX com_idx2 ON combined(protid)");
-        stmt.executeUpdate("CREATE INDEX com_idx3 ON combined(modPeptide, charge)");
-        stmt.executeUpdate("CREATE INDEX com_idx4 ON combined(modPeptide)");
-
-        query = "DELETE FROM RAWprotXML WHERE srcFile = '" + this.combinedFile + "'";
-        stmt.executeUpdate(query);
-
-        // clean up combined file cases where maxLocalPw
-        this.curate_on_maxLocalPw(Globals.combinedFile, conn, out);
-        this.recalculatePeptideWts(conn, "combined", out);
-
-        stmt.close();
         if (out != null) {
             out.append("\n\n");
         }
@@ -560,8 +598,11 @@ public class HyperSQLObject {
         rs.next();
         int N = rs.getInt(1);
 
+        int statusUpdateFreq = 100;
+        int NbyFreq = N / statusUpdateFreq;
+
         if (pbh != null) {
-            pbh.monitorBoxInit(N, "protXML table");
+            pbh.monitorBoxInit(NbyFreq, "protXML table");
         }
 
         query = "SELECT srcFile, srcFile, "
@@ -594,12 +635,19 @@ public class HyperSQLObject {
             prep.setString(13, rs.getString(13)); // defline
             prep.addBatch();
 
-            if (pbh != null) {
-                pbh.monitorBoxUpdate(iter);
-            } else {
-                Globals.cursorStatus(iter, msg);
+            if (iter % statusUpdateFreq == 0) {
+                if (pbh != null) {
+                    pbh.monitorBoxUpdate(iter);
+                } else {
+                    Globals.cursorStatus(iter, msg);
+                }
             }
             iter++;
+        }
+        if (pbh != null) {
+            pbh.monitorBoxUpdate(NbyFreq);
+        } else {
+            Globals.cursorStatusDone(msg);
         }
         conn.setAutoCommit(false);
         prep.executeBatch();
@@ -620,6 +668,9 @@ public class HyperSQLObject {
             pbh.monitorBoxInit(N, "Indexing protXML...");
         }
         iter = 0;
+        if (out != null) {
+            out.append(String.format("  Creating index %d\n", iter + 1));
+        }
         stmt.executeUpdate("CREATE INDEX protXML_idx1 ON protXML(tag)");
         if (pbh != null) {
             pbh.monitorBoxUpdate(iter++);
@@ -972,6 +1023,8 @@ public class HyperSQLObject {
             ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM combined");
             rs.next();
             N = rs.getInt(1);
+            int freq = 10;
+            int NbyFreq = N / freq;
 
             query = "INSERT INTO prot2peps_combined VALUES ("
                     + "?, " // protid
@@ -1002,6 +1055,7 @@ public class HyperSQLObject {
             rs = stmt.executeQuery(query);
 
             iter = 0;
+
             while (rs.next()) {
                 prep.setString(1, rs.getString(1));
                 prep.setString(2, rs.getString(2));
@@ -1015,11 +1069,40 @@ public class HyperSQLObject {
                 if (pbh != null) {
                     pbh.monitorBoxUpdate(iter);
                 } else {
-                    Globals.cursorStatus(iter, msg);
+                    if (iter % freq == 0)
+                        Globals.cursorStatus(iter, msg);
                 }
             }
+            if (pbh != null) {
+                pbh.monitorBoxUpdate(iter);
+            } else {
+                Globals.cursorStatusDone(msg + "\n");
+            }
+
+            // there were no rows in the resultset
+            if (iter == 0) {
+                if (DbgUtils.DEBUG) {
+                    // TODO: org.hsqldb.HsqlException: statement is not in batch mode
+                    // TODO: can be caused by if there were no batches added to prepared statement at all or after last execution
+                    out.append("There were no results for combined file peptides\n");
+                    DbgUtils.dbGuiInMem();
+                    DbgUtils.sleep();
+                } else {
+                    String errorMsg = "Could not map peptide ions from protXML files to the ones from pepXML files.";
+                    if (out != null) {
+                        out.append(errorMsg);
+                        System.exit(-1);
+                    }
+                    if (pbh != null) {
+                        JFrame frame = new JFrame();
+                        JOptionPane.showMessageDialog(frame, errorMsg, "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }
+
             conn.setAutoCommit(false);
             prep.executeBatch();
+            conn.commit();
             conn.setAutoCommit(true);
             prep.clearBatch();
             prep.close();
@@ -1753,8 +1836,11 @@ public class HyperSQLObject {
                         Globals.genesHaveDescriptions = true;
 
                         String defline;
+
+                        // TODO: WARNING: ACHTUNG: what does that condition mean?!
                         if (ary[2].length() > 1000) {
-                            defline = Globals.replaceAll(ary[2].substring(0, 990), '#', '_');
+                            //defline = Globals.replaceAll(ary[2].substring(0, 990), '#', '_');
+                            defline = ary[2].substring(0, 990).replace('#', '_');
                         } else {
                             defline = ary[2];
                         }

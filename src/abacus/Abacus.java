@@ -611,6 +611,7 @@ public class Abacus {
                 if (Globals.proceedWithQuery) { // if queryCtr = true then you got at least 1 row to insert into the DB
                     conn.setAutoCommit(false);
                     prep.executeBatch();
+                    conn.commit();
                     conn.setAutoCommit(true);
                     prep.clearBatch();
                 }

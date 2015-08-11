@@ -248,9 +248,9 @@ public class ProtXML {
 
 
 
-	/*
+	/**
 	 *  Function writes the collected data for the current protein group to
-	 *  the hyperSQL database (RAWprotXML table)
+	 *  the hyperSQL database (RAWprotXML table).
 	 */
 	public void write_to_db(PreparedStatement prep) {
 
