@@ -639,7 +639,7 @@ public class HyperSQLObject {
                 if (pbh != null) {
                     pbh.monitorBoxUpdate(iter);
                 } else {
-                    Globals.cursorStatus(iter, msg);
+                    Globals.cursorStatus(iter, 100, msg);
                 }
             }
             iter++;
@@ -647,7 +647,7 @@ public class HyperSQLObject {
         if (pbh != null) {
             pbh.monitorBoxUpdate(NbyFreq);
         } else {
-            Globals.cursorStatusDone(msg);
+            Globals.cursorStatusDone(iter, msg);
         }
         conn.setAutoCommit(false);
         prep.executeBatch();
@@ -1023,8 +1023,6 @@ public class HyperSQLObject {
             ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM combined");
             rs.next();
             N = rs.getInt(1);
-            int freq = 10;
-            int NbyFreq = N / freq;
 
             query = "INSERT INTO prot2peps_combined VALUES ("
                     + "?, " // protid
@@ -1069,14 +1067,13 @@ public class HyperSQLObject {
                 if (pbh != null) {
                     pbh.monitorBoxUpdate(iter);
                 } else {
-                    if (iter % freq == 0)
-                        Globals.cursorStatus(iter, msg);
+                    Globals.cursorStatus(iter, msg);
                 }
             }
             if (pbh != null) {
                 pbh.monitorBoxUpdate(iter);
             } else {
-                Globals.cursorStatusDone(msg + "\n");
+                Globals.cursorStatusDone(iter, msg + "\n");
             }
 
             // there were no rows in the resultset
@@ -1272,8 +1269,13 @@ public class HyperSQLObject {
                 if (pbh != null) {
                     pbh.monitorBoxUpdate(iter);
                 } else {
-                    Globals.cursorStatus(iter, "  Getting protein frequencies ");
+                    Globals.cursorStatus(iter, 100, "  Getting protein frequencies ");
                 }
+            }
+            if (pbh != null) {
+                pbh.monitorBoxUpdate(iter);
+            } else {
+                Globals.cursorStatusDone(iter, "  Getting protein frequencies ");
             }
             rs.close();
             if (pbh != null) {
@@ -1306,8 +1308,13 @@ public class HyperSQLObject {
                 if (pbh != null) {
                     pbh.monitorBoxUpdate(iter);
                 } else {
-                    Globals.cursorStatus(iter, "  Collecting protein probabilities ");
+                    Globals.cursorStatus(iter, 100, "  Collecting protein probabilities ");
                 }
+            }
+            if (pbh != null) {
+                pbh.monitorBoxUpdate(iter);
+            } else {
+                Globals.cursorStatusDone(iter, "  Collecting protein probabilities ");
             }
             rs.close();
             if (pbh != null) {
@@ -1531,10 +1538,18 @@ public class HyperSQLObject {
 
                 iter++;
                 if (pbh == null) {
-                    Globals.cursorStatus(iter, msg);
+                    Globals.cursorStatus(iter, 100, msg);
                 } else {
                     pbh.monitorBoxUpdate(iter);
                 }
+            }
+            if (pbh == null) {
+                Globals.cursorStatusDone(iter, msg);
+                if (out != null) {
+                    out.append("\n");
+                }
+            } else {
+                pbh.monitorBoxUpdate(iter);
             }
             conn.setAutoCommit(false);
             prep.executeBatch();
@@ -1624,14 +1639,18 @@ public class HyperSQLObject {
                     stmt3.executeUpdate(query);
                 }
                 rs2.close();
-                rs2 = null;
                 iter++;
 
                 if (pbh != null) {
                     pbh.monitorBoxUpdate(iter);
                 } else {
-                    Globals.cursorStatus(iter, msg);
+                    Globals.cursorStatus(iter, 100, msg);
                 }
+            }
+            if (pbh != null) {
+                pbh.monitorBoxUpdate(iter);
+            } else {
+                Globals.cursorStatusDone(iter, msg);
             }
             stmt.executeUpdate("CREATE INDEX ps_idx1 ON protidSummary(groupid, siblingGroup)");
             if (pbh != null) {
@@ -1908,7 +1927,7 @@ public class HyperSQLObject {
      */
     public boolean makeResultsTable(Connection conn, Appendable out) throws IOException, SQLException {
         if (out != null) {
-            out.append("Creating results table\n");
+            out.append("\nCreating results table\n");
         }
 
         try (Statement stmt = conn.createStatement()) {
@@ -2202,8 +2221,13 @@ public class HyperSQLObject {
                     if (pbh != null) {
                         pbh.monitorBoxUpdate(iter);
                     } else {
-                        Globals.cursorStatus(iter, "  Peptide usage index (" + tag + ")... ");
+                        Globals.cursorStatus(iter, 100, "  Peptide usage index (" + tag + ")... ");
                     }
+                }
+                if (pbh != null) {
+                    pbh.monitorBoxUpdate(iter);
+                } else {
+                    Globals.cursorStatusDone(iter, "  Peptide usage index (" + tag + ")... ");
                 }
                 rs2.close();
 

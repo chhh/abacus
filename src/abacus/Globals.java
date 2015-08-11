@@ -816,11 +816,15 @@ public class Globals {
      * @param msg
      */
     public static void cursorStatus(int i, String msg) {
-        final String anim = "|/-\\";
-        int r = i % anim.length();
-
-        String data = "\r" + msg + "  [ " + anim.charAt(r) + " " + i + " Working... ]";
+        String data = "\r" + msg + "  [ " + i + " Working... ]";
         System.err.print(data);
+    }
+
+    public static void cursorStatus(int i, int frequency, String msg) {
+        if (i % frequency == 0) {
+            String data = "\r" + msg + "  [ " + i + " Working... ]";
+            System.err.print(data);
+        }
     }
 
     /**
@@ -829,6 +833,17 @@ public class Globals {
      */
     public static void cursorStatusDone(String msg) {
         String data = "\r" + msg + "  [ Done ]";
+        System.err.print(data);
+    }
+
+    /**
+     * Just prints done in the end.
+     * @param i
+     * @param msg
+     */
+    public static void cursorStatusDone(int i, String msg) {
+        final String anim = "|/-\\";
+        String data = "\r" + msg + "  [ " + i + " Done ]";
         System.err.print(data);
     }
 

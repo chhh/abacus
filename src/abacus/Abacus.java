@@ -1,5 +1,6 @@
 package abacus;
 
+import abacus.console.AbacusTextArea;
 import abacus.console.ProgressBarHandler;
 import abacus.ui.UIAlerter;
 import abacus.xml.XMLUtils;
@@ -300,9 +301,11 @@ public class Abacus {
             long elapsedTime = System.currentTimeMillis() - startTime;
             String timeStr = Globals.formatTime(elapsedTime);
             updateOutput(out, "\n\nTotal runtime (hh:mm:ss): " + timeStr + "\n");
-            updateOutput(out, "\nYou may now close this window\n\n");
+            if (out instanceof AbacusTextArea) {
+                updateOutput(out, "\nYou may now close this window\n\n");
+            }
         } catch (Exception ex) {
-            throw new RuntimeException("Somethign awful happened during main processing step", ex);
+            throw new RuntimeException("Something awful happened during main processing step", ex);
         } finally {
             try {
                 // Whatever happens, shutdown the HSQLDB connection nicely
