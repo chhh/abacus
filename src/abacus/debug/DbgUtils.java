@@ -6,7 +6,7 @@ import org.hsqldb.util.DatabaseManagerSwing;
  * @author Dmitry Avtonomov
  */
 public class DbgUtils {
-    public static boolean DEBUG = false;
+    public static final boolean DEBUG = true;
 
     private DbgUtils() {}
 

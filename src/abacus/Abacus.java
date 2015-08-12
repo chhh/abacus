@@ -4,7 +4,8 @@ import abacus.console.AbacusTextArea;
 import abacus.console.ProgressBarHandler;
 import abacus.ui.UIAlerter;
 import abacus.xml.XMLUtils;
-import java.awt.Component;
+
+import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
@@ -13,11 +14,7 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 public class Abacus {
 
@@ -141,154 +138,154 @@ public class Abacus {
      */
     public boolean process(long startTime, Connection conn, Appendable out, ProgressBarHandler pbh, UIAlerter alerter, Component comp) {
         
-        HyperSQLObject forProteins = null;
-        HyperSQLObjectGene forGenes = null;
+        HyperSQLObject hsql = null;
+        HyperSQLObjectGene hsqlg = null;
         // now the work begins
         try {
             if (Globals.byPeptide) {
                 // user wants peptide-level results
-                forProteins = new HyperSQLObject();
-                forProteins.initialize();
-                forProteins.makeSrcFileTable(conn, pbh, out);
+                hsql = new HyperSQLObject();
+                hsql.initialize();
+                hsql.makeSrcFileTable(conn, pbh, out);
 
-                forProteins.correctPepXMLTags(conn);
+                hsql.correctPepXMLTags(conn);
                 updateProgress(pbh, 1);
 
-                forProteins.peptideLevelResults(conn, out);
+                hsql.peptideLevelResults(conn, out);
                 updateProgress(pbh, 20);
             } else if (Globals.byGene) {
                 // user wants gene-centric output
 
-                forGenes = new HyperSQLObjectGene();
-                forGenes.initialize();
-                //forGenes.makeProtLenTable(conn, console); //deprecated function
-                forGenes.makeSrcFileTable(conn, pbh, out);
+                hsqlg = new HyperSQLObjectGene();
+                hsqlg.initialize();
+                //hsqlg.makeProtLenTable(conn, console); //deprecated function
+                hsqlg.makeSrcFileTable(conn, pbh, out);
                 updateProgress(pbh, 1);
-                forGenes.correctPepXMLTags(conn);
-                if (forGenes.makeGeneTable(conn, out)) {
+                hsqlg.correctPepXMLTags(conn);
+                if (hsqlg.makeGeneTable(conn, out)) {
                     updateAlerter(alerter, comp);
                     updateProgressCloseStatus(pbh, ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
                     return true;
                 }
                 updateProgress(pbh, 1);
-                forGenes.makeCombinedTable(conn, out, pbh);
+                hsqlg.makeCombinedTable(conn, out, pbh);
                 updateProgress(pbh, 1);
-                forGenes.makeProtXMLTable(conn, out, pbh);
+                hsqlg.makeProtXMLTable(conn, out, pbh);
                 updateProgress(pbh, 1);
                 System.gc(); // need more RAM
-                forGenes.makeGeneCombined(conn, out);
+                hsqlg.makeGeneCombined(conn, out);
                 updateProgress(pbh, 1);
-                forGenes.makeGeneXML(conn, out);
+                hsqlg.makeGeneXML(conn, out);
                 updateProgress(pbh, 1);
-                forGenes.adjustGenePeptideWT(conn, out, pbh);
+                hsqlg.adjustGenePeptideWT(conn, out, pbh);
                 updateProgress(pbh, 1);
-                forGenes.makeTempGene2pepTable(conn);
+                hsqlg.makeTempGene2pepTable(conn);
                 System.gc(); // System clean up
                 updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.SHAKER);
-                forGenes.makeGeneidSummary(conn, out, pbh);
+                hsqlg.makeGeneidSummary(conn, out, pbh);
                 updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.PROGRESS);
                 updateProgress(pbh, 1);
-                forGenes.makeGeneResults(conn, out);
+                hsqlg.makeGeneResults(conn, out);
                 updateProgress(pbh, 1);
                 updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.SHAKER);
-                forGenes.makeGenePepUsageTable(conn, out, pbh);
+                hsqlg.makeGenePepUsageTable(conn, out, pbh);
                 updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.PROGRESS);
                 updateProgress(pbh, 1);
                 System.gc(); // System clean up
                 updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.SHAKER);
-                forGenes.appendIndividualExpts_GC(conn, out, pbh);
+                hsqlg.appendIndividualExpts_GC(conn, out, pbh);
                 updateProgressType(pbh, ProgressBarHandler.PROGRESS_TYPE.PROGRESS);
                 updateOutput(out, "\n");
                 if (Globals.doNSAF) {
-                    forGenes.getNSAF_values_gene(conn, out);
+                    hsqlg.getNSAF_values_gene(conn, out);
                     updateOutput(out, "\n");
                 }
                 updateProgress(pbh, 1);
                 if (Globals.genesHaveDescriptions) { // append gene descriptions
-                    forGenes.appendGeneDescriptions(conn);
+                    hsqlg.appendGeneDescriptions(conn);
                     updateProgress(pbh, 1);
                 } else {
                     updateProgress(pbh, 2);
                 }
                 // choose output format
                 if (Globals.outputFormat == Globals.geneQspecFormat) {
-                    forGenes.formatQspecOutput(conn, out);
+                    hsqlg.formatQspecOutput(conn, out);
                 } else {
-                    forGenes.defaultResults(conn, out);
+                    hsqlg.defaultResults(conn, out);
                 }
                 updateProgress(pbh, 1);
             } else {
                 // default protein-centric output
-                forProteins = new HyperSQLObject();
-                forProteins.initialize();
-                //forProteins.makeProtLenTable(conn, console); // deprecated function
-                forProteins.makeSrcFileTable(conn, pbh, out);
+                hsql = new HyperSQLObject();
+                hsql.initialize();
+                //hsql.makeProtLenTable(conn, console); // deprecated function
+                hsql.makeSrcFileTable(conn, pbh, out);
                 updateProgress(pbh, 1);
-                forProteins.correctPepXMLTags(conn);
-                forProteins.makeCombinedTable(conn, out, pbh);
+                hsql.correctPepXMLTags(conn);
+                hsql.makeCombinedTable(conn, out, pbh);
                 updateProgress(pbh, 1);
-                forProteins.makeProtXMLTable(conn, out, pbh);
+                hsql.makeProtXMLTable(conn, out, pbh);
                 updateProgress(pbh, 1);
                 System.gc(); // need more RAM
-                forProteins.makeTempProt2PepTable(conn, out, pbh);
+                hsql.makeTempProt2PepTable(conn, out, pbh);
                 System.gc(); // System clean up
                 //console.changeBarType("shaker");
-                forProteins.makeProtidSummary(conn, out, pbh);
+                hsql.makeProtidSummary(conn, out, pbh);
                 //console.changeBarType("progress");
                 updateProgress(pbh, 1);
                 if (Globals.gene2protFile != null) {
-                    forProteins.makeGeneTable(conn, out);
-                    forProteins.appendGeneIDs(conn, out);
+                    hsql.makeGeneTable(conn, out);
+                    hsql.appendGeneIDs(conn, out);
                     updateOutput(out, "\n");
 
                 }
-                if (forProteins.makeResultsTable(conn, out)) {
+                if (hsql.makeResultsTable(conn, out)) {
                     updateAlerter(alerter, comp);
                     updateOutput(out, "\nError creating results table.\n");
                     updateProgressCloseStatus(pbh, ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
                     return true;
                 }
                 updateProgress(pbh, 1);
-                forProteins.addProteinLengths(conn, 0, out, pbh);
+                hsql.addProteinLengths(conn, 0, out, pbh);
                 updateProgress(pbh, 1);
                 // these functions deal with adjusting spectral counts
-                forProteins.makeWT9XgroupsTable(conn);
-                forProteins.makePepUsageTable(conn, out, pbh);
+                hsql.makeWT9XgroupsTable(conn);
+                hsql.makePepUsageTable(conn, out, pbh);
                 updateProgress(pbh, 1);
                 // add individual experiment data to results table
-                forProteins.appendIndividualExpts(conn, out);
+                hsql.appendIndividualExpts(conn, out);
                 updateProgress(pbh, 1);
                     // reduce the number of columns in the results table
                 // by merging the groupid and siblingGroup fields
-                forProteins.mergeIDfields(conn);
+                hsql.mergeIDfields(conn);
                 if (Globals.doNSAF) {
-                    forProteins.getNSAF_values_prot(conn, out);
+                    hsql.getNSAF_values_prot(conn, out);
                     updateProgressCloseStatus(pbh, ProgressBarHandler.WND_CLOSE_STATUS.ALLOW_CLOSE);
                     updateOutput(out, "\n");
                 }
                 if (Globals.makeVerboseOutput) {
-                    forProteins.addExtraProteins(conn, out);
-                    forProteins.addProteinLengths(conn, 1, out, pbh);
+                    hsql.addExtraProteins(conn, out);
+                    hsql.addProteinLengths(conn, 1, out, pbh);
                 }
                 // choose output format
                 switch (Globals.outputFormat) {
                     case Globals.protQspecFormat:
-                        forProteins.formatQspecOutput(conn, out);
+                        hsql.formatQspecOutput(conn, out);
                         break;
                     case Globals.customOutput:
-                        forProteins.customOutput(conn, out);
+                        hsql.customOutput(conn, out);
                         break;
                     default:
-                        forProteins.defaultResults(conn, out);
+                        hsql.defaultResults(conn, out);
                 }
                 updateProgress(pbh, 1);
             }
             // user has elected to keep database, remove unnecessary tables.
             if (Globals.keepDB) {
-                if (Globals.byGene && forGenes != null) {
-                    forGenes.cleanUp(conn);
-                } else if (forProteins != null) {
-                    forProteins.cleanUp(conn);
+                if (Globals.byGene && hsqlg != null) {
+                    hsqlg.cleanUp(conn);
+                } else if (hsql != null) {
+                    hsql.cleanUp(conn);
                 }
             } else { // left over files that should be removed
                 String tmpFile = "" + Globals.DBname + ".properties";
@@ -403,7 +400,7 @@ public class Abacus {
                     result = false;
                 }
                 if (out != null) {
-                    out.append("\nDone\n");
+                    out.append("Done\n\n");
                 }
             }
         }
@@ -749,33 +746,30 @@ public class Abacus {
      * @return
      */
     public String printHeader() {
-        String ret;
-        StringBuilder sb = new StringBuilder(0);
+        StringBuilder sb = new StringBuilder();
         sb.append("\n***********************************\n");
         sb.append("\tAbacus\n");
         try {
             sb.append("\tVersion: ");
             //sb.append(abacus.class.getPackage().getImplementationVersion());
-            sb.append("2.5");
+            sb.append("2.6");
         } catch (Exception e) {
             // Don't print anything
         }
-        sb.append("\n***********************************\n");
-        sb.append(
-                "Developed and written by: Damian Fermin and Alexey Nesvizhskii\n"
-                + "Copyright 2010 Damian Fermin\n\n"
-                + "Licensed under the Apache License, Version 2.0 (the \"License\");\n"
-                + "you may not use this file except in compliance with the License.\n"
-                + "You may obtain a copy of the License at \n\n"
-                + "http://www.apache.org/licenses/LICENSE-2.0\n\n"
-                + "Unless required by applicable law or agreed to in writing, software\n"
-                + "distributed under the License is distributed on an \"AS IS\" BASIS,\n"
-                + "WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n"
-                + "See the License for the specific language governing permissions and\n"
-                + "limitations under the License.\n\n"
-        );
-        ret = sb.toString();
-        return ret;
+        sb.append("\n***********************************\n")
+                .append("Developed and written by: Damian Fermin and Alexey Nesvizhskii\n")
+                .append("Modifications by Dmitry Avtonomov\n")
+                .append("Copyright 2010 Damian Fermin\n\n")
+                .append("Licensed under the Apache License, Version 2.0 (the \"License\");\n")
+                .append("you may not use this file except in compliance with the License.\n")
+                .append("You may obtain a copy of the License at \n\n")
+                .append("http://www.apache.org/licenses/LICENSE-2.0\n\n")
+                .append("Unless required by applicable law or agreed to in writing, software\n")
+                .append("distributed under the License is distributed on an \"AS IS\" BASIS,\n")
+                .append("WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n")
+                .append("See the License for the specific language governing permissions and\n")
+                .append("limitations under the License.\n\n");
+        return sb.toString();
     }
 
 }

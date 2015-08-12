@@ -2860,53 +2860,52 @@ public class HyperSQLObject {
     }
 
     /**
-     * ******************
-     *
      * Function concatenates the groupid and siblingGroup fields together to
-     * make reading the output easier
+     * make reading the output easier.
      *
      * @param conn
      * @throws SQLException
      */
     public void mergeIDfields(Connection conn) throws SQLException {
-        Statement stmt = conn.createStatement();
-        Statement stmt2 = conn.createStatement();
-        ResultSet rs = null;
+        try (Statement stmt = conn.createStatement()) {
+            try (Statement stmt2 = conn.createStatement()) {
+                ResultSet rs;
+                String query;
 
-        String query = null;
+                DbgUtils.dbGuiInMem();
+                DbgUtils.sleep();
 
-        if (!Globals.byGene) {
-            query = "ALTER TABLE results ADD COLUMN ALL_id VARCHAR(20) BEFORE maxPw";
-            stmt.executeUpdate(query);
+                if (!Globals.byGene) {
+                    query = "ALTER TABLE results ADD COLUMN ALL_id VARCHAR(20) BEFORE maxPw";
+                    stmt.executeUpdate(query);
 
-            query = "UPDATE results rs "
-                    + "  SET ALL_id = (ALL_groupid || '-'|| ALL_siblingGroup)";
-            stmt.executeUpdate(query);
-            stmt.executeUpdate("ALTER TABLE results DROP COLUMN ALL_groupid");
-            stmt.executeUpdate("ALTER TABLE results DROP COLUMN ALL_siblingGroup");
+                    query = "UPDATE results rs "
+                            + "  SET ALL_id = (ALL_groupid || '-'|| ALL_siblingGroup)";
+                    stmt.executeUpdate(query);
+                    stmt.executeUpdate("ALTER TABLE results DROP COLUMN ALL_groupid");
+                    stmt.executeUpdate("ALTER TABLE results DROP COLUMN ALL_siblingGroup");
 
-            //append individual experiment fields
-            rs = stmt.executeQuery("SELECT DISTINCT tag FROM srcFileTags WHERE fileType = 'prot'");
-            while (rs.next()) {
-                String tag = rs.getString(1);
-                query = "ALTER TABLE results "
-                        + "ADD COLUMN " + tag + "_id VARCHAR(20) BEFORE "
-                        + tag + "_groupid ";
-                stmt2.executeUpdate(query);
+                    //append individual experiment fields
+                    rs = stmt.executeQuery("SELECT DISTINCT tag FROM srcFileTags WHERE fileType = 'prot'");
+                    while (rs.next()) {
+                        String tag = rs.getString(1);
+                        query = "ALTER TABLE results "
+                                + "ADD COLUMN " + tag + "_id VARCHAR(20) BEFORE "
+                                + tag + "_groupid ";
+                        stmt2.executeUpdate(query);
 
-                query = "UPDATE results "
-                        + "  SET " + tag + "_id = (" + tag + "_groupid || '-' || " + tag + "_sibGroup)";
-                stmt2.executeUpdate(query);
+                        query = "UPDATE results "
+                                + "  SET " + tag + "_id = (" + tag + "_groupid || '-' || " + tag + "_sibGroup)";
+                        stmt2.executeUpdate(query);
 
-                query = "ALTER TABLE results DROP COLUMN " + tag + "_groupid ";
-                stmt2.executeUpdate(query);
-                query = "ALTER TABLE results DROP COLUMN " + tag + "_sibGroup ";
-                stmt2.executeUpdate(query);
+                        query = "ALTER TABLE results DROP COLUMN " + tag + "_groupid ";
+                        stmt2.executeUpdate(query);
+                        query = "ALTER TABLE results DROP COLUMN " + tag + "_sibGroup ";
+                        stmt2.executeUpdate(query);
+                    }
+                    rs.close();
+                }
             }
-            rs.close();
-            rs = null;
-            stmt2.close();
-            stmt2 = null;
         }
     }
 
