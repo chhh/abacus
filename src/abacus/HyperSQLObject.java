@@ -1117,8 +1117,8 @@ public class HyperSQLObject {
                     // TODO: org.hsqldb.HsqlException: statement is not in batch mode
                     // TODO: can be caused by if there were no batches added to prepared statement at all or after last execution
                     out.append("There were no results for combined file peptides\n");
-                    DbgUtils.dbGuiInMem();
-                    DbgUtils.sleep();
+//                    DbgUtils.dbGuiInMem();
+//                    DbgUtils.sleep();
                 } else {
                     String errorMsg = "Could not map peptide ions from protXML files to the ones from pepXML files.";
                     if (out != null) {
@@ -1257,6 +1257,14 @@ public class HyperSQLObject {
                     + "AND Pw > " + this.minCombinedFilePw + " "
                     + "GROUP BY groupid, siblingGroup, protid "
                     + "ORDER BY groupid, siblingGroup ";
+
+            if (DbgUtils.DEBUG && out != null) {
+                String tableName = "t1_";
+                out.append(String.format("\n\n    Populating temp table %s using query:", tableName));
+                out.append(String.format("\n    %s", query));
+                out.append(String.format("\n\n"));
+            }
+
             rs = stmt.executeQuery(query);
             while (rs.next()) {
                 prep.setInt(1, rs.getInt(1));
@@ -1294,6 +1302,14 @@ public class HyperSQLObject {
                     + "FROM protXML "
                     + "GROUP BY protid ";
             rs = stmt.executeQuery(query);
+
+            if (DbgUtils.DEBUG && out != null) {
+                String tableName = "t1_";
+                out.append(String.format("\n\n    Getting ProtIDs from protXML table:"));
+                out.append(String.format("\n    %s", query));
+                out.append(String.format("\n\n"));
+            }
+
             iter = 0;
             while (rs.next()) {
                 query = "UPDATE t1_ "
@@ -1375,6 +1391,14 @@ public class HyperSQLObject {
                     + "FROM t1_ "
                     + "GROUP BY groupid, siblingGroup "
                     + "ORDER BY groupid, siblingGroup ";
+
+            if (DbgUtils.DEBUG && out != null) {
+                String tableName = "t1_";
+                out.append(String.format("\n\n    Getting ProtIDs, SiblinbgGroup from %s table:", tableName));
+                out.append(String.format("\n    %s", query));
+                out.append(String.format("\n\n"));
+            }
+
             rs = stmt.executeQuery(query);
             if (pbh != null) {
                 pbh.monitorBoxInit(N, "Selecting candidate proteins...");
@@ -1596,12 +1620,17 @@ public class HyperSQLObject {
             if (pbh != null) {
                 pbh.closeMonitorBox();
             }   // clean up
-            stmt.executeUpdate("DROP INDEX t1_idx1");
-            stmt.executeUpdate("DROP INDEX t1_idx2");
-            stmt.executeUpdate("DROP TABLE t1_");
-            stmt.executeUpdate("DROP INDEX t2_idx1");
-            stmt.executeUpdate("DROP TABLE t2_");
+
+            if (!DbgUtils.DEBUG) {
+                stmt.executeUpdate("DROP INDEX t1_idx1");
+                stmt.executeUpdate("DROP INDEX t1_idx2");
+                stmt.executeUpdate("DROP TABLE t1_");
+                stmt.executeUpdate("DROP INDEX t2_idx1");
+                stmt.executeUpdate("DROP TABLE t2_");
+            }
+
             stmt.executeUpdate("DROP TABLE IF EXISTS protidSummary");
+
             query = "CREATE CACHED TABLE protidSummary ( "
                     + "  groupid INT, "
                     + "  siblingGroup VARCHAR(10), "
@@ -1616,6 +1645,8 @@ public class HyperSQLObject {
                     + "  wt_maxIniProb DECIMAL(8,6), "
                     + "  maxIniProbUniq DECIMAL(8,6) "
                     + ")";
+
+
             stmt.executeUpdate(query);
             if (out != null) {
                 out.append("  Picking representative protids\n");
@@ -1631,6 +1662,15 @@ public class HyperSQLObject {
                     + "FROM t3_ "
                     + "GROUP BY groupid, siblingGroup "
                     + "ORDER BY groupid, siblingGroup ";
+            if (DbgUtils.DEBUG && out != null) {
+                String tableName = "t3_";
+                out.append(String.format("\n\n    Getting groupid, siblingGroup from %s to put into final protidSummary table:", tableName));
+                out.append(String.format("\n    %s", query));
+                out.append(String.format("\n\n"));
+
+//                DbgUtils.dbGuiInMem();
+//                DbgUtils.sleep();
+            }
             rs = stmt.executeQuery(query);
             msg = "  Loading protidSummary table...";
             if (pbh != null) {
@@ -1654,6 +1694,7 @@ public class HyperSQLObject {
                         + "ORDER BY numXML DESC, maxPw DESC, maxIniProb DESC, "
                         + "  maxIniProbUniq DESC, numPepsUniq DESC, numSpecsUniq DESC, protid ASC "
                         + "LIMIT 1 ";
+
                 rs2 = stmt2.executeQuery(query);
 
                 while (rs2.next()) {
@@ -1716,6 +1757,10 @@ public class HyperSQLObject {
     }
 
     public int retNumPeps(Connection conn, String tag, String pid, double wt, double iniProb) throws SQLException {
+        return retNumPeps(conn, tag, pid, wt, iniProb, null);
+    }
+
+    public int retNumPeps(Connection conn, String tag, String pid, double wt, double iniProb, Appendable out) throws SQLException {
         String query;
         Statement stmt;
         ResultSet rs;
@@ -1735,8 +1780,29 @@ public class HyperSQLObject {
                 + "AND iniProb >= " + iniProb + " "
                 + "GROUP BY modPeptide, charge "
                 + ") WITH DATA";
+
         stmt = conn.createStatement();
         stmt.executeUpdate(query);
+
+        if (DbgUtils.DEBUG && pid.equals("ENSP00000222574")) {
+
+
+            if (out != null) {
+                try {
+                    out.append("\n\n");
+
+                    out.append("    Executing query: \n");
+                    out.append(String.format("    %s\n", query));
+
+                    out.append("\n\n");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            DbgUtils.dbGuiInMem();
+            DbgUtils.sleep();
+        }
 
         rs = stmt.executeQuery("SELECT COUNT(*) FROM nptmp_");
         rs.next();
@@ -2027,6 +2093,12 @@ public class HyperSQLObject {
 
             query += " ORDER BY b.groupid ASC, b.siblingGroup ASC"
                     + ") WITH DATA";
+
+            if (DbgUtils.DEBUG && out != null) {
+                out.append("\n    Populating results table using query:");
+                out.append("\n    " + query);
+                out.append("\n\n");
+            }
 
             stmt.executeUpdate(query);
 
@@ -2869,8 +2941,8 @@ public class HyperSQLObject {
                 ResultSet rs;
                 String query;
 
-                DbgUtils.dbGuiInMem();
-                DbgUtils.sleep();
+//                DbgUtils.dbGuiInMem();
+//                DbgUtils.sleep();
 
                 if (!Globals.byGene) {
                     query = "ALTER TABLE results ADD COLUMN ALL_id VARCHAR(20) BEFORE maxPw";
