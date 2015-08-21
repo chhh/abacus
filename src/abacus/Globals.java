@@ -1,5 +1,6 @@
 package abacus;
 
+import abacus.config.MS1QuantOpts;
 import abacus.ui.UIAlerter;
 import java.awt.Component;
 import java.io.BufferedReader;
@@ -10,6 +11,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -40,6 +43,9 @@ public class Globals {
 
     public static String combinedFilePath = null;
     public static String combinedFile = null;
+
+    public static Path ms1QuantFilePath = null;
+    public static MS1QuantOpts ms1QuantOpts = null;
 
     public static String decoyTag = null;
     public static String pepXMLsuffix = "pep.xml";
@@ -471,6 +477,10 @@ public class Globals {
                  */
                 if (ary[0].equals("gene2prot")) {
                     gene2protFile = ary[1];
+                }
+
+                if (ary[0].equals("ms1QuantFile")) {
+                    ms1QuantFilePath = Paths.get(ary[1]).toAbsolutePath();
                 }
             }
             input.close();
