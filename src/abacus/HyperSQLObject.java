@@ -183,7 +183,7 @@ public class HyperSQLObject {
         }
 
         if (out != null) {
-            out.append("\tCreating index 1\n");
+            out.append("  Creating index 1\n");
         }
         stmt.executeUpdate("CREATE INDEX sf_idx1 ON srcFileTags(srcFile)");
         if (pbh != null) {
@@ -191,7 +191,7 @@ public class HyperSQLObject {
         }
 
         if (out != null) {
-            out.append("\tCreating index 2\n");
+            out.append("  Creating index 2\n");
         }
         stmt.executeUpdate("CREATE INDEX sf_idx2 ON srcFileTags(tag)");
         if (pbh != null) {
@@ -199,7 +199,7 @@ public class HyperSQLObject {
         }
 
         if (out != null) {
-            out.append("\tCreating index 3\n");
+            out.append("  Creating index 3\n");
         }
         stmt.executeUpdate("CREATE INDEX sf_idx3 ON srcFileTags(fileType)");
         if (pbh != null) {
@@ -2271,9 +2271,6 @@ public class HyperSQLObject {
 
                 if (pbh != null) {
                     pbh.closeMonitorBox();
-                }
-                if (out != null) {
-                    out.append("\n");
                 }
             }
             conn.setAutoCommit(false);
