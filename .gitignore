@@ -21,6 +21,8 @@
 .idea/dataSources.ids
 .idea/dataSources.xml
 .idea/sqlDataSources.xml
+.idea/sqldialects.xml
+.idea/dataSources.local.xml
 .idea/dynamic.xml
 .idea/uiDesigner.xml
 
