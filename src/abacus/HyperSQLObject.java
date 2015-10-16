@@ -273,6 +273,14 @@ public class HyperSQLObject {
                     + ");";
             prep = conn.prepareStatement(query);
 
+
+//            try {
+//                DbgUtils.dbGuiInMem();
+//                Thread.sleep(3000000000L);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+
             // this code is used for the progress monitor
             query = "SELECT COUNT(*) FROM RAWprotXML "
                     + "WHERE srcFile = '" + this.combinedFile.toUpperCase() + "' "
@@ -650,7 +658,13 @@ public class HyperSQLObject {
             Globals.cursorStatusDone(iter, msg);
         }
         conn.setAutoCommit(false);
-        prep.executeBatch();
+        try {
+            prep.executeBatch();
+        } catch (SQLException e) {
+            if (e.getMessage().contains("statement is not in batch mode")) {
+                int a = 1;
+            }
+        }
         conn.setAutoCommit(true);
         prep.clearBatch();
         prep.close();
@@ -1988,7 +2002,7 @@ public class HyperSQLObject {
             }
             prep.close();
         }
-        
+
 
         return false;
     }

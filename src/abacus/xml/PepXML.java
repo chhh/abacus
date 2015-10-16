@@ -29,20 +29,20 @@ public class PepXML {
 
 	private HashMap<Integer, Integer> aaMods; // holds the AA modification
 											  // positions
-	
-	
+
+
 	// Variables for XTANDEM search results
 	private double hyperscore;
 	private double nextscore;
 	private double xtandem_expect;
-	
+
 	// Variables for MASCOT search results
 	private double mascot_ionscore;
 	private double mascot_identityscore;
 	private int mascot_star;
 	private double mascot_homologyscore;
 	private double mascot_expect;
-	
+
 	// Variables for SEQUEST search results
 	private double sequest_xcorr;
 	private double sequest_deltacn;
@@ -63,7 +63,7 @@ public class PepXML {
 	public void setPeptide(String txt) {
 		this.peptide = txt;
 	}
-	
+
 	public void setCharge(String txt) {
 		this.charge = Integer.parseInt(txt);
 	}
@@ -157,48 +157,48 @@ public class PepXML {
 	public double getMascot_ionscore() {
 		return mascot_ionscore;
 	}
-	
+
 	public double getMascot_identityscore() {
 		return mascot_identityscore;
 	}
-	
+
 	public int getMascot_star() {
 		return mascot_star;
 	}
-	
+
 	public double getMascot_homologyscore() {
 		return mascot_homologyscore;
 	}
-	
+
 	public double getMascot_expect() {
 		return mascot_expect;
 	}
-	
-	
-	
+
+
+
 	// SEQUEST variables
 	public double getSequest_xcorr() {
 		return sequest_xcorr;
 	}
-	
+
 	public double getSequest_deltacn() {
 		return sequest_deltacn;
 	}
-	
+
 	public double getSequest_deltacnstar() {
 		return sequest_deltacnstar;
 	}
-	
+
 	public double getSequest_spscore() {
 		return sequest_spscore;
 	}
-	
+
 	public double getSequest_sprank() {
 		return sequest_sprank;
 	}
-	
-	
-	
+
+
+
 	/*
 	 * Function parses the given XML stream and records the relevant information
 	 * found in it.
@@ -208,14 +208,14 @@ public class PepXML {
 		String attrValue;
 
 		if(this.hitRank == 1) return; // this means we have already recorded the best hit for this PSM
-		
+
 		for (int i = 0; i < xmlStreamReader.getAttributeCount(); i++) {
 			attrName = xmlStreamReader.getAttributeLocalName(i);
 			attrValue = xmlStreamReader.getAttributeValue(i);
 
-			if (attrName.equals("hit_rank")) 
+			if (attrName.equals("hit_rank"))
 				this.hitRank = Integer.parseInt(attrValue);
-			
+
 			if (attrName.equals("spectrum"))
 				this.specId = attrValue;
 			if (attrName.equals("assumed_charge"))
@@ -246,6 +246,10 @@ public class PepXML {
 		if (this.aaMods == null)
 			this.aaMods = new HashMap<>();
 
+        int position = Integer.MIN_VALUE;
+        int massInt = Integer.MIN_VALUE;
+        double modMass = Double.NaN;
+        boolean foundSomething = false;
 		for (int i = 0; i < xmlStreamReader.getAttributeCount(); i++) {
 			attrName = xmlStreamReader.getAttributeLocalName(i);
 			attrValue = xmlStreamReader.getAttributeValue(i);
@@ -254,24 +258,31 @@ public class PepXML {
 				k = -100;
 				v = 43;
 				this.aaMods.put(k,v);
-			}
-			else { // not an N-terminal modification
-				if (attrName.equals("position"))
-					k = Integer.parseInt(attrValue) - 1;
-				if (attrName.equals("mass")) {
-					v = (int) Math.round(Double.parseDouble(attrValue));
-
-					if (k > -1 && v > 0)
-						this.aaMods.put(k, v);
-					else {
-						System.err.printf("\nERROR: mod_aminoacid_mass line pepXML::record_AA_mod()\n");
-						System.err.println(this.specId + "\n");
-						System.err.println(xmlStreamReader.toString());
-						System.exit(-1);
-					}
-				}
+			} else { // not an N-terminal modification
+                switch (attrName) {
+                    case "position":
+                        position = Integer.parseInt(attrValue) - 1;
+                        foundSomething = true;
+                        break;
+                    case "mass":
+                        modMass = Double.parseDouble(attrValue);
+                        massInt = (int) Math.round(modMass);
+                        foundSomething = true;
+                        break;
+                }
 			}
 		}
+        if (foundSomething) {
+            if (!Double.isNaN(modMass) && (position >= 0 && massInt >= 0)) {
+                this.aaMods.put(k, v);
+            } else {
+                System.err.printf("\nERROR: mod_aminoacid_mass line pepXML::record_AA_mod(), " +
+                                          "parsed position: %d, parsed mass: %.4f, rounded masss: %d\n", position, modMass, massInt);
+                System.err.println(this.specId + "\n");
+                System.err.println(xmlStreamReader.toString());
+                System.exit(-1);
+            }
+        }
 	}
 
 	/*
@@ -297,8 +308,8 @@ public class PepXML {
 			if (attrValue.equals("expect"))
 				this.xtandem_expect = Double.parseDouble(xmlStreamReader
 						.getAttributeValue(j));
-			
-			
+
+
 			/*
 			 *   Mascot search scores
 			 */
@@ -313,14 +324,14 @@ public class PepXML {
 			if (attrValue.equals("star"))
 				this.mascot_star = Integer.parseInt(xmlStreamReader.
 						getAttributeValue(j));
-			if (attrValue.equals("homologyscore")) 
+			if (attrValue.equals("homologyscore"))
 				this.mascot_homologyscore = Double.parseDouble(xmlStreamReader.
 						getAttributeValue(j));
 			if (attrValue.equals("expect"))
 				this.mascot_expect = Double.parseDouble(xmlStreamReader
 						.getAttributeValue(j));
-			
-			
+
+
 			/*
 			 *   Sequest search scores
 			 */
@@ -343,8 +354,8 @@ public class PepXML {
 						getAttributeValue(j));
 		}
 	}
-	
-	
+
+
 	/*
 	 * Function parses out peptide probability
 	 */
