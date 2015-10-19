@@ -212,8 +212,6 @@ public class Globals {
 
     // Function assigns command line arguments to global variables
     public static void parseCommandLineArgs(String[] argv) {
-        boolean a = false;
-        boolean b = false;
 
         if (argv[0].equals("-p")) {
             paramFile = argv[1];
@@ -296,18 +294,22 @@ public class Globals {
             String ary[] = new String[2]; // key, value
 
             while ((line = input.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty() || line.matches("^\\s*$")) {
+                    continue; // blank line
+                }
                 if (line.startsWith("#")) {
                     continue; // ignore comment lines
                 }
-                if (line.matches("^[^\\w]*")) {
-                    continue; // blank line
-                }
                 // this just handle's error where user didn't provide a field after the '=' sign
-                if (line.split("=").length < 2) {
-                    ary[0] = line.split("=")[0];
+                String[] split = line.split("=");
+                if (split.length < 2) {
+                    ary[0] = split[0];
                     ary[1] = "ERROR";
                 } else {
                     ary = line.split("=");
+                    ary[0] = ary[0].trim();
+                    ary[1] = ary[1].trim();
                 }
 
                 // special handling of the required AA mods text filed
@@ -332,13 +334,13 @@ public class Globals {
                     DBname = (ary[1].equals("ERROR")) ? "ABACUS" : ary[1];
                 }
                 if (ary[0].equals("combinedFile")) {
-                    combinedFilePath = (ary[1].equals("ERROR")) ? "" : ary[1];
+                    combinedFilePath = (ary[1].equals("ERROR")) ? "" : Paths.get(ary[1]).toAbsolutePath().toString();
                 }
                 if (ary[0].equals("srcDir")) {
-                    srcDir = (ary[1].equals("ERROR")) ? "" : ary[1];
+                    srcDir = (ary[1].equals("ERROR")) ? "" : Paths.get(ary[1]).toAbsolutePath().toString();
                 }
                 if (ary[0].equals("fasta")) {
-                    fastaFile = (ary[1].equals("ERROR")) ? "" : ary[1];
+                    fastaFile = (ary[1].equals("ERROR")) ? "" : Paths.get(ary[1]).toAbsolutePath().toString();
                 }
                 if (ary[0].equals("decoyTag")) {
                     decoyTag = (ary[1].equals("ERROR")) ? "" : ary[1];
@@ -363,7 +365,7 @@ public class Globals {
                 }
 
                 if (ary[0].equals("outputFile")) {
-                    outputFilePath = (ary[1].equals("ERROR")) ? "ABACUS_output.tsv" : ary[1];
+                    outputFilePath = (ary[1].equals("ERROR")) ? "ABACUS_output.tsv" : Paths.get(ary[1]).toAbsolutePath().toString();
                 }
 
                 if (ary[0].equals("recalcPepWts")) {
@@ -476,7 +478,7 @@ public class Globals {
                  * with the format gene ID <TAB> protein ID.
                  */
                 if (ary[0].equals("gene2prot")) {
-                    gene2protFile = ary[1];
+                    gene2protFile = Paths.get(ary[1]).toAbsolutePath().toString();
                 }
 
                 if (ary[0].equals("ms1QuantFile")) {
@@ -882,7 +884,7 @@ public class Globals {
             if (protMatcher.find()) {
                 origTag = protMatcher.group(1);
 
-				// hyperSQL database cannot handle column names with hyphens or 
+				// hyperSQL database cannot handle column names with hyphens or
                 // first characters that are digits. This could prevents such
                 // problems.
                 if (origTag.matches("^\\d.*")) {
